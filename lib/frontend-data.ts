@@ -1,4 +1,4 @@
-import { Activity, Brain, CalendarCheck, HeartPulse, Home, LayoutDashboard, Pill, ShieldCheck, UserRound } from "lucide-react";
+import { Activity, Brain, CalendarCheck, HeartPulse, Home, LayoutDashboard, MessageCircle, Pill, ShieldCheck, UserRound } from "lucide-react";
 
 export const landingFeatures = [
   { icon: Brain, title: "Cognitive Quizzes", description: "Large, calm, one-question screens for supervised memory and recognition activities." },
@@ -23,12 +23,12 @@ export const faqs = [
   { question: "Is Neura a diagnosis tool?", answer: "No. Neura is a supportive care platform and does not replace professional medical advice." },
   { question: "Who manages the patient data?", answer: "The caregiver owns the account and manages patient profile, medication, and quiz activity." },
   { question: "Is it responsive?", answer: "Yes. The layouts are built for laptop, tablet, and mobile screens." },
-  { question: "Is chat included?", answer: "No. The AI chat part is intentionally left out in this package as requested." },
+  { question: "Is chat included?", answer: "Yes. The cognitive quiz is a live AI chat, powered by Gemini and personalized to the patient's profile." },
 ];
 
 export const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: Brain, label: "Quiz", href: "/quiz" },
+  { icon: MessageCircle, label: "Chat", href: "/chat" },
   { icon: Pill, label: "Medication", href: "/medications" },
   { icon: UserRound, label: "Onboarding", href: "/onboarding" },
   { icon: Home, label: "Landing", href: "/" },

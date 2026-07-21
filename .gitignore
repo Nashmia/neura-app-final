@@ -1,6 +1,7 @@
 node_modules
 .next
 out
+*.tsbuildinfo
 
 # Legacy local JSON store, replaced by MongoDB. Not used at runtime anymore.
 data/db.json

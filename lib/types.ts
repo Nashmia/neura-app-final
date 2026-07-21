@@ -49,6 +49,7 @@ export type QuizSession = {
   patientId: string;
   score: number;
   total: number;
+  summary?: string;
   createdAt: string;
 };
 

@@ -56,17 +56,31 @@ Create a `.env.local` file (see `.env.example`):
 AUTH_SECRET="replace-with-a-long-random-secret"
 MONGODB_URI="mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority"
 MONGODB_DB="neura"
+GEMINI_API_KEY="replace-with-your-gemini-api-key"
 ```
 
 Get `MONGODB_URI` from MongoDB Atlas: create a free cluster, then
 **Connect → Drivers** and copy the connection string.
 
+Get `GEMINI_API_KEY` for free from [Google AI Studio](https://aistudio.google.com/apikey).
+
+## AI cognitive quiz
+
+"Start cognitive quiz" opens a dedicated chat page (`app/chat/page.tsx`) with
+a conversational check-in powered by Gemini (`app/api/chat/quiz/route.ts`,
+`lib/gemini.ts`) instead of a static multiple-choice quiz. Each question is
+generated live, personalized with the
+patient's name, dementia stage, and family/friend contacts from their
+profile, and sized/paced using the `quizLength`/`quizDifficulty` chosen
+during onboarding. When the check-in finishes, Gemini also grades it and
+writes a `QuizSession` (score, total, summary) to the database.
+
 ## Deploy to Vercel
 
 1. Push this project to a Git provider (or use `vercel` CLI directly).
 2. Import it on vercel.com, or run `vercel` from this folder.
-3. Add `AUTH_SECRET`, `MONGODB_URI`, and `MONGODB_DB` in the Vercel project's
-   Environment Variables.
+3. Add `AUTH_SECRET`, `MONGODB_URI`, `MONGODB_DB`, and `GEMINI_API_KEY` in the
+   Vercel project's Environment Variables.
 4. Allow network access from Vercel in Atlas (Network Access → allow `0.0.0.0/0`
    for a simple setup, or Vercel's IP ranges for a stricter one).
 
