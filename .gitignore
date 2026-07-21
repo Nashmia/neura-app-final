@@ -11,3 +11,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Claude Code local runtime state (keep .claude/launch.json)
+.claude/scheduled_tasks.lock
+.claude/worktrees/
