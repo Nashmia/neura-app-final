@@ -1,0 +1,255 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowLeft, ArrowRight, Check, Heart, ImagePlus, Trash2, UserPlus, UserRound, Users } from "lucide-react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Logo } from "@/components/layout/logo";
+import { api, resizeImageToDataUrl } from "@/lib/utils";
+
+const labels = ["Caregiver Information", "Patient Details", "Family & Friends", "Quiz Setup"];
+
+const schema = z.object({
+  patientName: z.string().min(2),
+  age: z.coerce.number().min(1).max(120),
+  gender: z.string().min(2),
+  dementiaStage: z.string().min(2),
+  notes: z.string().optional(),
+  contacts: z
+    .array(
+      z.object({
+        name: z.string().optional().default(""),
+        relationship: z.string().optional().default(""),
+        type: z.enum(["Family", "Friend"]),
+      })
+    )
+    .default([]),
+  quizLength: z.coerce.number().min(3).max(20),
+  quizDifficulty: z.string().min(2),
+});
+type Values = any;
+
+export default function OnboardingPage() {
+  const router = useRouter();
+  const [step, setStep] = useState(0);
+  const [error, setError] = useState("");
+  const { register, control, watch, handleSubmit, formState: { isSubmitting } } = useForm<Values>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      patientName: "Maryam Ahmed",
+      age: 72,
+      gender: "Female",
+      dementiaStage: "Mild",
+      notes: "Prefers calm instructions and familiar family photos.",
+      contacts: [
+        { name: "Sara Ahmed", relationship: "Daughter", type: "Family", photo: "" },
+        { name: "Imran Ahmed", relationship: "Son", type: "Family", photo: "" },
+        { name: "Bilal Khan", relationship: "Family friend", type: "Friend", photo: "" },
+      ],
+      quizLength: 4,
+      quizDifficulty: "Easy",
+    },
+  });
+
+  async function onPhoto(fieldId: string, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking the same file later
+    if (!file) return;
+    setError("");
+    try {
+      const dataUrl = await resizeImageToDataUrl(file);
+      setPhotos((prev) => ({ ...prev, [fieldId]: dataUrl }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not process that image.");
+    }
+  }
+
+  function removePhoto(fieldId: string) {
+    setPhotos((prev) => {
+      const next = { ...prev };
+      delete next[fieldId];
+      return next;
+    });
+  }
+  const { fields, append, remove } = useFieldArray({ control, name: "contacts" });
+  // Photos are held in local state keyed by the field-array row id, then merged
+  // into the payload at submit. (Storing image data URLs inside RHF field-array
+  // items doesn't reliably survive submission.)
+  const [photos, setPhotos] = useState<Record<string, string>>({});
+  const progress = ((step + 1) / labels.length) * 100;
+
+  const watchedContacts = (watch("contacts") as { name?: string; type: string }[]) || [];
+  const familyCount = watchedContacts.filter((c) => c.type === "Family").length;
+  const friendsCount = watchedContacts.filter((c) => c.type === "Friend").length;
+
+  async function submit(values: Values) {
+    setError("");
+    const withPhotos = (values.contacts || []).map((c: object, i: number) => ({
+      ...c,
+      photo: photos[fields[i]?.id] || "",
+    }));
+    const payload = {
+      ...values,
+      contacts: withPhotos.filter((c: { name?: string }) => c.name && c.name.trim()),
+    };
+    try {
+      await api("/api/onboarding", { method: "POST", body: JSON.stringify(payload) });
+      router.push("/dashboard");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save onboarding.");
+    }
+  }
+
+  return (
+    <main className="soft-gradient relative min-h-screen overflow-hidden px-4 py-8">
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="animate-blob absolute -left-24 top-10 size-80 bg-teal-400/15 blur-3xl" />
+        <div className="animate-blob anim-delay-3 absolute -right-20 bottom-10 size-96 bg-emerald-400/15 blur-3xl" />
+      </div>
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-8 flex items-center justify-between">
+          <Logo />
+          <Button asChild variant="outline" className="rounded-full bg-white"><Link href="/dashboard">Dashboard</Link></Button>
+        </div>
+        <Card className="rounded-[2rem] border-blue-100 bg-white/90 shadow-2xl shadow-blue-600/10">
+          <CardContent className="p-6 sm:p-8 lg:p-10">
+            <div className="mb-8">
+              <p className="font-semibold text-primary">Caregiver onboarding</p>
+              <h1 className="mt-2 text-3xl font-bold text-slate-950 sm:text-4xl">Set up Neura in four simple steps.</h1>
+              <p className="mt-3 max-w-2xl text-slate-600">The form saves to the backend and prepares the caregiver dashboard.</p>
+            </div>
+            {error && <div className="mb-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
+            <div className="mb-8">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                {labels.map((label, index) => (
+                  <div key={label} className="flex items-center gap-3">
+                    <div className={`grid size-10 place-items-center rounded-full border text-sm font-bold ${index <= step ? "border-primary bg-primary text-white" : "border-blue-100 bg-blue-50 text-slate-500"}`}>{index < step ? <Check className="size-5" /> : index + 1}</div>
+                    <span className={`text-sm font-semibold ${index <= step ? "text-slate-950" : "text-slate-500"}`}>{label}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="h-3 overflow-hidden rounded-full bg-blue-50"><div className="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 transition-all duration-500" style={{ width: `${progress}%` }} /></div>
+            </div>
+            <form onSubmit={handleSubmit(submit)}>
+              <div>
+                <motion.div key={step} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.28 }}>
+                  {step === 0 && (
+                    <StepShell title="Caregiver Information" description="Your account is already active. Add patient details next." icon={<UserRound className="size-6" />}>
+                      <div className="grid gap-5 sm:grid-cols-2">
+                        <Field label="Account owner" value="Current logged-in caregiver" disabled />
+                        <Field label="Workspace type" value="Single patient care" disabled />
+                      </div>
+                    </StepShell>
+                  )}
+                  {step === 1 && (
+                    <StepShell title="Patient Details" description="Add basic patient information for the dashboard and quiz context." icon={<UserRound className="size-6" />}>
+                      <div className="grid gap-5 sm:grid-cols-2">
+                        <Field label="Patient name" props={register("patientName")} />
+                        <Field label="Age" type="number" props={register("age")} />
+                        <Field label="Gender" props={register("gender")} />
+                        <Field label="Dementia stage" props={register("dementiaStage")} />
+                        <div className="space-y-2 sm:col-span-2"><Label>Medical notes</Label><Textarea {...register("notes")} /></div>
+                      </div>
+                    </StepShell>
+                  )}
+                  {step === 2 && (
+                    <StepShell title="Family & Friends" description="Add the important people in the patient's life. Their names and relationships give context to caregivers and power recognition quizzes." icon={<Users className="size-6" />}>
+                      <div className="space-y-4">
+                        {fields.length === 0 && <p className="rounded-2xl border border-dashed border-blue-200 bg-blue-50/50 p-6 text-center text-slate-500">No people added yet. Use the buttons below to add family members and friends.</p>}
+                        {fields.map((field, index) => {
+                          const type = watch(`contacts.${index}.type`) as string;
+                          const photo = photos[field.id];
+                          const name = watch(`contacts.${index}.name`) as string;
+                          const isFamily = type === "Family";
+                          return (
+                            <motion.div key={field.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-blue-100 bg-white p-4 shadow-sm">
+                              <div className="mb-3 flex items-center justify-between gap-3">
+                                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${isFamily ? "bg-teal-100 text-teal-800" : "bg-amber-100 text-amber-800"}`}>{isFamily ? <Users className="size-3.5" /> : <Heart className="size-3.5" />}{type}</span>
+                                <button type="button" onClick={() => remove(index)} aria-label="Remove person" className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600"><Trash2 className="size-5" /></button>
+                              </div>
+                              <div className="flex flex-col gap-4 sm:flex-row">
+                                <div className="flex flex-col items-center gap-2">
+                                  <label className="group/photo relative grid size-24 cursor-pointer place-items-center overflow-hidden rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50 transition hover:border-primary">
+                                    {photo ? (
+                                      <>
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={photo} alt={name || "Contact photo"} className="size-full object-cover" />
+                                        <span className="absolute inset-0 grid place-items-center bg-black/45 text-xs font-semibold text-white opacity-0 transition group-hover/photo:opacity-100">Change</span>
+                                      </>
+                                    ) : (
+                                      <span className="flex flex-col items-center gap-1 text-primary"><ImagePlus className="size-6" /><span className="text-[11px] font-semibold">Add photo</span></span>
+                                    )}
+                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => onPhoto(field.id, e)} />
+                                  </label>
+                                  {photo && <button type="button" onClick={() => removePhoto(field.id)} className="text-xs font-medium text-slate-500 transition hover:text-red-600">Remove photo</button>}
+                                </div>
+                                <div className="grid flex-1 gap-3 sm:grid-cols-2">
+                                  <div className="space-y-1.5"><Label>Full name</Label><Input placeholder="e.g. Sara Ahmed" className="h-12 rounded-2xl border-blue-100 bg-white" {...register(`contacts.${index}.name`)} /></div>
+                                  <div className="space-y-1.5"><Label>Relationship</Label><Input placeholder="e.g. Daughter" className="h-12 rounded-2xl border-blue-100 bg-white" {...register(`contacts.${index}.relationship`)} /></div>
+                                </div>
+                              </div>
+                              <input type="hidden" {...register(`contacts.${index}.type`)} />
+                            </motion.div>
+                          );
+                        })}
+                        <div className="flex flex-col gap-3 sm:flex-row">
+                          <Button type="button" variant="outline" onClick={() => append({ name: "", relationship: "", type: "Family", photo: "" })} className="h-12 flex-1 rounded-2xl bg-white"><UserPlus className="mr-2 size-4" />Add family member</Button>
+                          <Button type="button" variant="outline" onClick={() => append({ name: "", relationship: "", type: "Friend", photo: "" })} className="h-12 flex-1 rounded-2xl bg-white"><Heart className="mr-2 size-4" />Add friend</Button>
+                        </div>
+                        <p className="text-sm font-medium text-slate-500">{familyCount} family {familyCount === 1 ? "member" : "members"} • {friendsCount} {friendsCount === 1 ? "friend" : "friends"}</p>
+                      </div>
+                    </StepShell>
+                  )}
+                  {step === 3 && (
+                    <StepShell title="Quiz Setup" description="Prepare recognition-based quiz preferences." icon={<UserRound className="size-6" />}>
+                      <div className="grid gap-5 sm:grid-cols-2">
+                        <Field label="Preferred quiz length" type="number" props={register("quizLength")} />
+                        <Field label="Quiz difficulty" props={register("quizDifficulty")} />
+                      </div>
+                    </StepShell>
+                  )}
+                </motion.div>
+              </div>
+              <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+                <Button type="button" variant="outline" onClick={() => setStep((v) => Math.max(v - 1, 0))} disabled={step === 0} className="h-12 rounded-2xl bg-white"><ArrowLeft className="mr-2 size-4" />Back</Button>
+                {step < labels.length - 1
+                  ? <Button type="button" onClick={() => setStep((v) => Math.min(v + 1, labels.length - 1))} className="h-12 rounded-2xl">Continue<ArrowRight className="ml-2 size-4" /></Button>
+                  : <Button type="submit" disabled={isSubmitting} className="h-12 rounded-2xl">Finish setup<Check className="ml-2 size-4" /></Button>}
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
+  );
+}
+
+function StepShell({ title, description, icon, children }: any) {
+  return (
+    <div className="rounded-[1.5rem] border border-blue-100 bg-blue-50/50 p-5 sm:p-7">
+      <div className="mb-6 flex items-start gap-4">
+        <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white text-primary shadow-sm">{icon}</div>
+        <div><h2 className="text-2xl font-bold text-slate-950">{title}</h2><p className="mt-1 text-slate-600">{description}</p></div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Field({ label, props, type = "text", value, disabled }: any) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Input type={type} defaultValue={value} disabled={disabled} className="h-13 rounded-2xl border-blue-100 bg-white" {...props} />
+    </div>
+  );
+}
