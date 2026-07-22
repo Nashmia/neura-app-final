@@ -1,7 +1,7 @@
 import "server-only";
 import { GoogleGenAI, Type } from "@google/genai";
 
-const QUIZ_MODEL = "gemini-2.5-flash";
+const QUIZ_MODEL = "gemini-flash-latest";
 
 let client: GoogleGenAI | null = null;
 
