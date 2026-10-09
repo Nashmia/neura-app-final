@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
-import { createId, getCollections, withoutMongoId } from "@/lib/db";
+import { createId, findPatientForUser, getCollections } from "@/lib/db";
 import { runQuizTurn } from "@/lib/gemini";
 
 const schema = z.object({
@@ -15,8 +15,9 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
 
-  const { patients, quizSessions } = await getCollections();
-  const patient = await patients.findOne({ userId: user.id }, withoutMongoId);
+  const collections = await getCollections();
+  const { quizSessions } = collections;
+  const patient = await findPatientForUser(collections, user.id);
   if (!patient) return NextResponse.json({ error: "Complete onboarding first." }, { status: 400 });
 
   const questionCount = Math.min(Math.max(patient.quizLength || 5, 3), 8);

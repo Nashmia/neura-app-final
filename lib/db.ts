@@ -3,7 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 import { getMongoDb } from "@/lib/mongodb";
-import type { User, Patient, Medication, QuizSession } from "@/lib/types";
+import type { User, Patient, Medication, QuizSession, Appointment, JournalEntry, KnowledgeChunk } from "@/lib/types";
 
 /**
  * Data access layer (dual-mode).
@@ -39,13 +39,32 @@ export interface DataCollection<T> {
 
 const dbPath = path.join(process.cwd(), "data", "db.json");
 type Row = Record<string, unknown>;
-type FileShape = { users: Row[]; patients: Row[]; medications: Row[]; quizSessions: Row[] };
+type FileShape = {
+  users: Row[];
+  patients: Row[];
+  medications: Row[];
+  quizSessions: Row[];
+  appointments: Row[];
+  journalEntries: Row[];
+  knowledgeChunks: Row[];
+};
+
+const emptyFileShape: FileShape = {
+  users: [],
+  patients: [],
+  medications: [],
+  quizSessions: [],
+  appointments: [],
+  journalEntries: [],
+  knowledgeChunks: [],
+};
 
 async function readFile(): Promise<FileShape> {
   try {
-    return JSON.parse(await fs.readFile(dbPath, "utf8")) as FileShape;
+    const data = JSON.parse(await fs.readFile(dbPath, "utf8")) as Partial<FileShape>;
+    return { ...emptyFileShape, ...data };
   } catch {
-    return { users: [], patients: [], medications: [], quizSessions: [] };
+    return { ...emptyFileShape };
   }
 }
 
@@ -54,9 +73,12 @@ async function writeFile(data: FileShape): Promise<void> {
   await fs.writeFile(dbPath, JSON.stringify(data, null, 2), "utf8");
 }
 
-/** Every key in the filter must match the document (equality only). */
+/** Every key in the filter must match the document (equality, or array-contains when the field is an array). */
 function matches(doc: Row, filter: Record<string, unknown>): boolean {
-  return Object.keys(filter).every((key) => doc[key] === filter[key]);
+  return Object.keys(filter).every((key) => {
+    const value = doc[key];
+    return Array.isArray(value) ? value.includes(filter[key]) : value === filter[key];
+  });
 }
 
 class JsonCollection<T> implements DataCollection<T> {
@@ -118,6 +140,9 @@ export async function getCollections(): Promise<{
   patients: DataCollection<Patient>;
   medications: DataCollection<Medication>;
   quizSessions: DataCollection<QuizSession>;
+  appointments: DataCollection<Appointment>;
+  journalEntries: DataCollection<JournalEntry>;
+  knowledgeChunks: DataCollection<KnowledgeChunk>;
 }> {
   if (!process.env.MONGODB_URI) {
     // Local development fallback — no database required.
@@ -126,6 +151,9 @@ export async function getCollections(): Promise<{
       patients: new JsonCollection<Patient>("patients"),
       medications: new JsonCollection<Medication>("medications"),
       quizSessions: new JsonCollection<QuizSession>("quizSessions"),
+      appointments: new JsonCollection<Appointment>("appointments"),
+      journalEntries: new JsonCollection<JournalEntry>("journalEntries"),
+      knowledgeChunks: new JsonCollection<KnowledgeChunk>("knowledgeChunks"),
     };
   }
 
@@ -135,6 +163,9 @@ export async function getCollections(): Promise<{
     patients: db.collection("patients") as unknown as DataCollection<Patient>,
     medications: db.collection("medications") as unknown as DataCollection<Medication>,
     quizSessions: db.collection("quizSessions") as unknown as DataCollection<QuizSession>,
+    appointments: db.collection("appointments") as unknown as DataCollection<Appointment>,
+    journalEntries: db.collection("journalEntries") as unknown as DataCollection<JournalEntry>,
+    knowledgeChunks: db.collection("knowledgeChunks") as unknown as DataCollection<KnowledgeChunk>,
   };
 }
 
@@ -143,4 +174,17 @@ export const withoutMongoId = { projection: { _id: 0 } } as const;
 
 export function createId(prefix: string) {
   return `${prefix}_${randomUUID()}`;
+}
+
+/**
+ * Look up the patient the given user is a caregiver for (as creator or as an
+ * invited co-caregiver). A patient can have multiple caregiverIds, so this
+ * goes through the array-contains matching in `matches()`/Mongo instead of
+ * the old `{ userId }` equality lookup, which only ever matched the creator.
+ */
+export async function findPatientForUser(
+  collections: { patients: DataCollection<Patient> },
+  userId: string
+): Promise<Patient | null> {
+  return collections.patients.findOne({ caregiverIds: userId }, withoutMongoId);
 }

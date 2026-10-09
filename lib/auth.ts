@@ -47,3 +47,25 @@ export async function clearSession() {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
 }
+
+const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // invite links expire after 7 days
+
+export function createInviteCode(patientId: string) {
+  const payload = `${patientId}.${Date.now()}`;
+  const signature = crypto.createHmac("sha256", SECRET).update(payload).digest("hex");
+  return `${payload}.${signature}`;
+}
+
+/** Returns the patientId encoded in the code, or null if it's missing, forged, or expired. */
+export function verifyInviteCode(code?: string | null): string | null {
+  if (!code) return null;
+  const parts = code.split(".");
+  if (parts.length !== 3) return null;
+  const [patientId, timestamp, signature] = parts;
+  const payload = `${patientId}.${timestamp}`;
+  const expected = crypto.createHmac("sha256", SECRET).update(payload).digest("hex");
+  if (signature.length !== expected.length) return null;
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+  if (!Number.isFinite(Number(timestamp)) || Date.now() - Number(timestamp) > INVITE_TTL_MS) return null;
+  return patientId;
+}

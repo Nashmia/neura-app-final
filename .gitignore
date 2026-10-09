@@ -16,3 +16,6 @@ pnpm-debug.log*
 # Claude Code local runtime state (keep .claude/launch.json)
 .claude/scheduled_tasks.lock
 .claude/worktrees/
+
+# Resume cache for training/generate_dataset.ts — internal bookkeeping, not a deliverable.
+training/.dataset-cache.json

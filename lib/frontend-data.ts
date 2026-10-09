@@ -1,4 +1,4 @@
-import { Activity, Brain, CalendarCheck, HeartPulse, Home, LayoutDashboard, MessageCircle, Pill, ShieldCheck, UserRound } from "lucide-react";
+import { Activity, Brain, CalendarCheck, HeartPulse, Home, LayoutDashboard, MessageCircle, Pill, Settings, ShieldCheck, Sparkles, UserRound } from "lucide-react";
 
 export const landingFeatures = [
   { icon: Brain, title: "Cognitive Quizzes", description: "Large, calm, one-question screens for supervised memory and recognition activities." },
@@ -28,9 +28,13 @@ export const faqs = [
 
 export const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: MessageCircle, label: "Chat", href: "/chat" },
+  { icon: MessageCircle, label: "Cognitive Quiz", href: "/chat" },
+  { icon: Sparkles, label: "Care Assistant", href: "/assistant" },
   { icon: Pill, label: "Medication", href: "/medications" },
+  { icon: CalendarCheck, label: "Appointments", href: "/appointments" },
+  { icon: HeartPulse, label: "Journal", href: "/journal" },
   { icon: UserRound, label: "Onboarding", href: "/onboarding" },
+  { icon: Settings, label: "Settings", href: "/settings" },
   { icon: Home, label: "Landing", href: "/" },
 ];
 

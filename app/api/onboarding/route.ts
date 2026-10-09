@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
-import { createId, getCollections, withoutMongoId } from "@/lib/db";
+import { createId, findPatientForUser, getCollections } from "@/lib/db";
 import type { Contact } from "@/lib/types";
 
 const schema = z.object({
@@ -48,8 +48,9 @@ export async function POST(request: Request) {
   const familyCount = contacts.filter((c) => c.type === "Family").length;
   const friendsCount = contacts.filter((c) => c.type === "Friend").length;
 
-  const { patients, medications } = await getCollections();
-  const existing = await patients.findOne({ userId: user.id }, withoutMongoId);
+  const collections = await getCollections();
+  const { patients, medications } = collections;
+  const existing = await findPatientForUser(collections, user.id);
   const now = new Date().toISOString();
 
   if (existing) {
@@ -73,6 +74,7 @@ export async function POST(request: Request) {
   const patient = {
     id: createId("patient"),
     userId: user.id,
+    caregiverIds: [user.id],
     name: parsed.data.patientName,
     age: parsed.data.age,
     gender: parsed.data.gender,

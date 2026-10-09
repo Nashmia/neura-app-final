@@ -2,6 +2,7 @@ import "server-only";
 import { GoogleGenAI, Type } from "@google/genai";
 
 const QUIZ_MODEL = "gemini-flash-latest";
+const ASSISTANT_MODEL = "gemini-flash-latest";
 
 let client: GoogleGenAI | null = null;
 
@@ -53,4 +54,21 @@ export async function runQuizTurn(systemInstruction: string, history: HistoryTur
   const text = response.text;
   if (!text) throw new Error("Empty response from Gemini.");
   return JSON.parse(text) as QuizTurn;
+}
+
+export async function runAssistantTurn(systemInstruction: string, history: HistoryTurn[]): Promise<string> {
+  const ai = getClient();
+
+  const response = await ai.models.generateContent({
+    model: ASSISTANT_MODEL,
+    contents: history.map((turn) => ({ role: turn.role, parts: [{ text: turn.text }] })),
+    config: {
+      systemInstruction,
+      temperature: 0.4,
+    },
+  });
+
+  const text = response.text;
+  if (!text) throw new Error("Empty response from Gemini.");
+  return text;
 }

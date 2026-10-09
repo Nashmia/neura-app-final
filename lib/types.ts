@@ -19,6 +19,7 @@ export type Contact = {
 export type Patient = {
   id: string;
   userId: string;
+  caregiverIds: string[];
   name: string;
   age: number;
   gender: string;
@@ -53,9 +54,45 @@ export type QuizSession = {
   createdAt: string;
 };
 
+export type Appointment = {
+  id: string;
+  userId: string;
+  patientId: string;
+  title: string;
+  type: "Doctor" | "Therapy" | "Other";
+  date: string; // YYYY-MM-DD
+  time: string;
+  location?: string;
+  notes?: string;
+  status: "Upcoming" | "Cancelled";
+  createdAt: string;
+};
+
+export type MoodTag = "Calm" | "Anxious" | "Confused" | "Happy" | "Tired";
+
+export type JournalEntry = {
+  id: string;
+  userId: string;
+  patientId: string;
+  text: string;
+  moodTag?: MoodTag;
+  createdAt: string;
+};
+
+export type KnowledgeChunk = {
+  id: string;
+  source: string;
+  title: string;
+  text: string;
+  embedding: number[];
+};
+
 export type DB = {
   users: User[];
   patients: Patient[];
   medications: Medication[];
   quizSessions: QuizSession[];
+  appointments: Appointment[];
+  journalEntries: JournalEntry[];
+  knowledgeChunks: KnowledgeChunk[];
 };
