@@ -7,6 +7,14 @@ import { GoogleGenAI, Type } from "@google/genai";
 const QUIZ_MODEL = "gemini-3.8-flash";
 const ASSISTANT_MODEL = "gemini-3.8-flash";
 
+// The free Gemini tier caps gemini-3.8-flash at a very low requests-per-day
+// quota (20/day at time of writing) — easily exhausted by normal use, not
+// just testing. gemini-flash-lite-latest has its own separate quota, so on
+// RESOURCE_EXHAUSTED we fail over to it once rather than surfacing a hard
+// error to the caregiver. This is a stopgap for the free tier, not a fix —
+// the real fix is enabling billing on the Gemini API key for production use.
+const FALLBACK_MODEL = "gemini-flash-lite-latest";
+
 let client: GoogleGenAI | null = null;
 
 function getClient(): GoogleGenAI {
@@ -24,6 +32,12 @@ function getClient(): GoogleGenAI {
 function isTransient(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return message.includes('"code":503') || message.includes("UNAVAILABLE") || message.includes("high demand");
+}
+
+/** True for a daily/per-minute quota being exhausted — retrying the same model won't help, but a different model's separate quota might. */
+function isQuotaExceeded(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('"code":429') || message.includes("RESOURCE_EXHAUSTED");
 }
 
 /**
@@ -44,6 +58,16 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 4): Promise<T> {
     }
   }
   throw lastError;
+}
+
+/** Run `fn` against the primary model; on quota exhaustion, retry once against FALLBACK_MODEL. */
+async function withQuotaFallback<T>(fn: (model: string) => Promise<T>, primaryModel: string): Promise<T> {
+  try {
+    return await withRetry(() => fn(primaryModel));
+  } catch (error) {
+    if (!isQuotaExceeded(error)) throw error;
+    return await withRetry(() => fn(FALLBACK_MODEL));
+  }
 }
 
 export type HistoryTurn = { role: "user" | "model"; text: string };
@@ -69,17 +93,19 @@ export async function runQuizTurn(systemInstruction: string, history: HistoryTur
   const ai = getClient();
   const contents = history.length ? history : [{ role: "user" as const, text: "Please begin the check-in." }];
 
-  const response = await withRetry(() =>
-    ai.models.generateContent({
-      model: QUIZ_MODEL,
-      contents: contents.map((turn) => ({ role: turn.role, parts: [{ text: turn.text }] })),
-      config: {
-        systemInstruction,
-        responseMimeType: "application/json",
-        responseSchema: quizResponseSchema,
-        temperature: 0.6,
-      },
-    })
+  const response = await withQuotaFallback(
+    (model) =>
+      ai.models.generateContent({
+        model,
+        contents: contents.map((turn) => ({ role: turn.role, parts: [{ text: turn.text }] })),
+        config: {
+          systemInstruction,
+          responseMimeType: "application/json",
+          responseSchema: quizResponseSchema,
+          temperature: 0.6,
+        },
+      }),
+    QUIZ_MODEL
   );
 
   const text = response.text;
@@ -90,15 +116,17 @@ export async function runQuizTurn(systemInstruction: string, history: HistoryTur
 export async function runAssistantTurn(systemInstruction: string, history: HistoryTurn[]): Promise<string> {
   const ai = getClient();
 
-  const response = await withRetry(() =>
-    ai.models.generateContent({
-      model: ASSISTANT_MODEL,
-      contents: history.map((turn) => ({ role: turn.role, parts: [{ text: turn.text }] })),
-      config: {
-        systemInstruction,
-        temperature: 0.4,
-      },
-    })
+  const response = await withQuotaFallback(
+    (model) =>
+      ai.models.generateContent({
+        model,
+        contents: history.map((turn) => ({ role: turn.role, parts: [{ text: turn.text }] })),
+        config: {
+          systemInstruction,
+          temperature: 0.4,
+        },
+      }),
+    ASSISTANT_MODEL
   );
 
   const text = response.text;
