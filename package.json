@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed:kb": "tsx scripts/seed-knowledge-base.ts",
-    "gen:dataset": "tsx training/generate_dataset.ts"
+    "seed:kb": "tsx --conditions=react-server scripts/seed-knowledge-base.ts",
+    "gen:dataset": "tsx --conditions=react-server training/generate_dataset.ts"
   },
   "dependencies": {
     "@google/genai": "^1.52.0",

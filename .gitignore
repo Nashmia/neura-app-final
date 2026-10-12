@@ -19,3 +19,6 @@ pnpm-debug.log*
 
 # Resume cache for training/generate_dataset.ts — internal bookkeeping, not a deliverable.
 training/.dataset-cache.json
+
+.vercel
+.env*
