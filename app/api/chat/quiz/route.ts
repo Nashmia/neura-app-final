@@ -4,6 +4,10 @@ import { getCurrentUser } from "@/lib/auth";
 import { createId, findPatientForUser, getCollections } from "@/lib/db";
 import { runQuizTurn } from "@/lib/gemini";
 
+// A single Gemini call can occasionally take longer than Vercel's default
+// serverless timeout, especially under provider load — give it more room.
+export const maxDuration = 60;
+
 const schema = z.object({
   history: z.array(z.object({ role: z.enum(["user", "model"]), text: z.string() })),
 });

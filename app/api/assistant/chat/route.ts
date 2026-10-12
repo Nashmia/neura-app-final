@@ -6,6 +6,11 @@ import { cosineSimilarity, embedText } from "@/lib/embeddings";
 import { runAssistantTurn, type HistoryTurn } from "@/lib/gemini";
 import { runFinetunedTurn } from "@/lib/finetuned-model";
 
+// This route does an embedding call, several DB reads, and a generation call
+// in sequence — comfortably over Vercel's default serverless timeout when
+// Gemini is slow to respond, so give it more headroom.
+export const maxDuration = 60;
+
 /**
  * Which model actually generates the assistant's reply. Defaults to Gemini.
  * Set ASSISTANT_MODEL_PROVIDER=finetuned to use the fine-tuned model hosted

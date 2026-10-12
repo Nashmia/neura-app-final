@@ -1,8 +1,11 @@
 import "server-only";
 import { GoogleGenAI, Type } from "@google/genai";
 
-const QUIZ_MODEL = "gemini-flash-latest";
-const ASSISTANT_MODEL = "gemini-flash-latest";
+// "gemini-flash-latest" is currently returning sustained 503 "high demand"
+// errors for anything but trivial prompts (confirmed independent of Vercel —
+// same failure calling directly). Pinning to the current model avoids it.
+const QUIZ_MODEL = "gemini-3.8-flash";
+const ASSISTANT_MODEL = "gemini-3.8-flash";
 
 let client: GoogleGenAI | null = null;
 
@@ -15,6 +18,32 @@ function getClient(): GoogleGenAI {
   }
   if (!client) client = new GoogleGenAI({ apiKey });
   return client;
+}
+
+/** True for Gemini's "model currently experiencing high demand" 503s — worth a retry, unlike a bad request or auth failure. */
+function isTransient(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('"code":503') || message.includes("UNAVAILABLE") || message.includes("high demand");
+}
+
+/**
+ * Gemini's free tier returns transient 503s under load fairly often — Google's
+ * own error message calls these "usually temporary". Retry a couple of times
+ * with a short backoff before giving up, so a brief spike doesn't surface as
+ * a hard failure to the caregiver.
+ */
+async function withRetry<T>(fn: () => Promise<T>, attempts = 4): Promise<T> {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (!isTransient(error) || i === attempts - 1) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 3000 * (i + 1)));
+    }
+  }
+  throw lastError;
 }
 
 export type HistoryTurn = { role: "user" | "model"; text: string };
@@ -40,16 +69,18 @@ export async function runQuizTurn(systemInstruction: string, history: HistoryTur
   const ai = getClient();
   const contents = history.length ? history : [{ role: "user" as const, text: "Please begin the check-in." }];
 
-  const response = await ai.models.generateContent({
-    model: QUIZ_MODEL,
-    contents: contents.map((turn) => ({ role: turn.role, parts: [{ text: turn.text }] })),
-    config: {
-      systemInstruction,
-      responseMimeType: "application/json",
-      responseSchema: quizResponseSchema,
-      temperature: 0.6,
-    },
-  });
+  const response = await withRetry(() =>
+    ai.models.generateContent({
+      model: QUIZ_MODEL,
+      contents: contents.map((turn) => ({ role: turn.role, parts: [{ text: turn.text }] })),
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: quizResponseSchema,
+        temperature: 0.6,
+      },
+    })
+  );
 
   const text = response.text;
   if (!text) throw new Error("Empty response from Gemini.");
@@ -59,14 +90,16 @@ export async function runQuizTurn(systemInstruction: string, history: HistoryTur
 export async function runAssistantTurn(systemInstruction: string, history: HistoryTurn[]): Promise<string> {
   const ai = getClient();
 
-  const response = await ai.models.generateContent({
-    model: ASSISTANT_MODEL,
-    contents: history.map((turn) => ({ role: turn.role, parts: [{ text: turn.text }] })),
-    config: {
-      systemInstruction,
-      temperature: 0.4,
-    },
-  });
+  const response = await withRetry(() =>
+    ai.models.generateContent({
+      model: ASSISTANT_MODEL,
+      contents: history.map((turn) => ({ role: turn.role, parts: [{ text: turn.text }] })),
+      config: {
+        systemInstruction,
+        temperature: 0.4,
+      },
+    })
+  );
 
   const text = response.text;
   if (!text) throw new Error("Empty response from Gemini.");
