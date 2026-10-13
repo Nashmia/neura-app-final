@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
 import { CheckCircle2, Loader2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,7 +44,7 @@ function JoinContent() {
         <div className="animate-blob absolute left-1/4 top-16 size-80 bg-emerald-400/20 blur-3xl" />
         <div className="animate-blob anim-delay-3 absolute right-1/4 bottom-16 size-80 bg-teal-400/20 blur-3xl" />
       </div>
-      <motion.div initial={{ opacity: 0, scale: 0.92, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
+      <div className="animate-rise w-full max-w-md">
         <Card className="rounded-[2rem] border-blue-100 bg-white shadow-2xl shadow-blue-600/10">
           <CardContent className="p-8 text-center">
             <Logo className="mx-auto mb-6 justify-center" />
@@ -77,7 +76,7 @@ function JoinContent() {
             )}
           </CardContent>
         </Card>
-      </motion.div>
+      </div>
     </main>
   );
 }

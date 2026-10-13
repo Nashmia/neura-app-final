@@ -141,7 +141,7 @@ export default function OnboardingPage() {
             </div>
             <form onSubmit={handleSubmit(submit)}>
               <div>
-                <motion.div key={step} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.28 }}>
+                <div key={step} className="animate-rise">
                   {step === 0 && (
                     <StepShell title="Caregiver Information" description="Your account is already active. Add patient details next." icon={<UserRound className="size-6" />}>
                       <div className="grid gap-5 sm:grid-cols-2">
@@ -217,7 +217,7 @@ export default function OnboardingPage() {
                       </div>
                     </StepShell>
                   )}
-                </motion.div>
+                </div>
               </div>
               <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
                 <Button type="button" variant="outline" onClick={() => setStep((v) => Math.max(v - 1, 0))} disabled={step === 0} className="h-12 rounded-2xl bg-white"><ArrowLeft className="mr-2 size-4" />Back</Button>

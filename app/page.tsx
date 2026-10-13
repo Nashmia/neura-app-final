@@ -1,14 +1,9 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, Menu, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/layout/logo";
 import { faqs, howItWorks, landingFeatures, testimonials } from "@/lib/frontend-data";
-
-const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
 
 const stats = [
   { value: "3 steps", label: "From sign-up to a ready dashboard" },
@@ -49,7 +44,7 @@ export default function LandingPage() {
           <div className="animate-float-slow absolute bottom-0 left-1/3 size-72 rounded-full bg-teal-300/10 blur-3xl" />
         </div>
         <div className="container-neura grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
-          <motion.div initial="hidden" animate="visible" variants={fadeUp} transition={{ duration: 0.55 }} className="max-w-3xl">
+          <div className="animate-rise max-w-3xl">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm">
               <Sparkles className="size-4" /> AI-powered dementia care support
             </div>
@@ -62,9 +57,9 @@ export default function LandingPage() {
             <div className="mt-8 grid gap-4 text-sm text-slate-600 sm:grid-cols-3">
               {['Large text UI','Medication tracking','Caregiver dashboard'].map((item) => <div key={item} className="flex items-center gap-2"><CheckCircle2 className="size-5 text-emerald-500" />{item}</div>)}
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}>
+          <div className="animate-rise anim-delay-1">
             <Card className="soft-card animate-float-slow overflow-hidden">
               <CardContent className="p-5 sm:p-7">
                 <div className="rounded-3xl bg-gradient-to-br from-blue-600 to-cyan-500 p-6 text-white">
@@ -77,13 +72,13 @@ export default function LandingPage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      <section className="section-padding pb-4 pt-6"><div className="container-neura"><div className="grid gap-4 rounded-[2rem] border border-blue-100 bg-white/70 p-6 shadow-sm backdrop-blur sm:grid-cols-2 lg:grid-cols-4 lg:p-8">{stats.map((stat, index) => <motion.div key={stat.label} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:.4,delay:index*.08}} className="text-center lg:text-left"><p className="text-4xl font-extrabold text-gradient sm:text-5xl">{stat.value}</p><p className="mt-2 text-sm font-semibold text-slate-600">{stat.label}</p></motion.div>)}</div></div></section>
+      <section className="section-padding pb-4 pt-6"><div className="container-neura"><div className="grid gap-4 rounded-[2rem] border border-blue-100 bg-white/70 p-6 shadow-sm backdrop-blur sm:grid-cols-2 lg:grid-cols-4 lg:p-8">{stats.map((stat) => <div key={stat.label} className="text-center lg:text-left"><p className="text-4xl font-extrabold text-gradient sm:text-5xl">{stat.value}</p><p className="mt-2 text-sm font-semibold text-slate-600">{stat.label}</p></div>)}</div></div></section>
 
-      <section id="features" className="section-padding py-20"><div className="container-neura"><SectionHeading eyebrow="Features" title="Everything caregivers need in one calm workspace." description="Neura combines daily care tools with a simple patient experience designed for accessibility." /><div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{landingFeatures.map((feature,index)=>{const Icon=feature.icon;return <motion.div key={feature.title} initial="hidden" whileInView="visible" viewport={{once:true,margin:'-80px'}} variants={fadeUp} transition={{duration:.45,delay:index*.08}}><Card className="h-full rounded-3xl border-blue-100 bg-white/90 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-600/10"><CardContent className="p-6"><div className="mb-5 grid size-12 place-items-center rounded-2xl bg-blue-50 text-blue-600"><Icon className="size-6" /></div><h3 className="text-lg font-semibold text-slate-950">{feature.title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{feature.description}</p></CardContent></Card></motion.div>})}</div></div></section>
+      <section id="features" className="section-padding py-20"><div className="container-neura"><SectionHeading eyebrow="Features" title="Everything caregivers need in one calm workspace." description="Neura combines daily care tools with a simple patient experience designed for accessibility." /><div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{landingFeatures.map((feature)=>{const Icon=feature.icon;return <div key={feature.title}><Card className="h-full rounded-3xl border-blue-100 bg-white/90 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-600/10"><CardContent className="p-6"><div className="mb-5 grid size-12 place-items-center rounded-2xl bg-blue-50 text-blue-600"><Icon className="size-6" /></div><h3 className="text-lg font-semibold text-slate-950">{feature.title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{feature.description}</p></CardContent></Card></div>})}</div></div></section>
 
       <section id="how" className="section-padding py-20"><div className="container-neura"><SectionHeading eyebrow="How it works" title="A simple flow for daily dementia care." description="Designed for caregivers who need structure without complexity." /><div className="mt-12 grid gap-6 lg:grid-cols-3">{howItWorks.map((step,index)=><Card key={step.title} className="rounded-3xl border-blue-100 bg-white shadow-sm"><CardContent className="p-7"><div className="mb-6 grid size-12 place-items-center rounded-full bg-primary text-lg font-bold text-white">{index+1}</div><h3 className="text-xl font-semibold text-slate-950">{step.title}</h3><p className="mt-3 leading-7 text-slate-600">{step.description}</p></CardContent></Card>)}</div></div></section>
 
