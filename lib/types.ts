@@ -5,6 +5,15 @@ export type User = {
   phone: string;
   passwordHash: string;
   createdAt: string;
+  // Bumped on password reset so every existing session cookie stops working.
+  sessionVersion?: number;
+  // Login lockout after repeated wrong passwords.
+  loginFailures?: number;
+  loginLockedUntil?: string;
+  // Password reset link: only a SHA-256 of the emailed token is stored.
+  resetTokenHash?: string;
+  resetTokenExpires?: string;
+  resetRequestedAt?: string;
 };
 
 export type Contact = {
