@@ -82,7 +82,7 @@ export default function AssistantPage() {
 
   return (
     <main className="soft-gradient relative min-h-screen overflow-hidden px-4 py-6 sm:py-10">
-      <div className="mx-auto flex h-[calc(100vh-3rem)] max-w-3xl flex-col sm:h-[calc(100vh-5rem)]">
+      <div className="mx-auto flex h-[calc(100dvh-3rem)] max-w-3xl flex-col sm:h-[calc(100dvh-5rem)]">
         <header className="mb-6 flex items-center justify-between">
           <Logo />
           <Button asChild variant="outline" className="rounded-full bg-white">

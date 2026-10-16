@@ -19,10 +19,10 @@ import { api, resizeImageToDataUrl } from "@/lib/utils";
 const labels = ["Caregiver Information", "Patient Details", "Family & Friends", "Quiz Setup"];
 
 const schema = z.object({
-  patientName: z.string().min(2),
-  age: z.coerce.number().min(1).max(120),
-  gender: z.string().min(2),
-  dementiaStage: z.string().min(2),
+  patientName: z.string().trim().min(2, "Enter the patient's name."),
+  age: z.coerce.number().min(1, "Enter an age between 1 and 120.").max(120, "Enter an age between 1 and 120."),
+  gender: z.string().trim().min(2, "Enter the patient's gender."),
+  dementiaStage: z.string().trim().min(2, "Enter the dementia stage, e.g. Mild."),
   notes: z.string().optional(),
   contacts: z
     .array(
@@ -33,8 +33,8 @@ const schema = z.object({
       })
     )
     .default([]),
-  quizLength: z.coerce.number().min(3).max(20),
-  quizDifficulty: z.string().min(2),
+  quizLength: z.coerce.number().min(3, "Choose between 3 and 20 questions.").max(20, "Choose between 3 and 20 questions."),
+  quizDifficulty: z.string().trim().min(2, "Enter a difficulty, e.g. Easy."),
 });
 type Values = any;
 
@@ -42,23 +42,32 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
-  const { register, control, watch, handleSubmit, formState: { isSubmitting } } = useForm<Values>({
+  const { register, control, watch, handleSubmit, trigger, formState: { isSubmitting, errors } } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
-      patientName: "Maryam Ahmed",
-      age: 72,
-      gender: "Female",
-      dementiaStage: "Mild",
-      notes: "Prefers calm instructions and familiar family photos.",
-      contacts: [
-        { name: "Sara Ahmed", relationship: "Daughter", type: "Family", photo: "" },
-        { name: "Imran Ahmed", relationship: "Son", type: "Family", photo: "" },
-        { name: "Bilal Khan", relationship: "Family friend", type: "Friend", photo: "" },
-      ],
+      patientName: "",
+      age: "",
+      gender: "",
+      dementiaStage: "",
+      notes: "",
+      contacts: [],
       quizLength: 4,
       quizDifficulty: "Easy",
     },
   });
+  const patientFields = ["patientName", "age", "gender", "dementiaStage"];
+
+  // Patient details are required, so check them before leaving that step.
+  async function next() {
+    if (step === 1 && !(await trigger(patientFields))) return;
+    setStep((v) => Math.min(v + 1, labels.length - 1));
+  }
+
+  // If anything is still invalid at the end, jump back to the step that needs fixing.
+  function onInvalid(formErrors: Record<string, unknown>) {
+    setStep(patientFields.some((f) => f in formErrors) ? 1 : 3);
+    setError("Please fix the highlighted fields.");
+  }
 
   async function onPhoto(fieldId: string, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -135,7 +144,7 @@ export default function OnboardingPage() {
               </div>
               <div className="h-3 overflow-hidden rounded-full bg-blue-50"><div className="h-full rounded-full bg-periwinkle transition-all duration-500" style={{ width: `${progress}%` }} /></div>
             </div>
-            <form onSubmit={handleSubmit(submit)}>
+            <form onSubmit={handleSubmit(submit, onInvalid)}>
               <div>
                 <div key={step} className="animate-rise">
                   {step === 0 && (
@@ -149,10 +158,10 @@ export default function OnboardingPage() {
                   {step === 1 && (
                     <StepShell title="Patient Details" description="Add basic patient information for the dashboard and quiz context." icon={<UserRound className="size-6" />}>
                       <div className="grid gap-5 sm:grid-cols-2">
-                        <Field label="Patient name" props={register("patientName")} />
-                        <Field label="Age" type="number" props={register("age")} />
-                        <Field label="Gender" props={register("gender")} />
-                        <Field label="Dementia stage" props={register("dementiaStage")} />
+                        <Field label="Patient name" placeholder="Patient's full name" error={errors.patientName?.message} props={register("patientName")} />
+                        <Field label="Age" type="number" placeholder="e.g. 72" error={errors.age?.message} props={register("age")} />
+                        <Field label="Gender" placeholder="e.g. Female" error={errors.gender?.message} props={register("gender")} />
+                        <Field label="Dementia stage" placeholder="e.g. Mild, Moderate or Severe" error={errors.dementiaStage?.message} props={register("dementiaStage")} />
                         <div className="space-y-2 sm:col-span-2"><Label>Medical notes</Label><Textarea {...register("notes")} /></div>
                       </div>
                     </StepShell>
@@ -189,8 +198,8 @@ export default function OnboardingPage() {
                                   {photo && <button type="button" onClick={() => removePhoto(field.id)} className="text-xs font-medium text-slate-500 transition hover:text-red-600">Remove photo</button>}
                                 </div>
                                 <div className="grid flex-1 gap-3 sm:grid-cols-2">
-                                  <div className="space-y-1.5"><Label>Full name</Label><Input placeholder="e.g. Sara Ahmed" className="h-12" {...register(`contacts.${index}.name`)} /></div>
-                                  <div className="space-y-1.5"><Label>Relationship</Label><Input placeholder="e.g. Daughter" className="h-12" {...register(`contacts.${index}.relationship`)} /></div>
+                                  <div className="space-y-1.5"><Label>Full name</Label><Input placeholder="Full name" className="h-12" {...register(`contacts.${index}.name`)} /></div>
+                                  <div className="space-y-1.5"><Label>Relationship</Label><Input placeholder="e.g. Daughter, Son, Friend" className="h-12" {...register(`contacts.${index}.relationship`)} /></div>
                                 </div>
                               </div>
                               <input type="hidden" {...register(`contacts.${index}.type`)} />
@@ -208,8 +217,8 @@ export default function OnboardingPage() {
                   {step === 3 && (
                     <StepShell title="Quiz Setup" description="Prepare recognition-based quiz preferences." icon={<UserRound className="size-6" />}>
                       <div className="grid gap-5 sm:grid-cols-2">
-                        <Field label="Preferred quiz length" type="number" props={register("quizLength")} />
-                        <Field label="Quiz difficulty" props={register("quizDifficulty")} />
+                        <Field label="Preferred quiz length" type="number" error={errors.quizLength?.message} props={register("quizLength")} />
+                        <Field label="Quiz difficulty" placeholder="e.g. Easy" error={errors.quizDifficulty?.message} props={register("quizDifficulty")} />
                       </div>
                     </StepShell>
                   )}
@@ -218,8 +227,8 @@ export default function OnboardingPage() {
               <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
                 <Button type="button" variant="outline" onClick={() => setStep((v) => Math.max(v - 1, 0))} disabled={step === 0} className="h-12 rounded-2xl bg-white"><ArrowLeft className="mr-2 size-4" />Back</Button>
                 {step < labels.length - 1
-                  ? <Button type="button" onClick={() => setStep((v) => Math.min(v + 1, labels.length - 1))} className="h-12 rounded-2xl">Continue<ArrowRight className="ml-2 size-4" /></Button>
-                  : <Button type="submit" disabled={isSubmitting} className="h-12">Finish setup<Check className="ml-2 size-4" /></Button>}
+                  ? <Button key="next" type="button" onClick={next} className="h-12 rounded-2xl">Continue<ArrowRight className="ml-2 size-4" /></Button>
+                  : <Button key="submit" type="submit" disabled={isSubmitting} className="h-12">Finish setup<Check className="ml-2 size-4" /></Button>}
               </div>
             </form>
           </CardContent>
@@ -241,11 +250,12 @@ function StepShell({ title, description, icon, children }: any) {
   );
 }
 
-function Field({ label, props, type = "text", value, disabled }: any) {
+function Field({ label, props, type = "text", value, disabled, placeholder, error }: any) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Input type={type} defaultValue={value} disabled={disabled} className="h-13" {...props} />
+      <Input type={type} defaultValue={value} disabled={disabled} placeholder={placeholder} aria-invalid={error ? true : undefined} className={error ? "h-13 border-red-300" : "h-13"} {...props} />
+      {error && <p className="text-sm font-medium text-red-600">{error}</p>}
     </div>
   );
 }

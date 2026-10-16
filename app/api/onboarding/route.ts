@@ -49,7 +49,7 @@ export async function POST(request: Request) {
   const friendsCount = contacts.filter((c) => c.type === "Friend").length;
 
   const collections = await getCollections();
-  const { patients, medications } = collections;
+  const { patients } = collections;
   const existing = await findPatientForUser(collections, user.id);
   const now = new Date().toISOString();
 
@@ -90,11 +90,6 @@ export async function POST(request: Request) {
   };
 
   await patients.insertOne(patient);
-  await medications.insertMany([
-    { id: createId("med"), userId: user.id, patientId: patient.id, name: "Donepezil", dosage: "5mg", time: "08:00 AM", status: "Taken" },
-    { id: createId("med"), userId: user.id, patientId: patient.id, name: "Memantine", dosage: "10mg", time: "02:00 PM", status: "Taken" },
-    { id: createId("med"), userId: user.id, patientId: patient.id, name: "Vitamin D", dosage: "1000 IU", time: "08:00 PM", status: "Pending" },
-  ]);
 
   return NextResponse.json({ patient });
 }

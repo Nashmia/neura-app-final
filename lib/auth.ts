@@ -1,5 +1,5 @@
 import "server-only";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import crypto from "crypto";
 import { promisify } from "util";
 import { getCollections, withoutMongoId } from "@/lib/db";
@@ -89,10 +89,13 @@ export async function getCurrentUser() {
 /** `remember: false` sets a browser-session cookie that is dropped when the browser closes. */
 export async function setSession(user: Pick<User, "id" | "sessionVersion">, remember = true) {
   const cookieStore = await cookies();
+  // Secure-only over HTTPS (always the case on Vercel). Safari drops secure cookies on plain
+  // http://, so a production build opened over http (e.g. from a phone on the LAN) would never log in.
+  const secure = (await headers()).get("x-forwarded-proto")?.split(",")[0].trim() === "https";
   cookieStore.set(COOKIE_NAME, createSessionValue(user.id, user.sessionVersion ?? 0), {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure,
     path: "/",
     ...(remember ? { maxAge: SESSION_MAX_AGE_S } : {}),
   });

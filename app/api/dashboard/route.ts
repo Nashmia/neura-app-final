@@ -2,16 +2,6 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { findPatientForUser, getCollections, withoutMongoId } from "@/lib/db";
 
-const fallbackChart = [
-  { day: "Mon", score: 72 },
-  { day: "Tue", score: 76 },
-  { day: "Wed", score: 70 },
-  { day: "Thu", score: 81 },
-  { day: "Fri", score: 79 },
-  { day: "Sat", score: 84 },
-  { day: "Sun", score: 82 },
-];
-
 const moodScore: Record<string, number> = { Anxious: 1, Confused: 2, Tired: 3, Calm: 4, Happy: 5 };
 
 export async function GET() {
@@ -28,7 +18,7 @@ export async function GET() {
   const appointments = await apptCol.find({ patientId: patient.id }, withoutMongoId).toArray();
   const journalEntries = await journalCol.find({ patientId: patient.id }, withoutMongoId).toArray();
   const latest = sessions.at(-1);
-  const score = latest ? Math.round((latest.score / latest.total) * 100) : 82;
+  const score = latest ? Math.round((latest.score / latest.total) * 100) : null;
   const taken = medications.filter((item) => item.status === "Taken").length;
 
   const upcomingAppointments = appointments
@@ -46,8 +36,8 @@ export async function GET() {
   }));
 
   const metrics = [
-    { label: "Quiz Score", value: `${score}%`, helper: latest ? "Latest completed quiz" : "Sample baseline until first quiz" },
-    { label: "Medication", value: `${taken}/${medications.length || 0}`, helper: medications.some((m) => m.status === "Pending") ? "Some doses pending" : "All doses completed" },
+    { label: "Quiz Score", value: score === null ? "—" : `${score}%`, helper: latest ? "Latest completed quiz" : "No quiz completed yet" },
+    { label: "Medication", value: `${taken}/${medications.length || 0}`, helper: !medications.length ? "No medicines added yet" : medications.some((m) => m.status === "Pending") ? "Some doses pending" : "All doses completed" },
     { label: "Sessions", value: String(sessions.length), helper: "Completed quiz sessions" },
     { label: "Appointments", value: String(upcomingAppointments.length), helper: upcomingAppointments.length ? "Upcoming this week" : "None scheduled" },
   ];
@@ -58,13 +48,11 @@ export async function GET() {
     medications,
     sessions,
     metrics,
-    chart: sessions.length
-      ? sessions.slice(-7).map((session, index) => ({ day: `S${index + 1}`, score: Math.round((session.score / session.total) * 100) }))
-      : fallbackChart,
+    chart: sessions.slice(-7).map((session, index) => ({ day: `S${index + 1}`, score: Math.round((session.score / session.total) * 100) })),
     moodChart,
     upcomingAppointments,
     notifications: [
-      { title: "Medication reminder", description: medications.some((m) => m.status === "Pending") ? "One medicine is still pending today." : "All medicines are marked as taken." },
+      { title: "Medication reminder", description: !medications.length ? "No medicines added yet." : medications.some((m) => m.status === "Pending") ? "One medicine is still pending today." : "All medicines are marked as taken." },
       { title: "Quiz progress", description: latest ? `Latest quiz score was ${score}%.` : "No quiz submitted yet. Start a calm session today." },
       {
         title: "Next appointment",
