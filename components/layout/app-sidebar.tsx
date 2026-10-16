@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LogOut, Menu, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
 import { sidebarItems } from "@/lib/frontend-data";
+import { cn } from "@/lib/utils";
 
-export function AppSidebar() {
+function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -17,29 +18,70 @@ export function AppSidebar() {
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-blue-100 bg-white/85 p-5 backdrop-blur-xl lg:block">
-      <Logo className="mb-8" />
-
-      <nav className="space-y-2">
+    <div className="flex h-full flex-col">
+      <nav className="space-y-1">
         {sidebarItems.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;
           return (
-            <Link key={item.label} href={item.href} className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition ${active ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "text-slate-600 hover:bg-blue-50 hover:text-primary"}`}>
-              <Icon className="size-5" />
+            <Link
+              key={item.label}
+              href={item.href}
+              onClick={onNavigate}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-3 rounded-full px-4 py-2.5 text-sm transition",
+                active ? "bg-periwinkle font-medium text-navy" : "text-white/75 hover:bg-white/[0.07] hover:text-white"
+              )}
+            >
+              <Icon className="size-[18px]" strokeWidth={1.8} />
               {item.label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="absolute bottom-5 left-5 right-5 rounded-3xl bg-gradient-to-br from-blue-600 to-cyan-500 p-5 text-white">
-        <h3 className="font-semibold">Care workspace</h3>
-        <p className="mt-2 text-sm leading-6 text-blue-50">Review progress, update medicines, and start patient-friendly quizzes.</p>
-        <Button onClick={logout} className="mt-4 w-full rounded-2xl bg-white text-blue-700 hover:bg-blue-50">
-          <LogOut className="mr-2 size-4" /> Logout
-        </Button>
+      <div className="mt-auto rounded-[1.25rem] border border-white/10 bg-white/[0.05] p-5">
+        <h3 className="text-lg text-white">Care workspace</h3>
+        <p className="mt-1.5 text-[13px] leading-5 text-white/65">Review progress, update medicines, and start patient-friendly quizzes.</p>
+        <button onClick={logout} className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-full bg-periwinkle text-sm font-medium text-navy transition hover:bg-[#9dadff]">
+          <LogOut className="size-4" /> Logout
+        </button>
       </div>
-    </aside>
+    </div>
+  );
+}
+
+/** Navy sidebar on large screens; a top bar with a slide-in menu on smaller ones. */
+export function AppSidebar() {
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  useEffect(() => setOpen(false), [pathname]);
+
+  return (
+    <>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[264px] flex-col bg-navy px-5 pb-5 pt-7 lg:flex">
+        <Logo tone="light" className="mb-9 px-2" />
+        <SidebarContent />
+      </aside>
+
+      <div className="sticky top-0 z-40 flex h-16 items-center justify-between bg-navy px-4 lg:hidden">
+        <Logo tone="light" textClassName="text-[1.4rem]" />
+        <button onClick={() => setOpen(true)} aria-label="Open menu" className="grid size-10 place-items-center rounded-full text-white hover:bg-white/10"><Menu className="size-5" /></button>
+      </div>
+
+      {open && (
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+          <button aria-label="Close menu" onClick={() => setOpen(false)} className="absolute inset-0 bg-navy-deep/60 backdrop-blur-sm" />
+          <div className="animate-rise absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col bg-navy px-5 pb-5 pt-5">
+            <div className="mb-7 flex items-center justify-between px-2">
+              <Logo tone="light" textClassName="text-[1.4rem]" />
+              <button onClick={() => setOpen(false)} aria-label="Close menu" className="grid size-9 place-items-center rounded-full text-white hover:bg-white/10"><X className="size-5" /></button>
+            </div>
+            <SidebarContent onNavigate={() => setOpen(false)} />
+          </div>
+        </div>
+      )}
+    </>
   );
 }

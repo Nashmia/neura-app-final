@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Home, Loader2, NotebookPen, Send } from "lucide-react";
-import { AppSidebar } from "@/components/layout/app-sidebar";
+import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -55,31 +55,12 @@ export default function JournalPage() {
   }
 
   return (
-    <main className="dashboard-shell min-h-screen">
-      <div className="flex">
-        <AppSidebar />
-        <section className="w-full lg:pl-72">
-          <header className="sticky top-0 z-40 border-b border-blue-100 bg-white/75 backdrop-blur-xl">
-            <div className="flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
-              <div>
-                <h1 className="text-xl font-bold text-slate-950 sm:text-2xl">Care Journal</h1>
-                <p className="hidden text-sm text-slate-500 sm:block">Log today's mood and keep caregiver notes over time.</p>
-              </div>
-              <Button asChild variant="outline" className="rounded-full bg-white">
-                <Link href="/dashboard">
-                  <Home className="mr-2 size-4" />
-                  Dashboard
-                </Link>
-              </Button>
-            </div>
-          </header>
-
-          <div className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <AppShell eyebrow="Mood &amp; notes" title={<>Care <em>journal</em></>} description={"Log today's mood and keep caregiver notes over time."} actions={<Button asChild variant="outline"><Link href="/dashboard"><Home className="mr-1 size-4"/>Dashboard</Link></Button>}>
             <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
               <div className="space-y-6">
-                <Card className="rounded-[2rem] border-blue-100 bg-white shadow-sm">
+                <Card>
                   <CardContent className="p-6">
-                    <h2 className="text-xl font-bold text-slate-950">Today's check-in</h2>
+                    <h2 className="text-[1.35rem] text-ink">Today's check-in</h2>
                     <p className="mt-2 text-sm text-slate-500">Tap the mood that best describes the patient right now.</p>
                     <div className="mt-5 grid grid-cols-5 gap-2">
                       {moods.map((m) => (
@@ -87,7 +68,7 @@ export default function JournalPage() {
                           key={m.tag}
                           onClick={() => logMood(m.tag)}
                           className={cn(
-                            "flex flex-col items-center gap-1 rounded-2xl border border-blue-100 bg-blue-50/50 py-3 text-xs font-semibold text-slate-600 transition hover:bg-blue-100",
+                            "flex flex-col items-center gap-1 rounded-2xl border border-border bg-surface py-3 text-xs font-semibold text-slate-600 transition hover:bg-blue-100",
                             selectedMood === m.tag && "border-blue-400 bg-blue-100 text-blue-800"
                           )}
                         >
@@ -99,16 +80,16 @@ export default function JournalPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="rounded-[2rem] border-blue-100 bg-white shadow-sm">
+                <Card>
                   <CardContent className="p-6">
-                    <h2 className="text-xl font-bold text-slate-950">Add a note</h2>
+                    <h2 className="text-[1.35rem] text-ink">Add a note</h2>
                     <form onSubmit={addEntry} className="mt-4 space-y-3">
                       <textarea
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         placeholder="How did today go? Any changes worth remembering..."
                         rows={5}
-                        className="w-full rounded-2xl border border-blue-100 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-primary"
+                        className="w-full px-4 py-3 text-base rounded-[12px] border border-input bg-white text-ink transition hover:border-slate-300 focus-visible:border-periwinkle focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-periwinkle/25"
                       />
                       <Button disabled={saving || !text.trim()} className="w-full">
                         {saving ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Send className="mr-2 size-4" />}
@@ -119,9 +100,9 @@ export default function JournalPage() {
                 </Card>
               </div>
 
-              <Card className="rounded-[2rem] border-blue-100 bg-white shadow-sm">
+              <Card>
                 <CardContent className="p-6">
-                  <h2 className="text-2xl font-bold text-slate-950">Timeline</h2>
+                  <h2 className="text-[1.6rem] text-ink">Timeline</h2>
                   {loading ? (
                     <p className="mt-6 text-slate-500">Loading...</p>
                   ) : entries.length === 0 ? (
@@ -136,7 +117,7 @@ export default function JournalPage() {
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.35, delay: index * 0.05 }}
-                            className="flex items-start gap-4 rounded-3xl border border-blue-100 bg-blue-50/50 p-5"
+                            className="flex items-start gap-4 rounded-3xl border border-border bg-surface p-5"
                           >
                             <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white text-2xl">{mood?.emoji ?? <NotebookPen className="size-5 text-primary" />}</div>
                             <div className="min-w-0 flex-1">
@@ -154,9 +135,6 @@ export default function JournalPage() {
                 </CardContent>
               </Card>
             </div>
-          </div>
-        </section>
-      </div>
-    </main>
+          </AppShell>
   );
 }

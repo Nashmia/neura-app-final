@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CalendarCheck, Clock, Home, Loader2, MapPin, Plus, X } from "lucide-react";
-import { AppSidebar } from "@/components/layout/app-sidebar";
+import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -59,31 +59,12 @@ export default function AppointmentsPage() {
   const upcoming = items.filter((a) => a.status === "Upcoming");
 
   return (
-    <main className="dashboard-shell min-h-screen">
-      <div className="flex">
-        <AppSidebar />
-        <section className="w-full lg:pl-72">
-          <header className="sticky top-0 z-40 border-b border-blue-100 bg-white/75 backdrop-blur-xl">
-            <div className="flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
-              <div>
-                <h1 className="text-xl font-bold text-slate-950 sm:text-2xl">Appointments</h1>
-                <p className="hidden text-sm text-slate-500 sm:block">Schedule and track doctor visits and therapy sessions.</p>
-              </div>
-              <Button asChild variant="outline" className="rounded-full bg-white">
-                <Link href="/dashboard">
-                  <Home className="mr-2 size-4" />
-                  Dashboard
-                </Link>
-              </Button>
-            </div>
-          </header>
-
-          <div className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <AppShell eyebrow="Schedule" title={<>Upcoming <em>appointments</em></>} description={"Schedule and track doctor visits and therapy sessions."} actions={<Button asChild variant="outline"><Link href="/dashboard"><Home className="mr-1 size-4"/>Dashboard</Link></Button>}>
             <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
-              <Card className="rounded-[2rem] border-blue-100 bg-white shadow-sm">
+              <Card>
                 <CardContent className="p-6">
                   <div className="mb-6">
-                    <h2 className="text-2xl font-bold text-slate-950">New Appointment</h2>
+                    <h2 className="text-[1.6rem] text-ink">New Appointment</h2>
                     <p className="mt-2 text-sm text-slate-500">Add a doctor visit, therapy session, or reminder.</p>
                   </div>
                   <form onSubmit={addAppointment} className="space-y-4">
@@ -96,7 +77,7 @@ export default function AppointmentsPage() {
                       <select
                         value={form.type}
                         onChange={(e) => setForm({ ...form, type: e.target.value as Appointment["type"] })}
-                        className="flex h-12 w-full rounded-2xl border border-blue-100 bg-white px-4 py-2 text-base shadow-sm transition focus-visible:ring-2 focus-visible:ring-primary"
+                        className="flex h-12 w-full px-4 py-2 text-base rounded-[12px] border border-input bg-white text-ink transition hover:border-slate-300 focus-visible:border-periwinkle focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-periwinkle/25"
                       >
                         <option value="Doctor">Doctor</option>
                         <option value="Therapy">Therapy</option>
@@ -125,9 +106,9 @@ export default function AppointmentsPage() {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-[2rem] border-blue-100 bg-white shadow-sm">
+              <Card>
                 <CardContent className="p-6">
-                  <h2 className="text-2xl font-bold text-slate-950">Upcoming</h2>
+                  <h2 className="text-[1.6rem] text-ink">Upcoming</h2>
                   {loading ? (
                     <p className="mt-6 text-slate-500">Loading...</p>
                   ) : upcoming.length === 0 ? (
@@ -140,14 +121,14 @@ export default function AppointmentsPage() {
                           initial={{ opacity: 0, y: 16 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.35, delay: index * 0.06 }}
-                          className="hover-lift flex flex-col gap-4 rounded-3xl border border-blue-100 bg-blue-50/50 p-5 sm:flex-row sm:items-center sm:justify-between"
+                          className="hover-lift flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5 sm:flex-row sm:items-center sm:justify-between"
                         >
                           <div className="flex items-center gap-4">
-                            <div className="grid size-12 place-items-center rounded-2xl bg-white text-primary">
+                            <div className="grid size-12 place-items-center rounded-full bg-white text-navy">
                               <CalendarCheck className="size-6" />
                             </div>
                             <div>
-                              <p className="text-lg font-bold text-slate-950">{item.title}</p>
+                              <p className="text-base font-semibold text-ink">{item.title}</p>
                               <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
                                 <span className="flex items-center gap-1">
                                   <Clock className="size-4" />
@@ -174,9 +155,6 @@ export default function AppointmentsPage() {
                 </CardContent>
               </Card>
             </div>
-          </div>
-        </section>
-      </div>
-    </main>
+          </AppShell>
   );
 }

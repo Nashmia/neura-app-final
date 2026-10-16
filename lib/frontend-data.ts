@@ -13,10 +13,11 @@ export const howItWorks = [
   { title: "Support daily care", description: "Track medication, start quizzes, and review dashboard insights." },
 ];
 
+// Placeholder quotes from the design — replace with real feedback from user testing.
 export const testimonials = [
-  { name: "Ayesha Khan", role: "Family caregiver", quote: "Neura makes daily care feel organized instead of overwhelming." },
-  { name: "Dr. Hamza Malik", role: "Care advisor", quote: "The calm quiz interface is much easier for elderly patients to follow." },
-  { name: "Sara Ahmed", role: "Care coordinator", quote: "The dashboard gives families a clear picture of daily care routines." },
+  { name: "[Name]", role: "Family caregiver", quote: "Neura makes daily care feel organized instead of overwhelming." },
+  { name: "[Name]", role: "Care advisor", quote: "The calm quiz interface is much easier for elderly patients to follow." },
+  { name: "[Name]", role: "Care coordinator", quote: "The dashboard gives families a clear picture of daily care routines." },
 ];
 
 export const faqs = [

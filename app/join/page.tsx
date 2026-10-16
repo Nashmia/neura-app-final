@@ -40,18 +40,14 @@ function JoinContent() {
 
   return (
     <main className="soft-gradient relative grid min-h-screen place-items-center overflow-hidden px-4">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="animate-blob absolute left-1/4 top-16 size-80 bg-emerald-400/20 blur-3xl" />
-        <div className="animate-blob anim-delay-3 absolute right-1/4 bottom-16 size-80 bg-teal-400/20 blur-3xl" />
-      </div>
       <div className="animate-rise w-full max-w-md">
-        <Card className="rounded-[2rem] border-blue-100 bg-white shadow-2xl shadow-blue-600/10">
+        <Card className="shadow-[0_30px_60px_-36px_rgba(31,37,92,0.3)]">
           <CardContent className="p-8 text-center">
             <Logo className="mx-auto mb-6 justify-center" />
             {status === "done" ? (
               <>
                 <CheckCircle2 className="mx-auto mb-4 size-16 text-emerald-500" />
-                <h1 className="text-2xl font-bold text-slate-950">You're in</h1>
+                <h1 className="text-[1.6rem] text-ink">You're in</h1>
                 <p className="mt-3 text-slate-600">You now have caregiver access to {patientName || "this patient"}'s care profile.</p>
                 <Button asChild className="mt-6">
                   <Link href="/dashboard">Go to dashboard</Link>
@@ -59,13 +55,13 @@ function JoinContent() {
               </>
             ) : !code ? (
               <>
-                <h1 className="text-2xl font-bold text-slate-950">Invite link missing</h1>
+                <h1 className="text-[1.6rem] text-ink">Invite link missing</h1>
                 <p className="mt-3 text-slate-600">This link doesn't include an invite code. Ask the caregiver who invited you for a fresh link.</p>
               </>
             ) : (
               <>
                 <Users className="mx-auto mb-4 size-14 text-primary" />
-                <h1 className="text-2xl font-bold text-slate-950">Join a care team</h1>
+                <h1 className="text-[1.6rem] text-ink">Join a care team</h1>
                 <p className="mt-3 text-slate-600">You've been invited to co-manage a patient's care profile on Neura. Log in first if you haven't already.</p>
                 {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
                 <Button onClick={join} disabled={status === "joining"} className="mt-6 w-full">

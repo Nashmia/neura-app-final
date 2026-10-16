@@ -1,21 +1,22 @@
 import type { Metadata } from "next";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { DM_Sans, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 
-// Body face: Inter — a highly legible workhorse for running text and UI.
-const inter = Inter({
+// Body face: DM Sans — clean and highly legible for running text and UI.
+const dmSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
 });
 
-// Display face: Plus Jakarta Sans — warm, humanist, and very readable at large
-// sizes, which suits an accessibility-focused care product for older readers.
-const jakarta = Plus_Jakarta_Sans({
+// Display face: Source Serif 4 — a calm editorial serif for headings, with an
+// italic used for the accent words ("that matter", "checklist", ...).
+const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
-  weight: ["500", "600", "700", "800"],
+  style: ["normal", "italic"],
+  axes: ["opsz"],
 });
 
 export const metadata: Metadata = {
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
+    <html lang="en" className={`${dmSans.variable} ${sourceSerif.variable}`}>
       <body>{children}</body>
     </html>
   );

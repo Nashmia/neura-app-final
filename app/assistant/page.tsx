@@ -67,7 +67,7 @@ export default function AssistantPage() {
   if (needsOnboarding) {
     return (
       <main className="soft-gradient grid min-h-screen place-items-center px-4">
-        <Card className="max-w-md rounded-[2rem]">
+        <Card className="max-w-md rounded-[1.75rem]">
           <CardContent className="p-8 text-center">
             <h1 className="text-2xl font-bold">Complete onboarding first</h1>
             <p className="mt-3 text-slate-600">Add a patient profile to start using the care assistant.</p>
@@ -82,10 +82,6 @@ export default function AssistantPage() {
 
   return (
     <main className="soft-gradient relative min-h-screen overflow-hidden px-4 py-6 sm:py-10">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="animate-blob absolute -left-24 top-10 size-80 bg-teal-400/12 blur-3xl" />
-        <div className="animate-blob anim-delay-3 absolute -right-20 bottom-10 size-96 bg-emerald-400/12 blur-3xl" />
-      </div>
       <div className="mx-auto flex h-[calc(100vh-3rem)] max-w-3xl flex-col sm:h-[calc(100vh-5rem)]">
         <header className="mb-6 flex items-center justify-between">
           <Logo />
@@ -97,12 +93,15 @@ export default function AssistantPage() {
           </Button>
         </header>
 
-        <Card className="flex min-h-0 flex-1 flex-col rounded-[2rem] border-blue-100 bg-white shadow-2xl shadow-blue-600/10">
+        <Card className="flex min-h-0 flex-1 flex-col overflow-hidden shadow-[0_30px_60px_-36px_rgba(31,37,92,0.3)]">
+          <div className="on-dark shrink-0 bg-navy px-5 py-6 text-white sm:px-8">
+            <h1 className="text-[1.65rem] text-white">Care <em>Assistant</em></h1>
+            <p className="mt-1.5 flex items-center gap-2 text-[13px] text-white/75">
+              <Sparkles className="size-4 shrink-0 text-blue-300" />
+              Grounded in caregiving guidance and this patient&apos;s recent data
+            </p>
+          </div>
           <CardContent className="flex min-h-0 flex-1 flex-col p-5 sm:p-8">
-            <div className="mb-4 flex shrink-0 items-center gap-2 text-sm font-semibold text-slate-600">
-              <Sparkles className="size-4 text-primary" />
-              Care Assistant — grounded in caregiving guidance and this patient's recent data
-            </div>
 
             <div className="flex-1 space-y-4 overflow-y-auto pr-1">
               {messages.length === 0 && (
@@ -112,7 +111,7 @@ export default function AssistantPage() {
                     <button
                       key={p}
                       onClick={() => send(p)}
-                      className="rounded-2xl border border-blue-100 bg-blue-50/50 px-4 py-3 text-left text-sm text-slate-700 transition hover:bg-blue-100"
+                      className="rounded-2xl border border-border bg-surface px-4 py-3 text-left text-sm text-slate-700 transition hover:bg-blue-100"
                     >
                       {p}
                     </button>
@@ -131,8 +130,8 @@ export default function AssistantPage() {
                     <div
                       className={`rounded-3xl px-5 py-4 text-base leading-7 whitespace-pre-wrap ${
                         message.role === "user"
-                          ? "rounded-br-md bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                          : "rounded-bl-md border border-blue-100 bg-blue-50/60 text-slate-800"
+                          ? "rounded-br-md bg-navy text-white"
+                          : "rounded-bl-md border border-border bg-surface text-slate-800"
                       }`}
                     >
                       {message.text}
@@ -152,7 +151,7 @@ export default function AssistantPage() {
               ))}
               {sending && (
                 <div className="flex justify-start">
-                  <div className="rounded-3xl rounded-bl-md border border-blue-100 bg-blue-50/60 px-5 py-4 text-slate-500">Thinking...</div>
+                  <div className="rounded-3xl rounded-bl-md border border-border bg-surface px-5 py-4 text-slate-500">Thinking...</div>
                 </div>
               )}
               {error && <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-red-700">{error}</div>}
@@ -168,7 +167,7 @@ export default function AssistantPage() {
                 }}
                 disabled={sending}
                 placeholder="Ask about care, symptoms, or this patient's recent activity..."
-                className="h-14 flex-1 rounded-2xl border border-blue-100 bg-blue-50/40 px-5 text-lg text-slate-800 outline-none transition focus:border-blue-400 focus:bg-white disabled:opacity-60"
+                className="h-14 flex-1 rounded-2xl border border-border bg-surface px-5 text-lg text-slate-800 outline-none transition focus:border-blue-400 focus:bg-white disabled:opacity-60"
               />
               <Button onClick={() => send(input)} disabled={sending || !input.trim()} size="icon" className="size-14 shrink-0 rounded-2xl">
                 <Send className="size-5" />

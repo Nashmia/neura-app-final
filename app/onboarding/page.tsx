@@ -111,20 +111,16 @@ export default function OnboardingPage() {
 
   return (
     <main className="soft-gradient relative min-h-screen overflow-hidden px-4 py-8">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="animate-blob absolute -left-24 top-10 size-80 bg-teal-400/15 blur-3xl" />
-        <div className="animate-blob anim-delay-3 absolute -right-20 bottom-10 size-96 bg-emerald-400/15 blur-3xl" />
-      </div>
       <div className="mx-auto max-w-5xl">
         <div className="mb-8 flex items-center justify-between">
           <Logo />
           <Button asChild variant="outline" className="rounded-full bg-white"><Link href="/dashboard">Dashboard</Link></Button>
         </div>
-        <Card className="rounded-[2rem] border-blue-100 bg-white/90 shadow-2xl shadow-blue-600/10">
+        <Card >
           <CardContent className="p-6 sm:p-8 lg:p-10">
             <div className="mb-8">
-              <p className="font-semibold text-primary">Caregiver onboarding</p>
-              <h1 className="mt-2 text-3xl font-bold text-slate-950 sm:text-4xl">Set up Neura in four simple steps.</h1>
+              <span className="eyebrow">Caregiver onboarding</span>
+              <h1 className="mt-4 text-[2rem] leading-tight text-ink sm:text-[2.6rem]">Set up Neura in <em>four simple steps</em>.</h1>
               <p className="mt-3 max-w-2xl text-slate-600">The form saves to the backend and prepares the caregiver dashboard.</p>
             </div>
             {error && <div className="mb-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
@@ -132,12 +128,12 @@ export default function OnboardingPage() {
               <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 {labels.map((label, index) => (
                   <div key={label} className="flex items-center gap-3">
-                    <div className={`grid size-10 place-items-center rounded-full border text-sm font-bold ${index <= step ? "border-primary bg-primary text-white" : "border-blue-100 bg-blue-50 text-slate-500"}`}>{index < step ? <Check className="size-5" /> : index + 1}</div>
+                    <div className={`grid size-10 place-items-center rounded-full border text-sm font-bold ${index <= step ? "border-primary bg-primary text-white" : "border-border bg-blue-50 text-slate-500"}`}>{index < step ? <Check className="size-5" /> : index + 1}</div>
                     <span className={`text-sm font-semibold ${index <= step ? "text-slate-950" : "text-slate-500"}`}>{label}</span>
                   </div>
                 ))}
               </div>
-              <div className="h-3 overflow-hidden rounded-full bg-blue-50"><div className="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 transition-all duration-500" style={{ width: `${progress}%` }} /></div>
+              <div className="h-3 overflow-hidden rounded-full bg-blue-50"><div className="h-full rounded-full bg-periwinkle transition-all duration-500" style={{ width: `${progress}%` }} /></div>
             </div>
             <form onSubmit={handleSubmit(submit)}>
               <div>
@@ -164,14 +160,14 @@ export default function OnboardingPage() {
                   {step === 2 && (
                     <StepShell title="Family & Friends" description="Add the important people in the patient's life. Their names and relationships give context to caregivers and power recognition quizzes." icon={<Users className="size-6" />}>
                       <div className="space-y-4">
-                        {fields.length === 0 && <p className="rounded-2xl border border-dashed border-blue-200 bg-blue-50/50 p-6 text-center text-slate-500">No people added yet. Use the buttons below to add family members and friends.</p>}
+                        {fields.length === 0 && <p className="rounded-2xl border border-dashed border-blue-200 bg-surface p-6 text-center text-slate-500">No people added yet. Use the buttons below to add family members and friends.</p>}
                         {fields.map((field, index) => {
                           const type = watch(`contacts.${index}.type`) as string;
                           const photo = photos[field.id];
                           const name = watch(`contacts.${index}.name`) as string;
                           const isFamily = type === "Family";
                           return (
-                            <motion.div key={field.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-blue-100 bg-white p-4 shadow-sm">
+                            <motion.div key={field.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-border bg-white p-4 shadow-sm">
                               <div className="mb-3 flex items-center justify-between gap-3">
                                 <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${isFamily ? "bg-teal-100 text-teal-800" : "bg-amber-100 text-amber-800"}`}>{isFamily ? <Users className="size-3.5" /> : <Heart className="size-3.5" />}{type}</span>
                                 <button type="button" onClick={() => remove(index)} aria-label="Remove person" className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600"><Trash2 className="size-5" /></button>
@@ -193,8 +189,8 @@ export default function OnboardingPage() {
                                   {photo && <button type="button" onClick={() => removePhoto(field.id)} className="text-xs font-medium text-slate-500 transition hover:text-red-600">Remove photo</button>}
                                 </div>
                                 <div className="grid flex-1 gap-3 sm:grid-cols-2">
-                                  <div className="space-y-1.5"><Label>Full name</Label><Input placeholder="e.g. Sara Ahmed" className="h-12 rounded-2xl border-blue-100 bg-white" {...register(`contacts.${index}.name`)} /></div>
-                                  <div className="space-y-1.5"><Label>Relationship</Label><Input placeholder="e.g. Daughter" className="h-12 rounded-2xl border-blue-100 bg-white" {...register(`contacts.${index}.relationship`)} /></div>
+                                  <div className="space-y-1.5"><Label>Full name</Label><Input placeholder="e.g. Sara Ahmed" className="h-12" {...register(`contacts.${index}.name`)} /></div>
+                                  <div className="space-y-1.5"><Label>Relationship</Label><Input placeholder="e.g. Daughter" className="h-12" {...register(`contacts.${index}.relationship`)} /></div>
                                 </div>
                               </div>
                               <input type="hidden" {...register(`contacts.${index}.type`)} />
@@ -223,7 +219,7 @@ export default function OnboardingPage() {
                 <Button type="button" variant="outline" onClick={() => setStep((v) => Math.max(v - 1, 0))} disabled={step === 0} className="h-12 rounded-2xl bg-white"><ArrowLeft className="mr-2 size-4" />Back</Button>
                 {step < labels.length - 1
                   ? <Button type="button" onClick={() => setStep((v) => Math.min(v + 1, labels.length - 1))} className="h-12 rounded-2xl">Continue<ArrowRight className="ml-2 size-4" /></Button>
-                  : <Button type="submit" disabled={isSubmitting} className="h-12 rounded-2xl">Finish setup<Check className="ml-2 size-4" /></Button>}
+                  : <Button type="submit" disabled={isSubmitting} className="h-12">Finish setup<Check className="ml-2 size-4" /></Button>}
               </div>
             </form>
           </CardContent>
@@ -235,10 +231,10 @@ export default function OnboardingPage() {
 
 function StepShell({ title, description, icon, children }: any) {
   return (
-    <div className="rounded-[1.5rem] border border-blue-100 bg-blue-50/50 p-5 sm:p-7">
+    <div className="rounded-[1.5rem] border border-border bg-surface p-5 sm:p-7">
       <div className="mb-6 flex items-start gap-4">
-        <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white text-primary shadow-sm">{icon}</div>
-        <div><h2 className="text-2xl font-bold text-slate-950">{title}</h2><p className="mt-1 text-slate-600">{description}</p></div>
+        <div className="grid size-12 shrink-0 place-items-center rounded-full bg-white text-navy shadow-sm">{icon}</div>
+        <div><h2 className="text-[1.6rem] text-ink">{title}</h2><p className="mt-1 text-slate-600">{description}</p></div>
       </div>
       {children}
     </div>
@@ -249,7 +245,7 @@ function Field({ label, props, type = "text", value, disabled }: any) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Input type={type} defaultValue={value} disabled={disabled} className="h-13 rounded-2xl border-blue-100 bg-white" {...props} />
+      <Input type={type} defaultValue={value} disabled={disabled} className="h-13" {...props} />
     </div>
   );
 }

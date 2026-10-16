@@ -4,22 +4,23 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl text-sm font-semibold transition-all duration-200 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-all duration-200 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-lg shadow-blue-600/25 hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/30",
-        destructive: "bg-destructive text-destructive-foreground shadow-lg shadow-red-600/20 hover:bg-red-700",
-        outline: "border border-blue-200 bg-white text-slate-800 shadow-sm hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800",
-        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-blue-100",
-        ghost: "text-slate-700 hover:bg-blue-50 hover:text-blue-800",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: "bg-primary text-primary-foreground shadow-[0_10px_24px_-12px_rgba(31,37,92,0.6)] hover:bg-[var(--primary-hover)]",
+        accent: "bg-periwinkle text-navy hover:bg-[#9dadff]",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-red-700",
+        outline: "border border-border bg-white text-ink hover:border-blue-300 hover:bg-blue-50",
+        secondary: "bg-lavender text-navy hover:bg-blue-200",
+        ghost: "text-slate-700 hover:bg-white/70 hover:text-ink",
+        link: "text-accent-ink underline underline-offset-4 hover:text-navy",
       },
       size: {
         default: "h-11 px-5 py-2",
-        sm: "h-9 rounded-xl px-3",
-        lg: "h-14 rounded-full px-8 text-base",
-        icon: "size-11 rounded-2xl",
+        sm: "h-9 px-3.5",
+        lg: "h-12 px-7 text-[15px]",
+        icon: "size-11",
       },
     },
     defaultVariants: { variant: "default", size: "default" },
@@ -35,4 +36,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ className, va
   return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
 });
 Button.displayName = "Button";
-export { Button, buttonVariants };
+
+/** The small light circle with an ↗ arrow that sits at the end of navy pill buttons in the design. */
+function ArrowBubble({ className }: { className?: string }) {
+  return (
+    <span aria-hidden className={cn("-mr-3 ml-1 grid size-8 place-items-center rounded-full bg-[#eceef2] text-navy", className)}>
+      <svg viewBox="0 0 12 12" className="size-3" fill="none"><path d="M3.5 8.5l5-5M4.5 3.5h4v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    </span>
+  );
+}
+
+export { Button, buttonVariants, ArrowBubble };
