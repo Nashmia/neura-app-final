@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ArrowRight, Brain, CalendarDays, Check, ChevronDown, Eye, FilePlus2, Pill, Smile } from "lucide-react";
 import { ArrowBubble, Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
+import { SiteHeader } from "@/components/landing/site-header";
+import { HeroArt } from "@/components/landing/hero-art";
 import { GlowWave } from "@/components/layout/glow-wave";
 import { cn } from "@/lib/utils";
 import { faqs, howItWorks, landingFeatures, testimonials } from "@/lib/frontend-data";
@@ -50,84 +52,64 @@ const todaysCare = [
 export default function LandingPage() {
   return (
     <main className="min-h-screen bg-background text-ink">
-      {/* ───────────── Hero ───────────── */}
-      <section className="on-dark relative overflow-hidden bg-navy text-white">
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_75%_40%,rgba(142,160,255,0.10),transparent_45%)]" />
-        <header className="mx-auto w-full max-w-[1352px] px-4 sm:px-6 lg:px-8 relative z-20 flex h-[72px] items-center justify-between">
-          <div className="flex items-center gap-[92px]">
-          <Logo tone="light" />
-          <nav className="hidden items-center gap-10 text-sm md:flex">
-            <a href="#top" className="relative pb-1 text-white after:absolute after:inset-x-0 after:-bottom-1.5 after:h-0.5 after:rounded-full after:bg-periwinkle">Home</a>
-            <a href="#features" className="text-white/85 transition hover:text-white">Features</a>
-            <a href="#about" className="text-white/85 transition hover:text-white">About</a>
-          </nav>
-          </div>
-          <div className="flex items-center gap-3 sm:gap-6">
-            <Link href="/login" className="text-sm text-white/90 transition hover:text-white">Login</Link>
-            <Button asChild variant="accent" className="h-[34px] px-4 text-[13px] font-medium"><Link href="/signup">Get Started</Link></Button>
-          </div>
-        </header>
+      <SiteHeader />
 
-        <div id="top" className="mx-auto w-full max-w-[1352px] px-4 sm:px-6 lg:px-8 relative grid items-center lg:min-h-[438px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <div className="relative z-10 max-w-[560px] pb-10 pt-10 lg:pb-14 lg:pt-6">
+      {/* ───────────── Hero ───────────── */}
+      <section className="on-dark relative -mt-16 overflow-hidden bg-navy pt-16 text-white lg:-mt-[72px] lg:pt-[72px]">
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_75%_40%,rgba(142,160,255,0.10),transparent_45%)]" />
+
+        <div id="top" className="mx-auto w-full max-w-[1352px] px-4 sm:px-6 lg:px-8 relative grid scroll-mt-20 items-center lg:min-h-[438px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="relative z-10 max-w-[560px] pb-10 pt-8 sm:pt-10 lg:pb-14 lg:pt-6">
             <p className="kicker text-white/80">Care, with more clarity</p>
-            <h1 className="mt-3 text-[2.6rem] leading-[1.06] text-[#f1f2fb] sm:text-[3.4rem] lg:text-[3.95rem]">Be there for the moments <em>that matter</em>.</h1>
-            <p className="mt-6 max-w-[370px] text-[15px] leading-[1.6] text-white/85">Neura brings medication routines, cognitive activities, mood notes and care progress into one clear place for at-home dementia caregivers.</p>
+            <h1 className="mt-4 text-[2.6rem] leading-[1.06] text-[#f1f2fb] text-balance sm:text-[3.4rem] lg:text-[3.95rem]">Be there for the moments <em>that matter</em>.</h1>
+            <p className="mt-6 max-w-[25rem] text-[16px] leading-[1.65] text-white/80">Neura brings medication routines, cognitive activities, mood notes and care progress into one clear place for at-home dementia caregivers.</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild variant="accent" className="h-[38px] px-6 text-[13px]"><a href="#features">Explore Neura <ArrowRight className="ml-1 size-3.5" /></a></Button>
-              <Button asChild variant="ghost" className="h-[38px] border border-white/45 px-6 text-[13px] text-white hover:bg-white/10 hover:text-white"><a href="#how">See how it works</a></Button>
+              <Button asChild variant="accent" className="h-11 px-6 text-[14px] font-semibold focus-visible:ring-offset-navy"><a href="#features">Explore Neura <ArrowRight className="size-4" /></a></Button>
+              <Button asChild variant="ghost" className="h-11 border border-white/30 px-6 text-[14px] text-white/90 hover:border-white/50 hover:bg-white/[0.07] hover:text-white focus-visible:ring-offset-navy"><a href="#how">See how it works</a></Button>
             </div>
-            <p className="mt-9 flex items-center gap-4 text-[11px] text-white/75"><span aria-hidden className="h-px w-9 bg-white/50" />Designed around the caregiver. Built for everyday use.</p>
+            <p className="mt-10 flex items-center gap-4 text-[12.5px] text-white/65"><span aria-hidden className="h-px w-9 bg-white/50" />Designed around the caregiver. Built for everyday use.</p>
           </div>
         </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/hero-art.webp"
-          alt="A glass sculpture orbited by Medication, Memory Exercise and Mood Notes cards"
-          width={822}
-          height={454}
-          className="relative mx-auto block w-full max-w-[640px] hero-art-mask lg:absolute lg:bottom-0 lg:right-[max(0px,calc((100vw-1487px)/2))] lg:mx-0 lg:w-[822px] lg:max-w-[57vw]"
-        />
+        <HeroArt className="mx-auto w-full max-w-[640px] lg:absolute lg:bottom-0 lg:right-[max(0px,calc((100vw-1487px)/2))] lg:mx-0 lg:w-[822px] lg:max-w-[57vw]" />
       </section>
 
       {/* ───────────── Care is more than a checklist ───────────── */}
-      <section id="about" className="section-padding py-20 lg:py-24">
+      <section id="about" className="section-padding scroll-mt-16 py-20 lg:scroll-mt-[72px] lg:py-24">
         <div className="container-neura grid gap-12 lg:grid-cols-[435px_1fr] lg:gap-0">
           <div>
             <h2 className="max-w-[300px] text-[2.75rem] leading-[1.1] text-ink" style={{ fontWeight: 600 }}>Care is more than a <em>checklist</em>.</h2>
-            <p className="mt-5 max-w-[290px] text-[13px] leading-[1.6] text-slate-600">Neura gives you the tools to understand your loved one&apos;s day, spot changes early, and feel more confident in the care you provide.</p>
+            <p className="mt-5 max-w-[330px] text-[15px] leading-[1.65] text-slate-600">Neura gives you the tools to understand your loved one&apos;s day, spot changes early, and feel more confident in the care you provide.</p>
           </div>
           <div className="grid gap-10 sm:grid-cols-3 sm:gap-0">
             {values.map((item, i) => (
               <div key={item.title} className={cn("sm:pl-10 sm:pr-4", i === 0 && "sm:pl-0", i > 0 && "sm:border-l sm:border-slate-300/70")}>
                 <span className="grid size-[50px] place-items-center rounded-full border border-periwinkle text-navy"><item.icon className="size-5" strokeWidth={1.6} /></span>
                 <h3 className="mt-5 text-[19px] text-ink">{item.title}</h3>
-                <p className="mt-3 max-w-[230px] text-[13px] leading-[1.55] text-slate-600">{item.description}</p>
+                <p className="mt-3 max-w-[260px] text-[14px] leading-[1.6] text-slate-600">{item.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <div aria-hidden className="flex h-16 items-center justify-between bg-periwinkle px-[6%]"><span className="h-px w-[75px] bg-navy/60" /><span className="h-px w-[75px] bg-navy/60" /></div>
-
       {/* ───────────── How it works ───────────── */}
-      <section id="how" className="section-padding py-20 lg:py-24">
+      <div aria-hidden className="section-padding"><div className="container-neura border-t border-slate-300/80" /></div>
+      <section id="how" className="section-padding scroll-mt-16 py-20 lg:scroll-mt-[72px] lg:py-24">
         <div className="container-neura">
           <span className="eyebrow">How it works</span>
           <div className="mt-5 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="text-[2.4rem] leading-[1.1] text-ink sm:text-[3.15rem]">Get started in <em>three simple steps</em>.</h2>
-              <p className="mt-3 text-[13px] text-slate-600">Designed for caregivers who need structure without complexity.</p>
+              <p className="mt-3 text-[15px] leading-[1.65] text-slate-600">Designed for caregivers who need structure without complexity.</p>
             </div>
-            <Button asChild className="h-[46px] w-fit pl-6 pr-4 text-[13px]"><Link href="/signup">Create caregiver account <ArrowBubble /></Link></Button>
+            <Button asChild className="h-12 w-fit pl-6 pr-4 text-[14px]"><Link href="/signup">Create caregiver account <ArrowBubble /></Link></Button>
           </div>
           <div className="mt-16 grid gap-12 md:grid-cols-3 md:gap-0">
             {howItWorks.map((step, i) => (
               <div key={step.title} className={cn("md:px-9", i === 0 && "md:pl-0", i > 0 && "md:border-l md:border-dashed md:border-slate-300")}>
                 <p className="font-display text-[4.2rem] leading-none text-accent-ink">0{i + 1}</p>
-                <h3 className="mt-12 text-[1.6rem] text-ink md:mt-20">{step.title}</h3>
-                <p className="mt-3 max-w-[260px] text-[13px] leading-[1.65] text-slate-600">{step.description}</p>
+                <h3 className="mt-6 text-[1.6rem] text-ink md:mt-10">{step.title}</h3>
+                <p className="mt-3 max-w-[280px] text-[14px] leading-[1.65] text-slate-600">{step.description}</p>
               </div>
             ))}
           </div>
@@ -135,14 +117,14 @@ export default function LandingPage() {
       </section>
 
       {/* ───────────── Features ───────────── */}
-      <section id="features" className="section-padding pb-20 pt-8 lg:pb-24">
+      <section id="features" className="section-padding scroll-mt-8 pb-16 pt-8 lg:pb-20">
         <div className="container-neura">
           <div className="flex flex-col gap-6 pb-7 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="max-w-[600px] text-[2.4rem] leading-[1.12] text-ink sm:text-[2.95rem]">Everything caregivers need in one <em>calm workspace</em>.</h2>
-              <p className="mt-4 max-w-[430px] text-[13px] leading-[1.65] text-slate-600">Neura combines daily care tools with a simple patient experience designed for accessibility.</p>
+              <p className="mt-4 max-w-[460px] text-[15px] leading-[1.65] text-slate-600">Neura combines daily care tools with a simple patient experience designed for accessibility.</p>
             </div>
-            <Button asChild variant="accent" className="h-[42px] w-fit px-6 text-[13px] font-semibold"><Link href="/signup">Explore all features</Link></Button>
+            <Button asChild variant="accent" className="h-12 w-fit px-6 text-[14px] font-semibold"><Link href="/signup">Explore all features</Link></Button>
           </div>
           <div className="border-t border-slate-300/80">
             {landingFeatures.map((feature, i) => {
@@ -150,8 +132,8 @@ export default function LandingPage() {
               return (
                 <div key={feature.title} className="grid items-center gap-4 border-b border-slate-300/80 py-7 sm:grid-cols-[1fr_auto] lg:grid-cols-[minmax(0,1fr)_440px_46px] lg:gap-x-[69px]">
                   <h3 className="flex items-center gap-4 text-[1.7rem] text-ink sm:text-[1.95rem]"><Glyph className={cn("size-5 shrink-0", i === 0 ? "text-blue-500" : "text-accent-ink")} />{feature.title}</h3>
-                  <p className="max-w-[440px] text-[13px] leading-[1.65] text-slate-600 sm:order-3 sm:col-span-2 lg:order-none lg:col-span-1">{feature.description}</p>
-                  <Link href={featureLinks[i]} aria-label={`Open ${feature.title}`} className="hidden size-[46px] place-items-center rounded-full border border-border bg-white text-navy transition hover:border-periwinkle hover:bg-lavender sm:grid"><svg viewBox="0 0 12 12" className="size-3" fill="none"><path d="M3.5 8.5l5-5M4.5 3.5h4v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></Link>
+                  <p className="max-w-[440px] text-[14px] leading-[1.65] text-slate-600 sm:order-3 sm:col-span-2 lg:order-none lg:col-span-1">{feature.description}</p>
+                  <Link href={featureLinks[i]} aria-label={`Open ${feature.title}`} className="hidden size-[46px] place-items-center rounded-full border border-border bg-white text-navy transition hover:border-periwinkle hover:bg-lavender active:scale-95 sm:grid"><svg viewBox="0 0 12 12" className="size-3" fill="none"><path d="M3.5 8.5l5-5M4.5 3.5h4v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></Link>
                 </div>
               );
             })}
@@ -165,7 +147,7 @@ export default function LandingPage() {
           <span className="eyebrow">Inside Neura</span>
           <div className="mt-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <h2 className="text-[2.4rem] leading-[1.1] text-ink sm:text-[2.95rem]">See the whole week <em>at a glance</em>.</h2>
-            <p className="max-w-[380px] text-[13px] leading-[1.7] text-slate-600 lg:pb-1">Medication, memory exercises, mood notes and appointments — every day of the week, in one calm view.</p>
+            <p className="max-w-[400px] text-[15px] leading-[1.65] text-slate-600 lg:pb-1">Medication, memory exercises, mood notes and appointments — every day of the week, in one calm view.</p>
           </div>
           <div className="mt-10 rounded-[1.75rem] border border-border bg-white p-5 shadow-[0_30px_60px_-36px_rgba(31,37,92,0.3)] sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -199,16 +181,16 @@ export default function LandingPage() {
           <div>
             <span className="eyebrow">Progress</span>
             <h2 className="mt-5 text-[2.4rem] leading-[1.1] text-ink sm:text-[2.95rem]">Progress you can <em>actually read</em>.</h2>
-            <p className="mt-4 max-w-[420px] text-[13px] leading-[1.7] text-slate-600">Weekly trends turn quiz sessions into simple, readable progress summaries.</p>
+            <p className="mt-4 max-w-[420px] text-[15px] leading-[1.65] text-slate-600">Weekly trends turn quiz sessions into simple, readable progress summaries.</p>
             <div className="mt-8 border-t border-slate-300/80">
               {progressSeries.map((s) => (
                 <div key={s.label} className="flex items-center justify-between border-b border-slate-300/80 py-4">
-                  <span className="flex items-center gap-3 text-[13px] text-ink"><svg width="26" height="4" aria-hidden><line x1="1" y1="2" x2="25" y2="2" stroke={s.color} strokeWidth="2.5" strokeDasharray={s.dash ? (s.dash === "9 7" ? "6 3" : "2 3") : undefined} strokeLinecap="round" /></svg>{s.label}</span>
+                  <span className="flex items-center gap-3 text-[14px] text-ink"><svg width="26" height="4" aria-hidden><line x1="1" y1="2" x2="25" y2="2" stroke={s.color} strokeWidth="2.5" strokeDasharray={s.dash ? (s.dash === "9 7" ? "6 3" : "2 3") : undefined} strokeLinecap="round" /></svg>{s.label}</span>
                   <span className="font-display text-[22px] text-ink">{s.value}</span>
                 </div>
               ))}
             </div>
-            <p className="mt-5 text-xs italic text-slate-600">Small steps make a big difference.</p>
+            <p className="mt-5 text-[13px] text-slate-600">Small steps make a big difference.</p>
           </div>
           <div className="rounded-[1.75rem] border border-border bg-white p-5 shadow-[0_30px_60px_-36px_rgba(31,37,92,0.3)] sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -240,7 +222,7 @@ export default function LandingPage() {
           <div>
             <span className="eyebrow">Daily routine</span>
             <h2 className="mt-5 text-[2.4rem] leading-[1.1] text-ink sm:text-[2.95rem]">Every dose and activity, <em>in order</em>.</h2>
-            <p className="mt-4 max-w-[430px] text-[13px] leading-[1.7] text-slate-600">Medication, activities, appointments and notes — all in one place, so you never have to juggle it all.</p>
+            <p className="mt-4 max-w-[430px] text-[15px] leading-[1.65] text-slate-600">Medication, activities, appointments and notes — all in one place, so you never have to juggle it all.</p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               <MiniStat label="Next up" title="Lunch Medication" detail="1:00 PM" />
               <MiniStat label="Done today" title="2 of 4 tasks" detail="Medication & exercise" />
@@ -255,7 +237,7 @@ export default function LandingPage() {
           <div className="text-center">
             <span className="eyebrow">Testimonials</span>
             <h2 className="mt-5 text-[2.4rem] leading-[1.1] text-ink sm:text-[2.95rem]">Built for <em>families</em> and caregivers.</h2>
-            <p className="mt-4 text-[13px] text-slate-600">A soft healthcare interface focused on confidence and ease of use.</p>
+            <p className="mt-4 text-[15px] text-slate-600">A soft healthcare interface focused on confidence and ease of use.</p>
             <p className="mt-4 text-[11px] italic text-accent-ink/80">Placeholder quotes — replace with real feedback from user testing.</p>
           </div>
           <div className="mt-14 grid items-start gap-5 lg:grid-cols-3">
@@ -275,18 +257,18 @@ export default function LandingPage() {
       </section>
 
       {/* ───────────── FAQ ───────────── */}
-      <section id="faq" className="section-padding pb-24 pt-16 lg:pb-32 lg:pt-20">
+      <section id="faq" className="section-padding scroll-mt-16 pb-24 pt-16 lg:scroll-mt-[72px] lg:pb-28 lg:pt-20">
         <div className="container-neura grid gap-10 lg:grid-cols-[500px_1fr] lg:gap-0">
           <div>
             <span className="eyebrow">FAQ</span>
             <h2 className="mt-5 text-[2.4rem] leading-[1.1] text-ink max-w-[420px] sm:text-[2.95rem]">Common questions about <em>Neura</em>.</h2>
-            <p className="mt-5 text-[13px] text-slate-600">Clear answers for caregivers before they start.</p>
+            <p className="mt-5 text-[15px] text-slate-600">Clear answers for caregivers before they start.</p>
           </div>
           <div>
             {faqs.map((item, i) => (
               <details key={item.question} open={i === 0} className="faq group border-b border-slate-300/80 open:rounded-2xl open:border-transparent open:bg-white open:shadow-[0_20px_44px_-28px_rgba(31,37,92,0.35)]">
-                <summary className="flex items-center justify-between gap-4 px-6 py-6 font-display text-[1.2rem] text-ink">{i + 1}. {item.question}<ChevronDown className="faq-chevron size-4 shrink-0 text-ink transition-transform" /></summary>
-                <p className="-mt-2 max-w-[520px] px-6 pb-6 text-[13px] leading-[1.7] text-slate-600">{item.answer}</p>
+                <summary className="flex items-center justify-between gap-4 rounded-2xl px-6 py-6 font-display text-[1.2rem] text-ink transition-colors hover:text-accent-ink">{i + 1}. {item.question}<ChevronDown className="faq-chevron size-4 shrink-0 text-ink transition-transform" /></summary>
+                <p className="-mt-2 max-w-[560px] px-6 pb-6 text-[14px] leading-[1.7] text-slate-600">{item.answer}</p>
               </details>
             ))}
           </div>
@@ -295,14 +277,14 @@ export default function LandingPage() {
 
       {/* ───────────── Closing CTA ───────────── */}
       <section className="grid lg:grid-cols-2">
-        <div aria-hidden className="relative h-64 overflow-hidden bg-navy-deep sm:h-80 lg:h-auto lg:min-h-[500px]">
+        <div aria-hidden className="relative h-64 overflow-hidden bg-navy-deep sm:h-80 lg:h-auto lg:min-h-[460px]">
           <GlowWave className="absolute inset-0 size-full" />
         </div>
-        <div className="bg-periwinkle px-6 py-14 text-navy sm:px-14">
+        <div className="flex flex-col justify-center bg-periwinkle px-6 py-16 text-navy sm:px-14 lg:py-20">
           <p className="kicker text-navy/80">Start with Neura</p>
           <h2 className="mt-3 max-w-[520px] text-[2.5rem] leading-[1.12] text-navy sm:text-[3.25rem] [&_em]:!text-navy">Give caregivers a <em>calmer way</em> to manage daily cognitive support.</h2>
-          <p className="mt-10 max-w-[400px] text-[17px] leading-[1.6] text-navy/90 lg:mt-36">Create an account, add patient details, and begin guided daily care routines.</p>
-          <Button asChild className="mt-6 h-[46px] pl-6 pr-4 text-[13px]"><Link href="/signup">Create account <ArrowBubble /></Link></Button>
+          <p className="mt-6 max-w-[420px] text-[17px] leading-[1.6] text-navy/90">Create an account, add patient details, and begin guided daily care routines.</p>
+          <Button asChild className="mt-8 h-12 w-fit pl-6 pr-4 text-[14px] focus-visible:ring-offset-periwinkle"><Link href="/signup">Create account <ArrowBubble /></Link></Button>
         </div>
       </section>
 
@@ -310,11 +292,11 @@ export default function LandingPage() {
       <footer className="section-padding bg-navy py-8 text-white">
         <div className="container-neura flex flex-col items-center gap-6 md:flex-row md:justify-between">
           <Logo tone="light" textClassName="text-[1.35rem]" />
-          <nav className="flex flex-wrap justify-center gap-7 text-[13px] text-white/90">
-            <a href="#features" className="hover:text-white">Features</a>
-            <a href="#how" className="hover:text-white">How it works</a>
-            <a href="#faq" className="hover:text-white">FAQ</a>
-            <Link href="/login" className="hover:text-white">Login</Link>
+          <nav aria-label="Footer" className="flex flex-wrap justify-center gap-7 text-[14px] text-white/80">
+            <a href="#features" className="transition-colors hover:text-white">Features</a>
+            <a href="#how" className="transition-colors hover:text-white">How it works</a>
+            <a href="#faq" className="transition-colors hover:text-white">FAQ</a>
+            <Link href="/login" className="transition-colors hover:text-white">Sign in</Link>
           </nav>
           <p className="text-xs text-white/70">© 2026 Neura. Not a substitute for medical advice.</p>
         </div>
