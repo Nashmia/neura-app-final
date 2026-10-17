@@ -266,7 +266,9 @@ function renderMarkdown(report: RunReport): string {
   L.push(`| Git commit | \`${report.git.commit}\`${report.git.productionCodeModified ? " ⚠️ app/lib/scripts have uncommitted changes" : ""} |`);
   L.push(`| Node / locale / time zone | ${report.environment.node} / ${report.environment.locale} / ${report.environment.timeZone} |`);
   L.push(`| Embedding model | ${s.embeddingModel} |`);
-  L.push(`| Generation model (Gemini path forced) | ${s.generationModel} (quota fallback: ${s.quotaFallbackModel}), temperature ${s.assistantTemperature} |`);
+  L.push(s.answerProvider?.startsWith("fine-tuned")
+    ? `| Answer model | ${s.answerProvider} (Gemini still used for embeddings and reranking) |`
+    : `| Generation model (Gemini path forced) | ${s.generationModel} (quota fallback: ${s.quotaFallbackModel}), temperature ${s.assistantTemperature} |`);
   L.push(`| Retrieval | top-K = ${s.topK}; query = ${s.retrievalQuery}; ${s.knowledgeBase.chunks} chunks, loaded in ${s.knowledgeBase.loadMs} ms |`);
   L.push(`| Flags | \`${JSON.stringify(report.flags)}\` |`);
   L.push(`| Production-code check | ${report.driftCheck.ok ? "✅" : "❌"} ${report.driftCheck.detail} |`);

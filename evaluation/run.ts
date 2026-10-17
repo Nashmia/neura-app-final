@@ -45,6 +45,8 @@ const flags = {
   rerank: arg("rerank") ? argValue("rerank", "on") !== "off" : undefined,
   rewrite: arg("rewrite") ? argValue("rewrite", "on") !== "off" : undefined,
   taskDelayMs: Number(argValue("task-delay", "4000")),
+  // Which model writes the answers: Gemini (production default) or the fine-tuned model on the HF Space (Phase 4 benchmark).
+  provider: (argValue("provider", "gemini") === "finetuned" ? "finetuned" : "gemini") as "gemini" | "finetuned",
 };
 
 /**
@@ -168,6 +170,12 @@ async function main() {
   let generationSkippedReason: string | undefined = flags.answers ? undefined : "Answer generation not requested (run with --answers).";
   if (flags.answers) {
     const { runAssistantTurn } = await import("../lib/gemini");
+    const { runFinetunedTurn } = await import("../lib/finetuned-model");
+    // The fine-tuned model is called with a long timeout so the benchmark records its true latency
+    // (the app gives up after 25 s and falls back to Gemini).
+    const generate = flags.provider === "finetuned"
+      ? (system: string, history: TestCase["history"]) => runFinetunedTurn(system, history, { timeoutMs: 180_000 })
+      : runAssistantTurn;
     const { judgeAnswer } = await import("./judge");
     const subset = results.filter((r) => (flags.ids ? true : r.answerSubset) && retrievals.has(r.id)).slice(0, flags.limit);
     let quotaHit = false;
@@ -181,7 +189,7 @@ async function main() {
       const contextMs = ms(t0);
       try {
         const g0 = performance.now();
-        const answer = await runAssistantTurn(systemInstruction, tc.history);
+        const answer = await generate(systemInstruction, tc.history);
         const generationMs = ms(g0);
         const cited = ctx.citedSources(answer, top); // what the route returns and the user sees
         r.answer = {
@@ -221,7 +229,7 @@ async function main() {
     environment: { node: process.version, locale: Intl.DateTimeFormat().resolvedOptions().locale, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
     flags,
     label: flags.label,
-    settings: { ...settings, topK: ctx.TOP_K, evalNow: EVAL_NOW.toISOString(), appTimeZone: ctx.APP_TIME_ZONE, retrievalQuery: `last 4 turns joined with newlines${flags.rewrite ? "; follow-ups rewritten into a standalone query" : ""}`, pipeline: flags.rerank ? `dense top ${CANDIDATE_K} -> LLM rerank (lite model), keep score >= ${MIN_RELEVANCE}, max ${MAX_SELECTED}` : `dense top ${ctx.TOP_K}`, knowledgeBase: { chunks: chunks.length, source: kbSource, loadMs: kbLoadMs } },
+    settings: { ...settings, answerProvider: flags.provider === "finetuned" ? "fine-tuned model on the HF Space (lib/finetuned-model.ts)" : "Gemini (lib/gemini.ts)", topK: ctx.TOP_K, evalNow: EVAL_NOW.toISOString(), appTimeZone: ctx.APP_TIME_ZONE, retrievalQuery: `last 4 turns joined with newlines${flags.rewrite ? "; follow-ups rewritten into a standalone query" : ""}`, pipeline: flags.rerank ? `dense top ${CANDIDATE_K} -> LLM rerank (lite model), keep score >= ${MIN_RELEVANCE}, max ${MAX_SELECTED}` : `dense top ${ctx.TOP_K}`, knowledgeBase: { chunks: chunks.length, source: kbSource, loadMs: kbLoadMs } },
     driftCheck: drift,
     generationSkippedReason,
     apiCalls: { summary: summariseCalls(), log: apiCalls },

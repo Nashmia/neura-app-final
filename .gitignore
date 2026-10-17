@@ -22,3 +22,5 @@ training/.dataset-cache.json
 
 .vercel
 .env*
+# Resume cache for training/generate_context_dataset.ts
+training/.context-dataset-cache.json

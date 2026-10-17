@@ -6,14 +6,15 @@ const REQUEST_TIMEOUT_MS = 25_000; // free HF Spaces can be slow to wake from sl
 /**
  * Calls the fine-tuned model hosted on Hugging Face (see training/hf_space).
  * Same shape as `runAssistantTurn` in lib/gemini.ts, so the assistant route
- * can swap between the two behind the ASSISTANT_MODEL_PROVIDER env var.
+ * can swap between the two behind the ASSISTANT_MODEL_PROVIDER env var. `timeoutMs` lets the evaluation
+ * measure true latency; the app uses the 25 s default and falls back to Gemini past it.
  */
-export async function runFinetunedTurn(systemInstruction: string, history: HistoryTurn[]): Promise<string> {
+export async function runFinetunedTurn(systemInstruction: string, history: HistoryTurn[], options: { timeoutMs?: number } = {}): Promise<string> {
   const baseUrl = process.env.HF_SPACE_URL;
   if (!baseUrl) throw new Error("HF_SPACE_URL is not set — cannot reach the fine-tuned model.");
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? REQUEST_TIMEOUT_MS);
 
   try {
     const response = await fetch(`${baseUrl.replace(/\/$/, "")}/generate`, {
