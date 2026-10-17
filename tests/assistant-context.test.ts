@@ -36,6 +36,11 @@ test("excerpts are numbered [1]..[n]", () => {
 const appt = (id: string, date: string, status: Appointment["status"] = "Upcoming") =>
   ({ id, title: id, date, time: "10:00", status }) as Appointment;
 
+test("past appointments still marked Upcoming are excluded; today and future are kept", () => {
+  const list = [appt("past", "2026-10-01"), appt("today", "2026-10-17"), appt("future", "2026-11-03"), appt("cancelled", "2026-11-04", "Cancelled")];
+  assert.deepEqual(upcomingAppointments(list, "2026-10-17").map((a) => a.id), ["today", "future"]);
+});
+
 test("dates are written unambiguously in the app time zone, regardless of server locale", () => {
   assert.equal(formatTimestamp("2026-10-11T10:00:00.000Z", "Asia/Karachi"), "11 Oct 2026");
   assert.equal(formatTimestamp("2026-10-14T19:00:00.000Z", "Asia/Karachi"), "15 Oct 2026"); // after midnight in Pakistan
@@ -55,5 +60,6 @@ test("patient context uses the date filter and word dates", () => {
   );
   assert.match(text, /2\/5 on 11 Oct 2026/);
   assert.match(text, /Neurologist on 3 Nov 2026 at 10:00/);
+  assert.doesNotMatch(text, /Old physio/);
   assert.doesNotMatch(text, /\d{1,2}\/\d{1,2}\/\d{2,4}/);
 });

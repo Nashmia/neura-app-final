@@ -32,9 +32,14 @@ export function todayIn(now: Date, timeZone = APP_TIME_ZONE) {
   return new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone }).format(now);
 }
 
-export function upcomingAppointments(appointments: Appointment[], _today: string, limit = 3) {
+/**
+ * Appointments still to come: status "Upcoming" AND dated today or later. Status alone isn't enough —
+ * nothing moves a past appointment out of "Upcoming", so it would be presented as still to come.
+ * Only the date is compared (the time field is free text), so an appointment earlier today still shows.
+ */
+export function upcomingAppointments(appointments: Appointment[], today: string, limit = 3) {
   return appointments
-    .filter((a) => a.status === "Upcoming")
+    .filter((a) => a.status === "Upcoming" && /^\d{4}-\d{2}-\d{2}$/.test(a.date) && a.date >= today)
     .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))
     .slice(0, limit);
 }
