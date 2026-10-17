@@ -66,6 +66,8 @@ async function withQuotaFallback<T>(fn: (model: string) => Promise<T>, primaryMo
     return await withRetry(() => fn(primaryModel));
   } catch (error) {
     if (!isQuotaExceeded(error)) throw error;
+    // Visible in the server logs: answers from the lite model are noticeably shorter and less careful.
+    console.warn(`Gemini quota/rate limit on ${primaryModel}; answering with ${FALLBACK_MODEL} instead.`);
     return await withRetry(() => fn(FALLBACK_MODEL));
   }
 }

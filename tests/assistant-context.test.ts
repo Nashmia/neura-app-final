@@ -63,3 +63,8 @@ test("patient context uses the date filter and word dates", () => {
   assert.doesNotMatch(text, /Old physio/);
   assert.doesNotMatch(text, /\d{1,2}\/\d{1,2}\/\d{2,4}/);
 });
+
+test("the today line names the weekday so the model never has to guess it", () => {
+  const text = buildPatientContext({ patient: { name: "P", age: 80, dementiaStage: "Mild" }, medications: [], sessions: [], journalEntries: [], appointments: [] }, new Date("2026-10-17T09:00:00Z"));
+  assert.match(text, /^Today is Saturday, 17 Oct 2026\./);
+});

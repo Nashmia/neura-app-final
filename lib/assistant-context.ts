@@ -87,7 +87,7 @@ export function buildPatientContext(data: PatientData, now: Date, question = "")
   const upcoming = upcomingAppointments(appointments, today);
 
   return [
-    `Today is ${formatTimestamp(now.toISOString())}.`,
+    `Today is ${new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: APP_TIME_ZONE }).format(now)}, ${formatTimestamp(now.toISOString())}.`,
     `Patient: ${patient.name}, age ${patient.age}, ${patient.dementiaStage} stage dementia.`,
     medications.length
       ? `Current medications: ${medications.map((m) => `${m.name} (${m.dosage}, ${m.time}, ${m.status})`).join("; ")}.`
