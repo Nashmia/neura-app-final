@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { QUIZ_MAX_QUESTIONS, QUIZ_MIN_QUESTIONS } from "@/lib/quiz-limits";
 import { getCurrentUser } from "@/lib/auth";
 import { createId, findPatientForUser, getCollections } from "@/lib/db";
 import type { Contact } from "@/lib/types";
@@ -22,7 +23,7 @@ const schema = z.object({
     )
     .optional()
     .default([]),
-  quizLength: z.coerce.number().min(3).max(20),
+  quizLength: z.coerce.number().int().min(QUIZ_MIN_QUESTIONS).max(QUIZ_MAX_QUESTIONS),
   quizDifficulty: z.string().min(2),
 });
 

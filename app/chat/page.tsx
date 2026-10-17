@@ -7,16 +7,17 @@ import { CheckCircle2, Home, Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/layout/logo";
+import { QUIZ_MAX_ANSWER_CHARS } from "@/lib/quiz-limits";
 import { api } from "@/lib/utils";
 
-type HistoryTurn = { role: "user" | "model"; text: string };
 type ChatMessage = { role: "user" | "assistant"; text: string };
 type QuizTurn =
   | { type: "question"; message: string; questionNumber: number; total: number }
   | { type: "complete"; message: string; score: number; total: number; summary: string };
 
 export default function ChatPage() {
-  const [history, setHistory] = useState<HistoryTurn[]>([]);
+  // The server keeps the transcript; the client only remembers which check-in it is answering.
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -27,16 +28,16 @@ export default function ChatPage() {
   const started = useRef(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  async function sendTurn(nextHistory: HistoryTurn[]) {
+  async function sendTurn(answer?: string) {
     setSending(true);
     setError(null);
     try {
-      const data = await api<{ turn: QuizTurn }>("/api/chat/quiz", {
+      const data = await api<{ sessionId: string; turn: QuizTurn }>("/api/chat/quiz", {
         method: "POST",
-        body: JSON.stringify({ history: nextHistory }),
+        body: JSON.stringify(answer === undefined ? {} : { sessionId, answer }),
       });
       const { turn } = data;
-      setHistory([...nextHistory, { role: "model", text: JSON.stringify(turn) }]);
+      setSessionId(data.sessionId);
       setMessages((m) => [...m, { role: "assistant", text: turn.message }]);
       if (turn.type === "question") {
         setProgress({ current: turn.questionNumber, total: turn.total });
@@ -53,7 +54,20 @@ export default function ChatPage() {
         setNeedsOnboarding(true);
         return;
       }
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      const message = err instanceof Error ? err.message : "Something went wrong.";
+      if (answer !== undefined) {
+        // The server saved nothing, so give the answer back to resend.
+        setMessages((m) => m.slice(0, -1));
+        setInput(answer);
+      }
+      if (answer === undefined || message.startsWith("This check-in has expired")) {
+        setSessionId(null);
+        setMessages([]);
+        setProgress({ current: 0, total: 0 });
+        setError(`${message} Press send to start the check-in.`);
+      } else {
+        setError(message);
+      }
     } finally {
       setSending(false);
     }
@@ -62,7 +76,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (started.current) return;
     started.current = true;
-    sendTurn([]);
+    sendTurn();
   }, []);
 
   useEffect(() => {
@@ -70,11 +84,16 @@ export default function ChatPage() {
   }, [messages, sending]);
 
   function submitAnswer() {
+    if (sending || result) return;
+    if (!sessionId) {
+      sendTurn();
+      return;
+    }
     const answer = input.trim();
-    if (!answer || sending || result) return;
+    if (!answer) return;
     setMessages((m) => [...m, { role: "user", text: answer }]);
     setInput("");
-    sendTurn([...history, { role: "user", text: answer }]);
+    sendTurn(answer);
   }
 
   const progressPct = progress.total ? (progress.current / progress.total) * 100 : 0;
@@ -187,10 +206,11 @@ export default function ChatPage() {
                   if (e.key === "Enter") submitAnswer();
                 }}
                 disabled={sending}
+                maxLength={QUIZ_MAX_ANSWER_CHARS}
                 placeholder="Type your answer..."
                 className="h-14 flex-1 rounded-2xl border border-border bg-surface px-5 text-lg text-slate-800 outline-none transition focus:border-blue-400 focus:bg-white disabled:opacity-60"
               />
-              <Button onClick={submitAnswer} disabled={sending || !input.trim()} size="icon" className="size-14 shrink-0">
+              <Button onClick={submitAnswer} disabled={sending || (Boolean(sessionId) && !input.trim())} size="icon" className="size-14 shrink-0">
                 <Send className="size-5" />
               </Button>
             </div>
