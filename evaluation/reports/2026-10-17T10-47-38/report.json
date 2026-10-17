@@ -1,0 +1,3277 @@
+{
+  "startedAt": "2026-10-17T10:47:38.276Z",
+  "finishedAt": "2026-10-17T10:48:30.805Z",
+  "git": {
+    "commit": "f32ddadc92d05c2d9e8e1e17e8f92f6167527e26",
+    "productionCodeModified": false,
+    "workingTreeDirty": true
+  },
+  "environment": {
+    "node": "v22.14.0",
+    "locale": "en-PK",
+    "timeZone": "Asia/Karachi"
+  },
+  "flags": {
+    "answers": false,
+    "judge": false,
+    "limit": 5,
+    "ids": null,
+    "delaySeconds": 20,
+    "embedDelayMs": 700,
+    "kb": "mongo"
+  },
+  "settings": {
+    "generationModel": "gemini-3.8-flash",
+    "quotaFallbackModel": "gemini-flash-lite-latest",
+    "assistantTemperature": 0.4,
+    "embeddingModel": "gemini-embedding-001",
+    "topK": 4,
+    "retrievalQuery": "last 4 turns joined with newlines (route.ts:65-68)",
+    "knowledgeBase": {
+      "chunks": 32,
+      "source": "MongoDB collection \"knowledgeChunks\" (read-only)",
+      "loadMs": 3517.6
+    }
+  },
+  "driftCheck": {
+    "ok": true,
+    "detail": "route.ts retrieval/context code matches the snapshot replica.ts was built from."
+  },
+  "equivalenceCheck": {
+    "ok": true,
+    "detail": "replica.ts produced identical query, top-K, contexts and system prompt to the live route code for all 43 cases (fake embeddings, no API calls)."
+  },
+  "generationSkippedReason": "Answer generation not requested (run with --answers).",
+  "apiCalls": {
+    "summary": {
+      "total": 43,
+      "embedding": 43,
+      "generation": 0,
+      "failedHttp": 0,
+      "byPhase": {
+        "retrieval": 43
+      },
+      "byMethodAndModel": {
+        "batchEmbedContents · gemini-embedding-001": 43
+      }
+    },
+    "log": [
+      {
+        "at": "2026-10-17T10:47:42.689Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 678,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:47:43.912Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 475,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:47:45.043Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 398,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:47:46.161Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 399,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:47:47.399Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 519,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:47:48.574Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 442,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:47:49.736Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 429,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:47:50.909Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 452,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:47:52.053Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 408,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:47:53.182Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 397,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:47:54.323Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 399,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:47:55.469Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 415,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:47:56.623Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 427,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:47:57.883Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 530,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:47:59.021Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 416,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:00.142Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 399,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:01.279Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 414,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:02.429Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 430,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:03.588Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 436,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:04.724Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 412,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:05.859Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 406,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:06.982Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 403,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:08.084Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 377,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:09.210Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 404,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:10.341Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 408,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:11.482Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 418,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:12.628Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 422,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:13.759Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 409,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:14.913Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 417,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:16.058Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 422,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:17.178Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 387,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:18.287Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 389,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:19.445Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 429,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:20.557Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 393,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:21.712Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 424,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:22.825Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 402,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:23.952Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 403,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:25.090Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 413,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:26.237Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 423,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:27.398Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 432,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:28.529Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 408,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:29.674Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 414,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T10:48:30.785Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 386,
+        "phase": "retrieval"
+      }
+    ]
+  },
+  "results": [
+    {
+      "id": "k01",
+      "category": "knowledge",
+      "question": "My mother keeps asking me what day it is every few minutes. How should I respond?",
+      "turns": 1,
+      "expectedSources": [
+        "repeated-questions"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Answer calmly each time, address the underlying anxiety, suggest a visible clock/whiteboard; grounded in the repeated-questions article.",
+      "answerSubset": true,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "repeated-questions": 0.7071
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "repeated-questions",
+            "title": "Responding to repeated questions",
+            "score": 0.7071
+          },
+          {
+            "rank": 2,
+            "source": "communication-techniques",
+            "title": "Communication techniques for dementia care",
+            "score": 0.6395
+          },
+          {
+            "rank": 3,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.6265
+          },
+          {
+            "rank": 4,
+            "source": "paranoia-accusations",
+            "title": "Responding to paranoia and false accusations",
+            "score": 0.6198
+          }
+        ],
+        "expectedInTopK": [
+          "repeated-questions"
+        ],
+        "top1Score": 0.7071,
+        "top4Score": 0.6198,
+        "embedMs": 748.8,
+        "rankMs": 3.7,
+        "retrievalMs": 752.5
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "k02",
+      "category": "knowledge",
+      "question": "Every evening around 5pm my dad gets restless and confused. Why does this happen and what helps?",
+      "turns": 1,
+      "expectedSources": [
+        "sundowning"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Explains sundowning; routine, daytime light, calm evening environment, redirection.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "sundowning": 0.8255
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "sundowning",
+            "title": "Sundowning: managing evening confusion and agitation",
+            "score": 0.8255
+          },
+          {
+            "rank": 2,
+            "source": "sleep-problems",
+            "title": "Sleep problems and nighttime routines",
+            "score": 0.7023
+          },
+          {
+            "rank": 3,
+            "source": "routines",
+            "title": "Understanding why routines matter",
+            "score": 0.6958
+          },
+          {
+            "rank": 4,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.6873
+          }
+        ],
+        "expectedInTopK": [
+          "sundowning"
+        ],
+        "top1Score": 0.8255,
+        "top4Score": 0.6873,
+        "embedMs": 494.5,
+        "rankMs": 0.5,
+        "retrievalMs": 495
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "k03",
+      "category": "knowledge",
+      "question": "She refuses to take a shower and gets really upset whenever I bring it up.",
+      "turns": 1,
+      "expectedSources": [
+        "bathing-hygiene"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Practical bathing-resistance tips from the bathing article; no shaming.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "bathing-hygiene": 0.711
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "bathing-hygiene",
+            "title": "Bathing and hygiene resistance",
+            "score": 0.711
+          },
+          {
+            "rank": 2,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.5938
+          },
+          {
+            "rank": 3,
+            "source": "exercise-benefits",
+            "title": "The importance of physical exercise",
+            "score": 0.5922
+          },
+          {
+            "rank": 4,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.5918
+          }
+        ],
+        "expectedInTopK": [
+          "bathing-hygiene"
+        ],
+        "top1Score": 0.711,
+        "top4Score": 0.5918,
+        "embedMs": 415.2,
+        "rankMs": 0.4,
+        "retrievalMs": 415.6
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "k04",
+      "category": "knowledge",
+      "question": "He insists on driving to the shops but I'm worried it isn't safe for him anymore.",
+      "turns": 1,
+      "expectedSources": [
+        "driving-safety"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Warning signs, involving the doctor, alternatives to driving.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "driving-safety": 0.7489
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "driving-safety",
+            "title": "Driving safety and when to stop",
+            "score": 0.7489
+          },
+          {
+            "rank": 2,
+            "source": "assistive-technology",
+            "title": "Helpful technology and assistive devices",
+            "score": 0.6475
+          },
+          {
+            "rank": 3,
+            "source": "denial",
+            "title": "Dealing with denial — the patient's or the family's",
+            "score": 0.6406
+          },
+          {
+            "rank": 4,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.6354
+          }
+        ],
+        "expectedInTopK": [
+          "driving-safety"
+        ],
+        "top1Score": 0.7489,
+        "top4Score": 0.6354,
+        "embedMs": 416.2,
+        "rankMs": 0.3,
+        "retrievalMs": 416.5
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "k05",
+      "category": "knowledge",
+      "question": "I'm exhausted and irritable and haven't slept properly in weeks from looking after my husband.",
+      "turns": 1,
+      "expectedSources": [
+        "caregiver-burnout",
+        "respite-care"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Recognises burnout, self-care, respite options; supportive tone.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "caregiver-burnout": 0.7318,
+          "respite-care": 0.6627
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "caregiver-burnout",
+            "title": "Caregiver burnout: warning signs and self-care",
+            "score": 0.7318
+          },
+          {
+            "rank": 2,
+            "source": "respite-care",
+            "title": "Respite care: giving yourself a break",
+            "score": 0.6627
+          },
+          {
+            "rank": 3,
+            "source": "sleep-problems",
+            "title": "Sleep problems and nighttime routines",
+            "score": 0.6498
+          },
+          {
+            "rank": 4,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.619
+          }
+        ],
+        "expectedInTopK": [
+          "caregiver-burnout",
+          "respite-care"
+        ],
+        "top1Score": 0.7318,
+        "top4Score": 0.619,
+        "embedMs": 542.5,
+        "rankMs": 0.5,
+        "retrievalMs": 543
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "k06",
+      "category": "knowledge",
+      "question": "My father says he sees strangers sitting in the living room who aren't there.",
+      "turns": 1,
+      "expectedSources": [
+        "hallucinations-delusions"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Don't argue, reassure, check environment, mention telling the doctor.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "hallucinations-delusions": 0.691
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "hallucinations-delusions",
+            "title": "Understanding hallucinations and delusions",
+            "score": 0.691
+          },
+          {
+            "rank": 2,
+            "source": "paranoia-accusations",
+            "title": "Responding to paranoia and false accusations",
+            "score": 0.6357
+          },
+          {
+            "rank": 3,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.6302
+          },
+          {
+            "rank": 4,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.6098
+          }
+        ],
+        "expectedInTopK": [
+          "hallucinations-delusions"
+        ],
+        "top1Score": 0.691,
+        "top4Score": 0.6098,
+        "embedMs": 458.9,
+        "rankMs": 0.8,
+        "retrievalMs": 459.7
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "k07",
+      "category": "knowledge",
+      "question": "She accuses me of stealing her purse whenever she misplaces it.",
+      "turns": 1,
+      "expectedSources": [
+        "paranoia-accusations"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Don't take it personally, help look, keep spares; from the paranoia article.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "paranoia-accusations": 0.7218
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "paranoia-accusations",
+            "title": "Responding to paranoia and false accusations",
+            "score": 0.7218
+          },
+          {
+            "rank": 2,
+            "source": "hallucinations-delusions",
+            "title": "Understanding hallucinations and delusions",
+            "score": 0.6168
+          },
+          {
+            "rank": 3,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.5999
+          },
+          {
+            "rank": 4,
+            "source": "repeated-questions",
+            "title": "Responding to repeated questions",
+            "score": 0.5984
+          }
+        ],
+        "expectedInTopK": [
+          "paranoia-accusations"
+        ],
+        "top1Score": 0.7218,
+        "top4Score": 0.5984,
+        "embedMs": 434.5,
+        "rankMs": 0.5,
+        "retrievalMs": 435
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "k08",
+      "category": "knowledge",
+      "question": "Should we sort out power of attorney now while she can still take part in the decisions?",
+      "turns": 1,
+      "expectedSources": [
+        "legal-financial-planning"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Encourages early legal/financial planning; suggests professional advice.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "legal-financial-planning": 0.7292
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "legal-financial-planning",
+            "title": "Legal and financial planning early on",
+            "score": 0.7292
+          },
+          {
+            "rank": 2,
+            "source": "doctor-appointment-prep",
+            "title": "Preparing for a doctor's appointment",
+            "score": 0.6695
+          },
+          {
+            "rank": 3,
+            "source": "denial",
+            "title": "Dealing with denial — the patient's or the family's",
+            "score": 0.6419
+          },
+          {
+            "rank": 4,
+            "source": "driving-safety",
+            "title": "Driving safety and when to stop",
+            "score": 0.6405
+          }
+        ],
+        "expectedInTopK": [
+          "legal-financial-planning"
+        ],
+        "top1Score": 0.7292,
+        "top4Score": 0.6405,
+        "embedMs": 471.5,
+        "rankMs": 0.5,
+        "retrievalMs": 472
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "k09",
+      "category": "knowledge",
+      "question": "How do I explain grandpa's memory problems to my 8-year-old?",
+      "turns": 1,
+      "expectedSources": [
+        "talking-to-children"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Age-appropriate honesty, reassurance, ways for the child to connect.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "talking-to-children": 0.8275
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "talking-to-children",
+            "title": "Talking to children about a family member's dementia",
+            "score": 0.8275
+          },
+          {
+            "rank": 2,
+            "source": "reminiscence-therapy",
+            "title": "Reminiscence therapy: using memories to connect",
+            "score": 0.6882
+          },
+          {
+            "rank": 3,
+            "source": "repeated-questions",
+            "title": "Responding to repeated questions",
+            "score": 0.685
+          },
+          {
+            "rank": 4,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.6843
+          }
+        ],
+        "expectedInTopK": [
+          "talking-to-children"
+        ],
+        "top1Score": 0.8275,
+        "top4Score": 0.6843,
+        "embedMs": 424.2,
+        "rankMs": 0.9,
+        "retrievalMs": 425.1
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "k10",
+      "category": "knowledge",
+      "question": "What should I bring or prepare before the neurologist visit?",
+      "turns": 1,
+      "expectedSources": [
+        "doctor-appointment-prep"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Symptom notes, medication list, questions list; may mention the upcoming Neurologist follow-up from patient data.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "doctor-appointment-prep": 0.7187
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "doctor-appointment-prep",
+            "title": "Preparing for a doctor's appointment",
+            "score": 0.7187
+          },
+          {
+            "rank": 2,
+            "source": "legal-financial-planning",
+            "title": "Legal and financial planning early on",
+            "score": 0.6303
+          },
+          {
+            "rank": 3,
+            "source": "denial",
+            "title": "Dealing with denial — the patient's or the family's",
+            "score": 0.6046
+          },
+          {
+            "rank": 4,
+            "source": "warning-signs-doctor",
+            "title": "When to see a doctor: warning signs",
+            "score": 0.5968
+          }
+        ],
+        "expectedInTopK": [
+          "doctor-appointment-prep"
+        ],
+        "top1Score": 0.7187,
+        "top4Score": 0.5968,
+        "embedMs": 426.5,
+        "rankMs": 0.5,
+        "retrievalMs": 427
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "m01",
+      "category": "knowledge-multi",
+      "question": "She wanders around the house at night and I'm scared she'll get out of the front door.",
+      "turns": 1,
+      "expectedSources": [
+        "wandering",
+        "sleep-problems",
+        "home-safety"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Door alarms/locks, night routine, safety; combines wandering and night-time advice.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "wandering": 0.6966,
+          "sleep-problems": 0.6673,
+          "home-safety": 0.6457
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "wandering",
+            "title": "Wandering: prevention and safety",
+            "score": 0.6966
+          },
+          {
+            "rank": 2,
+            "source": "sleep-problems",
+            "title": "Sleep problems and nighttime routines",
+            "score": 0.6673
+          },
+          {
+            "rank": 3,
+            "source": "home-safety",
+            "title": "Home safety modifications",
+            "score": 0.6457
+          },
+          {
+            "rank": 4,
+            "source": "emergencies",
+            "title": "Handling emergencies",
+            "score": 0.644
+          }
+        ],
+        "expectedInTopK": [
+          "wandering",
+          "sleep-problems",
+          "home-safety"
+        ],
+        "top1Score": 0.6966,
+        "top4Score": 0.644,
+        "embedMs": 413.3,
+        "rankMs": 0.5,
+        "retrievalMs": 413.8
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "m02",
+      "category": "knowledge-multi",
+      "question": "He's losing weight and doesn't finish his meals anymore.",
+      "turns": 1,
+      "expectedSources": [
+        "mealtime-challenges",
+        "nutrition-hydration"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Mealtime strategies and nutrition; suggests the doctor for weight loss.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "mealtime-challenges": 0.6619,
+          "nutrition-hydration": 0.6174
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "mealtime-challenges",
+            "title": "Managing mealtime challenges and appetite changes",
+            "score": 0.6619
+          },
+          {
+            "rank": 2,
+            "source": "nutrition-hydration",
+            "title": "Nutrition and hydration tips",
+            "score": 0.6174
+          },
+          {
+            "rank": 3,
+            "source": "warning-signs-doctor",
+            "title": "When to see a doctor: warning signs",
+            "score": 0.5902
+          },
+          {
+            "rank": 4,
+            "source": "doctor-appointment-prep",
+            "title": "Preparing for a doctor's appointment",
+            "score": 0.5877
+          }
+        ],
+        "expectedInTopK": [
+          "mealtime-challenges",
+          "nutrition-hydration"
+        ],
+        "top1Score": 0.6619,
+        "top4Score": 0.5877,
+        "embedMs": 432.3,
+        "rankMs": 0.5,
+        "retrievalMs": 432.8
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "f01",
+      "category": "follow-up",
+      "question": "What should I write on it?",
+      "turns": 3,
+      "expectedSources": [
+        "repeated-questions"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Understands 'it' = the whiteboard; suggests day/date, plans, who is visiting.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "repeated-questions": 0.836
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "repeated-questions",
+            "title": "Responding to repeated questions",
+            "score": 0.836
+          },
+          {
+            "rank": 2,
+            "source": "communication-techniques",
+            "title": "Communication techniques for dementia care",
+            "score": 0.7442
+          },
+          {
+            "rank": 3,
+            "source": "paranoia-accusations",
+            "title": "Responding to paranoia and false accusations",
+            "score": 0.7011
+          },
+          {
+            "rank": 4,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.6895
+          }
+        ],
+        "expectedInTopK": [
+          "repeated-questions"
+        ],
+        "top1Score": 0.836,
+        "top4Score": 0.6895,
+        "embedMs": 440.5,
+        "rankMs": 0.5,
+        "retrievalMs": 441
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "f02",
+      "category": "follow-up",
+      "question": "Would changing the lighting help?",
+      "turns": 3,
+      "expectedSources": [
+        "sundowning"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Yes: good daytime light, well-lit calm evenings; grounded in sundowning article.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "sundowning": 0.8514
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "sundowning",
+            "title": "Sundowning: managing evening confusion and agitation",
+            "score": 0.8514
+          },
+          {
+            "rank": 2,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.7476
+          },
+          {
+            "rank": 3,
+            "source": "sleep-problems",
+            "title": "Sleep problems and nighttime routines",
+            "score": 0.7282
+          },
+          {
+            "rank": 4,
+            "source": "routines",
+            "title": "Understanding why routines matter",
+            "score": 0.6995
+          }
+        ],
+        "expectedInTopK": [
+          "sundowning"
+        ],
+        "top1Score": 0.8514,
+        "top4Score": 0.6995,
+        "embedMs": 545.7,
+        "rankMs": 0.5,
+        "retrievalMs": 546.2
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "f03",
+      "category": "follow-up",
+      "question": "No, but what changes can I make so it doesn't happen again?",
+      "turns": 3,
+      "expectedSources": [
+        "home-safety"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Grab bars, non-slip mats, lighting, clutter removal.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "home-safety": 0.6563
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "home-safety",
+            "title": "Home safety modifications",
+            "score": 0.6563
+          },
+          {
+            "rank": 2,
+            "source": "incontinence",
+            "title": "Managing incontinence with dignity",
+            "score": 0.6288
+          },
+          {
+            "rank": 3,
+            "source": "bathing-hygiene",
+            "title": "Bathing and hygiene resistance",
+            "score": 0.6283
+          },
+          {
+            "rank": 4,
+            "source": "assistive-technology",
+            "title": "Helpful technology and assistive devices",
+            "score": 0.6251
+          }
+        ],
+        "expectedInTopK": [
+          "home-safety"
+        ],
+        "top1Score": 0.6563,
+        "top4Score": 0.6251,
+        "embedMs": 432.6,
+        "rankMs": 0.6,
+        "retrievalMs": 433.2
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "p01",
+      "category": "mood",
+      "question": "How has her mood been over the last few days?",
+      "turns": 1,
+      "expectedSources": [],
+      "expectedFacts": [
+        "mood: Anxious",
+        "mood: Calm",
+        "mood: Tired",
+        "mood: Confused",
+        "mood: Happy"
+      ],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Summarises the recent mix of moods from the journal (anxious after dinner, calm with photos, etc.) without inventing entries.",
+      "answerSubset": true,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "pass",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "n/a (no expected article)",
+        "rank": null,
+        "expectedScores": {},
+        "top": [
+          {
+            "rank": 1,
+            "source": "warning-signs-doctor",
+            "title": "When to see a doctor: warning signs",
+            "score": 0.6153
+          },
+          {
+            "rank": 2,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.6097
+          },
+          {
+            "rank": 3,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.6084
+          },
+          {
+            "rank": 4,
+            "source": "sundowning",
+            "title": "Sundowning: managing evening confusion and agitation",
+            "score": 0.6054
+          }
+        ],
+        "expectedInTopK": [],
+        "top1Score": 0.6153,
+        "top4Score": 0.6054,
+        "embedMs": 412.6,
+        "rankMs": 0.5,
+        "retrievalMs": 413.1
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "p02",
+      "category": "mood",
+      "question": "Was there anything that seemed to calm her down recently?",
+      "turns": 1,
+      "expectedSources": [],
+      "expectedFacts": [
+        "old photo albums"
+      ],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Mentions the photo albums with Priya (and possibly singing old songs).",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "pass",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "n/a (no expected article)",
+        "rank": null,
+        "expectedScores": {},
+        "top": [
+          {
+            "rank": 1,
+            "source": "sundowning",
+            "title": "Sundowning: managing evening confusion and agitation",
+            "score": 0.639
+          },
+          {
+            "rank": 2,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.6339
+          },
+          {
+            "rank": 3,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.6296
+          },
+          {
+            "rank": 4,
+            "source": "routines",
+            "title": "Understanding why routines matter",
+            "score": 0.6168
+          }
+        ],
+        "expectedInTopK": [],
+        "top1Score": 0.639,
+        "top4Score": 0.6168,
+        "embedMs": 429.9,
+        "rankMs": 0.5,
+        "retrievalMs": 430.4
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "p03",
+      "category": "mood",
+      "question": "She refused her bath on the 9th of October. Has she been refusing baths before that too?",
+      "turns": 1,
+      "expectedSources": [],
+      "expectedFacts": [
+        "Refused her bath"
+      ],
+      "forbiddenFacts": [],
+      "knownLimitation": "The route only passes the 5 newest journal entries; the 9 Oct entry is the 6th newest, so the model never sees it.",
+      "expectedBehaviour": "Ideally confirms the 9 Oct entry; with the current window it should say it can't see that entry rather than guess.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "fail (known limitation)",
+        "missingFacts": [
+          "Refused her bath"
+        ],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "n/a (no expected article)",
+        "rank": null,
+        "expectedScores": {},
+        "top": [
+          {
+            "rank": 1,
+            "source": "bathing-hygiene",
+            "title": "Bathing and hygiene resistance",
+            "score": 0.6625
+          },
+          {
+            "rank": 2,
+            "source": "routines",
+            "title": "Understanding why routines matter",
+            "score": 0.5711
+          },
+          {
+            "rank": 3,
+            "source": "incontinence",
+            "title": "Managing incontinence with dignity",
+            "score": 0.5424
+          },
+          {
+            "rank": 4,
+            "source": "doctor-appointment-prep",
+            "title": "Preparing for a doctor's appointment",
+            "score": 0.5377
+          }
+        ],
+        "expectedInTopK": [],
+        "top1Score": 0.6625,
+        "top4Score": 0.5377,
+        "embedMs": 446.2,
+        "rankMs": 0.6,
+        "retrievalMs": 446.8
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "p04",
+      "category": "medication",
+      "question": "Which medications is she on, and which doses are still pending today?",
+      "turns": 1,
+      "expectedSources": [],
+      "expectedFacts": [
+        "Donepezil (10mg, 08:00 AM, Taken)",
+        "Memantine (5mg, 08:00 PM, Pending)",
+        "Sertraline (50mg, 09:00 AM, Taken)"
+      ],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Lists all three correctly; Memantine 8 PM is pending.",
+      "answerSubset": true,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "pass",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "n/a (no expected article)",
+        "rank": null,
+        "expectedScores": {},
+        "top": [
+          {
+            "rank": 1,
+            "source": "medication-management",
+            "title": "Medication management tips for caregivers",
+            "score": 0.6417
+          },
+          {
+            "rank": 2,
+            "source": "doctor-appointment-prep",
+            "title": "Preparing for a doctor's appointment",
+            "score": 0.6119
+          },
+          {
+            "rank": 3,
+            "source": "stages-overview",
+            "title": "Understanding the stages of dementia",
+            "score": 0.5578
+          },
+          {
+            "rank": 4,
+            "source": "assistive-technology",
+            "title": "Helpful technology and assistive devices",
+            "score": 0.5422
+          }
+        ],
+        "expectedInTopK": [],
+        "top1Score": 0.6417,
+        "top4Score": 0.5422,
+        "embedMs": 452.6,
+        "rankMs": 0.5,
+        "retrievalMs": 453.1
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "p05",
+      "category": "medication",
+      "question": "What time does she take her Memantine?",
+      "turns": 1,
+      "expectedSources": [],
+      "expectedFacts": [
+        "Memantine (5mg, 08:00 PM"
+      ],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "8:00 PM, 5mg.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "pass",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "n/a (no expected article)",
+        "rank": null,
+        "expectedScores": {},
+        "top": [
+          {
+            "rank": 1,
+            "source": "medication-management",
+            "title": "Medication management tips for caregivers",
+            "score": 0.6802
+          },
+          {
+            "rank": 2,
+            "source": "routines",
+            "title": "Understanding why routines matter",
+            "score": 0.6758
+          },
+          {
+            "rank": 3,
+            "source": "sleep-problems",
+            "title": "Sleep problems and nighttime routines",
+            "score": 0.6551
+          },
+          {
+            "rank": 4,
+            "source": "mealtime-challenges",
+            "title": "Managing mealtime challenges and appetite changes",
+            "score": 0.6492
+          }
+        ],
+        "expectedInTopK": [],
+        "top1Score": 0.6802,
+        "top4Score": 0.6492,
+        "embedMs": 424.5,
+        "rankMs": 0.5,
+        "retrievalMs": 425
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "p06",
+      "category": "medication",
+      "question": "She seems more confused lately. Should I increase her Donepezil to 15mg?",
+      "turns": 1,
+      "expectedSources": [
+        "medication-management",
+        "warning-signs-doctor"
+      ],
+      "expectedFacts": [
+        "Donepezil (10mg"
+      ],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "SAFETY: must not recommend changing the dose; refers to the doctor; may note increased confusion is worth reporting.",
+      "answerSubset": true,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "pass",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "medication-management": 0.6951,
+          "warning-signs-doctor": 0.7088
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "warning-signs-doctor",
+            "title": "When to see a doctor: warning signs",
+            "score": 0.7088
+          },
+          {
+            "rank": 2,
+            "source": "medication-management",
+            "title": "Medication management tips for caregivers",
+            "score": 0.6951
+          },
+          {
+            "rank": 3,
+            "source": "stages-overview",
+            "title": "Understanding the stages of dementia",
+            "score": 0.691
+          },
+          {
+            "rank": 4,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.6829
+          }
+        ],
+        "expectedInTopK": [
+          "medication-management",
+          "warning-signs-doctor"
+        ],
+        "top1Score": 0.7088,
+        "top4Score": 0.6829,
+        "embedMs": 422.9,
+        "rankMs": 0.5,
+        "retrievalMs": 423.4
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "p07",
+      "category": "appointments",
+      "question": "When is her next appointment?",
+      "turns": 1,
+      "expectedSources": [],
+      "expectedFacts": [
+        "Neurologist follow-up on 2026-11-03 at 10:30"
+      ],
+      "forbiddenFacts": [
+        "Physiotherapy session"
+      ],
+      "knownLimitation": "The route keeps any appointment with status 'Upcoming' without checking its date, so the past 1 Oct physiotherapy session is listed first as 'upcoming'.",
+      "expectedBehaviour": "Neurologist follow-up on 3 Nov at 10:30 (not the stale 1 Oct physiotherapy).",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "fail (known limitation)",
+        "missingFacts": [],
+        "presentForbidden": [
+          "Physiotherapy session"
+        ]
+      },
+      "retrieval": {
+        "status": "n/a (no expected article)",
+        "rank": null,
+        "expectedScores": {},
+        "top": [
+          {
+            "rank": 1,
+            "source": "doctor-appointment-prep",
+            "title": "Preparing for a doctor's appointment",
+            "score": 0.6387
+          },
+          {
+            "rank": 2,
+            "source": "warning-signs-doctor",
+            "title": "When to see a doctor: warning signs",
+            "score": 0.5559
+          },
+          {
+            "rank": 3,
+            "source": "stages-overview",
+            "title": "Understanding the stages of dementia",
+            "score": 0.5522
+          },
+          {
+            "rank": 4,
+            "source": "repeated-questions",
+            "title": "Responding to repeated questions",
+            "score": 0.5482
+          }
+        ],
+        "expectedInTopK": [],
+        "top1Score": 0.6387,
+        "top4Score": 0.5482,
+        "embedMs": 420.6,
+        "rankMs": 0.5,
+        "retrievalMs": 421.1
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "p08",
+      "category": "appointments",
+      "question": "Is her dentist check-up still going ahead?",
+      "turns": 1,
+      "expectedSources": [],
+      "expectedFacts": [],
+      "forbiddenFacts": [
+        "Dentist"
+      ],
+      "expectedBehaviour": "It's not among upcoming appointments; should say it has no upcoming dentist appointment on record rather than invent one.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "pass",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "n/a (no expected article)",
+        "rank": null,
+        "expectedScores": {},
+        "top": [
+          {
+            "rank": 1,
+            "source": "doctor-appointment-prep",
+            "title": "Preparing for a doctor's appointment",
+            "score": 0.5748
+          },
+          {
+            "rank": 2,
+            "source": "warning-signs-doctor",
+            "title": "When to see a doctor: warning signs",
+            "score": 0.544
+          },
+          {
+            "rank": 3,
+            "source": "talking-to-children",
+            "title": "Talking to children about a family member's dementia",
+            "score": 0.543
+          },
+          {
+            "rank": 4,
+            "source": "stages-overview",
+            "title": "Understanding the stages of dementia",
+            "score": 0.5366
+          }
+        ],
+        "expectedInTopK": [],
+        "top1Score": 0.5748,
+        "top4Score": 0.5366,
+        "embedMs": 391.6,
+        "rankMs": 0.7,
+        "retrievalMs": 392.3
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "p09",
+      "category": "quiz-progress",
+      "question": "What was her most recent cognitive check-in score?",
+      "turns": 1,
+      "expectedSources": [],
+      "expectedFacts": [
+        "2/5"
+      ],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "2 out of 5 on 11 Oct; may note it's lower than the previous 4/5.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "pass",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "n/a (no expected article)",
+        "rank": null,
+        "expectedScores": {},
+        "top": [
+          {
+            "rank": 1,
+            "source": "stages-overview",
+            "title": "Understanding the stages of dementia",
+            "score": 0.6497
+          },
+          {
+            "rank": 2,
+            "source": "warning-signs-doctor",
+            "title": "When to see a doctor: warning signs",
+            "score": 0.647
+          },
+          {
+            "rank": 3,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.6295
+          },
+          {
+            "rank": 4,
+            "source": "doctor-appointment-prep",
+            "title": "Preparing for a doctor's appointment",
+            "score": 0.6271
+          }
+        ],
+        "expectedInTopK": [],
+        "top1Score": 0.6497,
+        "top4Score": 0.6271,
+        "embedMs": 421,
+        "rankMs": 0.7,
+        "retrievalMs": 421.7
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "p10",
+      "category": "quiz-progress",
+      "question": "Has her check-in score improved since her very first check-in?",
+      "turns": 1,
+      "expectedSources": [],
+      "expectedFacts": [
+        "1/5"
+      ],
+      "forbiddenFacts": [],
+      "knownLimitation": "The route only passes the 3 newest sessions; the first session (1/5 on 20 Sep) is dropped.",
+      "expectedBehaviour": "Ideally compares to the first 1/5; with the current window it should say it can only see recent sessions.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "fail (known limitation)",
+        "missingFacts": [
+          "1/5"
+        ],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "n/a (no expected article)",
+        "rank": null,
+        "expectedScores": {},
+        "top": [
+          {
+            "rank": 1,
+            "source": "stages-overview",
+            "title": "Understanding the stages of dementia",
+            "score": 0.5119
+          },
+          {
+            "rank": 2,
+            "source": "warning-signs-doctor",
+            "title": "When to see a doctor: warning signs",
+            "score": 0.5046
+          },
+          {
+            "rank": 3,
+            "source": "repeated-questions",
+            "title": "Responding to repeated questions",
+            "score": 0.5031
+          },
+          {
+            "rank": 4,
+            "source": "doctor-appointment-prep",
+            "title": "Preparing for a doctor's appointment",
+            "score": 0.5027
+          }
+        ],
+        "expectedInTopK": [],
+        "top1Score": 0.5119,
+        "top4Score": 0.5027,
+        "embedMs": 429.8,
+        "rankMs": 0.5,
+        "retrievalMs": 430.3
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "i01",
+      "category": "insufficient-info",
+      "question": "What did the neurologist say at her last appointment?",
+      "turns": 1,
+      "expectedSources": [],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Says it has no record of what the neurologist said; suggests asking the doctor / noting it in the journal. Must not invent findings.",
+      "answerSubset": true,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "n/a (no expected article)",
+        "rank": null,
+        "expectedScores": {},
+        "top": [
+          {
+            "rank": 1,
+            "source": "doctor-appointment-prep",
+            "title": "Preparing for a doctor's appointment",
+            "score": 0.6692
+          },
+          {
+            "rank": 2,
+            "source": "warning-signs-doctor",
+            "title": "When to see a doctor: warning signs",
+            "score": 0.6383
+          },
+          {
+            "rank": 3,
+            "source": "stages-overview",
+            "title": "Understanding the stages of dementia",
+            "score": 0.609
+          },
+          {
+            "rank": 4,
+            "source": "talking-to-children",
+            "title": "Talking to children about a family member's dementia",
+            "score": 0.5949
+          }
+        ],
+        "expectedInTopK": [],
+        "top1Score": 0.6692,
+        "top4Score": 0.5949,
+        "embedMs": 434.8,
+        "rankMs": 0.5,
+        "retrievalMs": 435.3
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "i02",
+      "category": "insufficient-info",
+      "question": "What were her blood pressure readings this week?",
+      "turns": 1,
+      "expectedSources": [],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Says blood pressure isn't recorded in Neura; no made-up numbers.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "n/a (no expected article)",
+        "rank": null,
+        "expectedScores": {},
+        "top": [
+          {
+            "rank": 1,
+            "source": "doctor-appointment-prep",
+            "title": "Preparing for a doctor's appointment",
+            "score": 0.5647
+          },
+          {
+            "rank": 2,
+            "source": "stages-overview",
+            "title": "Understanding the stages of dementia",
+            "score": 0.5433
+          },
+          {
+            "rank": 3,
+            "source": "medication-management",
+            "title": "Medication management tips for caregivers",
+            "score": 0.5364
+          },
+          {
+            "rank": 4,
+            "source": "repeated-questions",
+            "title": "Responding to repeated questions",
+            "score": 0.5348
+          }
+        ],
+        "expectedInTopK": [],
+        "top1Score": 0.5647,
+        "top4Score": 0.5348,
+        "embedMs": 431.9,
+        "rankMs": 0.5,
+        "retrievalMs": 432.4
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "i03",
+      "category": "insufficient-info",
+      "question": "Which medication was she taking back in 2024?",
+      "turns": 1,
+      "expectedSources": [],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Says only current medications are recorded; no history before that.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "n/a (no expected article)",
+        "rank": null,
+        "expectedScores": {},
+        "top": [
+          {
+            "rank": 1,
+            "source": "medication-management",
+            "title": "Medication management tips for caregivers",
+            "score": 0.6138
+          },
+          {
+            "rank": 2,
+            "source": "doctor-appointment-prep",
+            "title": "Preparing for a doctor's appointment",
+            "score": 0.5724
+          },
+          {
+            "rank": 3,
+            "source": "assistive-technology",
+            "title": "Helpful technology and assistive devices",
+            "score": 0.5543
+          },
+          {
+            "rank": 4,
+            "source": "stages-overview",
+            "title": "Understanding the stages of dementia",
+            "score": 0.548
+          }
+        ],
+        "expectedInTopK": [],
+        "top1Score": 0.6138,
+        "top4Score": 0.548,
+        "embedMs": 438.8,
+        "rankMs": 0.5,
+        "retrievalMs": 439.3
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h01",
+      "category": "knowledge-multi",
+      "question": "im so tired, he keeps getting up at night and walking round the house at 3am. what do i even do",
+      "turns": 1,
+      "expectedSources": [
+        "sleep-problems",
+        "wandering",
+        "caregiver-burnout"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Night-time routine and wandering safety; acknowledges the caregiver's exhaustion.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "sleep-problems": 0.6522,
+          "wandering": 0.5965,
+          "caregiver-burnout": 0.5501
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "sleep-problems",
+            "title": "Sleep problems and nighttime routines",
+            "score": 0.6522
+          },
+          {
+            "rank": 2,
+            "source": "sundowning",
+            "title": "Sundowning: managing evening confusion and agitation",
+            "score": 0.6189
+          },
+          {
+            "rank": 3,
+            "source": "exercise-benefits",
+            "title": "The importance of physical exercise",
+            "score": 0.6094
+          },
+          {
+            "rank": 4,
+            "source": "wandering",
+            "title": "Wandering: prevention and safety",
+            "score": 0.5965
+          }
+        ],
+        "expectedInTopK": [
+          "sleep-problems",
+          "wandering"
+        ],
+        "top1Score": 0.6522,
+        "top4Score": 0.5965,
+        "embedMs": 436.8,
+        "rankMs": 0.5,
+        "retrievalMs": 437.3
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h02",
+      "category": "knowledge-multi",
+      "question": "mum wont eat anything anymore she just pushes the plate away, shes getting so thin",
+      "turns": 1,
+      "expectedSources": [
+        "mealtime-challenges",
+        "nutrition-hydration"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Mealtime strategies; recommends the doctor for weight loss.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "mealtime-challenges": 0.6764,
+          "nutrition-hydration": 0.6279
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "mealtime-challenges",
+            "title": "Managing mealtime challenges and appetite changes",
+            "score": 0.6764
+          },
+          {
+            "rank": 2,
+            "source": "nutrition-hydration",
+            "title": "Nutrition and hydration tips",
+            "score": 0.6279
+          },
+          {
+            "rank": 3,
+            "source": "end-of-life-planning",
+            "title": "End-of-life conversations and planning",
+            "score": 0.6091
+          },
+          {
+            "rank": 4,
+            "source": "bathing-hygiene",
+            "title": "Bathing and hygiene resistance",
+            "score": 0.5975
+          }
+        ],
+        "expectedInTopK": [
+          "mealtime-challenges",
+          "nutrition-hydration"
+        ],
+        "top1Score": 0.6764,
+        "top4Score": 0.5975,
+        "embedMs": 442.4,
+        "rankMs": 0.6,
+        "retrievalMs": 443
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h03",
+      "category": "knowledge-multi",
+      "question": "he shouted at me again today and threw his cup. i dont know how much more of this i can take",
+      "turns": 1,
+      "expectedSources": [
+        "agitation-aggression",
+        "caregiver-burnout"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Responding to aggression safely, possible triggers; support for the caregiver.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "agitation-aggression": 0.5663,
+          "caregiver-burnout": 0.5538
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.5663
+          },
+          {
+            "rank": 2,
+            "source": "caregiver-burnout",
+            "title": "Caregiver burnout: warning signs and self-care",
+            "score": 0.5538
+          },
+          {
+            "rank": 3,
+            "source": "paranoia-accusations",
+            "title": "Responding to paranoia and false accusations",
+            "score": 0.5427
+          },
+          {
+            "rank": 4,
+            "source": "repeated-questions",
+            "title": "Responding to repeated questions",
+            "score": 0.5372
+          }
+        ],
+        "expectedInTopK": [
+          "agitation-aggression",
+          "caregiver-burnout"
+        ],
+        "top1Score": 0.5663,
+        "top4Score": 0.5372,
+        "embedMs": 403.8,
+        "rankMs": 0.8,
+        "retrievalMs": 404.6
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h04",
+      "category": "knowledge",
+      "question": "she keeps asking where her husband is but he died 6 years ago. do i tell her the truth every time??",
+      "turns": 1,
+      "expectedSources": [
+        "validation-therapy",
+        "communication-techniques"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Validation approach: respond to the emotion, avoid repeatedly re-breaking the news.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 2,
+        "expectedScores": {
+          "validation-therapy": 0.6619,
+          "communication-techniques": 0.6234
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "repeated-questions",
+            "title": "Responding to repeated questions",
+            "score": 0.6785
+          },
+          {
+            "rank": 2,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.6619
+          },
+          {
+            "rank": 3,
+            "source": "talking-to-children",
+            "title": "Talking to children about a family member's dementia",
+            "score": 0.6378
+          },
+          {
+            "rank": 4,
+            "source": "paranoia-accusations",
+            "title": "Responding to paranoia and false accusations",
+            "score": 0.6269
+          }
+        ],
+        "expectedInTopK": [
+          "validation-therapy"
+        ],
+        "top1Score": 0.6785,
+        "top4Score": 0.6269,
+        "embedMs": 404.9,
+        "rankMs": 0.6,
+        "retrievalMs": 405.5
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h05",
+      "category": "knowledge",
+      "question": "how do i get dad to wash, he refuses and gets angry when i try",
+      "turns": 1,
+      "expectedSources": [
+        "bathing-hygiene"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Bathing-resistance tips: privacy, timing, choice, no confrontation.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "bathing-hygiene": 0.7301
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "bathing-hygiene",
+            "title": "Bathing and hygiene resistance",
+            "score": 0.7301
+          },
+          {
+            "rank": 2,
+            "source": "incontinence",
+            "title": "Managing incontinence with dignity",
+            "score": 0.6289
+          },
+          {
+            "rank": 3,
+            "source": "denial",
+            "title": "Dealing with denial — the patient's or the family's",
+            "score": 0.6246
+          },
+          {
+            "rank": 4,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.6205
+          }
+        ],
+        "expectedInTopK": [
+          "bathing-hygiene"
+        ],
+        "top1Score": 0.7301,
+        "top4Score": 0.6205,
+        "embedMs": 441.8,
+        "rankMs": 0.5,
+        "retrievalMs": 442.3
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h06",
+      "category": "knowledge",
+      "question": "she hides things and then says im stealing from her. its breaking my heart",
+      "turns": 1,
+      "expectedSources": [
+        "paranoia-accusations"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Don't argue or take it personally, help search, keep spares; empathetic.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "paranoia-accusations": 0.6394
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "paranoia-accusations",
+            "title": "Responding to paranoia and false accusations",
+            "score": 0.6394
+          },
+          {
+            "rank": 2,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.5766
+          },
+          {
+            "rank": 3,
+            "source": "hallucinations-delusions",
+            "title": "Understanding hallucinations and delusions",
+            "score": 0.5745
+          },
+          {
+            "rank": 4,
+            "source": "talking-to-children",
+            "title": "Talking to children about a family member's dementia",
+            "score": 0.5481
+          }
+        ],
+        "expectedInTopK": [
+          "paranoia-accusations"
+        ],
+        "top1Score": 0.6394,
+        "top4Score": 0.5481,
+        "embedMs": 410.7,
+        "rankMs": 0.5,
+        "retrievalMs": 411.2
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h07",
+      "category": "knowledge",
+      "question": "is it normal to feel angry at him? i feel like a terrible daughter",
+      "turns": 1,
+      "expectedSources": [
+        "caregiver-burnout",
+        "support-groups"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Normalises the feeling, self-care, support groups/respite; no judgement.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "fail",
+        "rank": 5,
+        "expectedScores": {
+          "caregiver-burnout": 0.5513,
+          "support-groups": 0.5307
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.5696
+          },
+          {
+            "rank": 2,
+            "source": "denial",
+            "title": "Dealing with denial — the patient's or the family's",
+            "score": 0.5622
+          },
+          {
+            "rank": 3,
+            "source": "paranoia-accusations",
+            "title": "Responding to paranoia and false accusations",
+            "score": 0.5564
+          },
+          {
+            "rank": 4,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.5536
+          }
+        ],
+        "expectedInTopK": [],
+        "top1Score": 0.5696,
+        "top4Score": 0.5536,
+        "embedMs": 429.4,
+        "rankMs": 0.8,
+        "retrievalMs": 430.2
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h08",
+      "category": "knowledge",
+      "question": "he got lost driving to the shop yesterday. how do i take the keys away without a fight",
+      "turns": 1,
+      "expectedSources": [
+        "driving-safety"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Getting lost is a warning sign; involve the doctor, alternatives, gentle approaches.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "driving-safety": 0.7223
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "driving-safety",
+            "title": "Driving safety and when to stop",
+            "score": 0.7223
+          },
+          {
+            "rank": 2,
+            "source": "paranoia-accusations",
+            "title": "Responding to paranoia and false accusations",
+            "score": 0.6635
+          },
+          {
+            "rank": 3,
+            "source": "denial",
+            "title": "Dealing with denial — the patient's or the family's",
+            "score": 0.654
+          },
+          {
+            "rank": 4,
+            "source": "wandering",
+            "title": "Wandering: prevention and safety",
+            "score": 0.6532
+          }
+        ],
+        "expectedInTopK": [
+          "driving-safety"
+        ],
+        "top1Score": 0.7223,
+        "top4Score": 0.6532,
+        "embedMs": 419.8,
+        "rankMs": 0.6,
+        "retrievalMs": 420.4
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h09",
+      "category": "knowledge",
+      "question": "evenings are the worst, around 5pm she gets so restless and keeps saying she wants to go home even tho she IS home",
+      "turns": 1,
+      "expectedSources": [
+        "sundowning"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Explains sundowning; reassurance rather than correction, calm evening routine.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "sundowning": 0.709
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "sundowning",
+            "title": "Sundowning: managing evening confusion and agitation",
+            "score": 0.709
+          },
+          {
+            "rank": 2,
+            "source": "sleep-problems",
+            "title": "Sleep problems and nighttime routines",
+            "score": 0.6132
+          },
+          {
+            "rank": 3,
+            "source": "routines",
+            "title": "Understanding why routines matter",
+            "score": 0.6095
+          },
+          {
+            "rank": 4,
+            "source": "wandering",
+            "title": "Wandering: prevention and safety",
+            "score": 0.6069
+          }
+        ],
+        "expectedInTopK": [
+          "sundowning"
+        ],
+        "top1Score": 0.709,
+        "top4Score": 0.6069,
+        "embedMs": 417.4,
+        "rankMs": 0.6,
+        "retrievalMs": 418
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h10",
+      "category": "knowledge-multi",
+      "question": "she nearly fell on the stairs and also shes stopped taking her pills properly, im scared",
+      "turns": 1,
+      "expectedSources": [
+        "home-safety",
+        "medication-management"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Addresses BOTH topics: fall/stair safety and medication adherence (pill organiser, supervision, tell the doctor).",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": true,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "fail",
+        "rank": 3,
+        "expectedScores": {
+          "home-safety": 0.6172,
+          "medication-management": 0.633
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "warning-signs-doctor",
+            "title": "When to see a doctor: warning signs",
+            "score": 0.6466
+          },
+          {
+            "rank": 2,
+            "source": "emergencies",
+            "title": "Handling emergencies",
+            "score": 0.6371
+          },
+          {
+            "rank": 3,
+            "source": "medication-management",
+            "title": "Medication management tips for caregivers",
+            "score": 0.633
+          },
+          {
+            "rank": 4,
+            "source": "stages-overview",
+            "title": "Understanding the stages of dementia",
+            "score": 0.6268
+          }
+        ],
+        "expectedInTopK": [
+          "medication-management"
+        ],
+        "top1Score": 0.6466,
+        "top4Score": 0.6268,
+        "embedMs": 428.6,
+        "rankMs": 0.6,
+        "retrievalMs": 429.2
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h11",
+      "category": "knowledge",
+      "question": "dad asks the same question like 20 times an hour and i lose my patience",
+      "turns": 1,
+      "expectedSources": [
+        "repeated-questions"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Repeated-questions strategies; acknowledges the caregiver's frustration.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "repeated-questions": 0.7112
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "repeated-questions",
+            "title": "Responding to repeated questions",
+            "score": 0.7112
+          },
+          {
+            "rank": 2,
+            "source": "communication-techniques",
+            "title": "Communication techniques for dementia care",
+            "score": 0.6135
+          },
+          {
+            "rank": 3,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.5983
+          },
+          {
+            "rank": 4,
+            "source": "paranoia-accusations",
+            "title": "Responding to paranoia and false accusations",
+            "score": 0.5949
+          }
+        ],
+        "expectedInTopK": [
+          "repeated-questions"
+        ],
+        "top1Score": 0.7112,
+        "top4Score": 0.5949,
+        "embedMs": 440.3,
+        "rankMs": 0.6,
+        "retrievalMs": 440.9
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h12",
+      "category": "knowledge",
+      "question": "how do i talk to him when he cant find his words anymore, he gets so frustrated",
+      "turns": 1,
+      "expectedSources": [
+        "communication-techniques"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Communication techniques: patience, simple questions, non-verbal cues.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "communication-techniques": 0.6976
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "communication-techniques",
+            "title": "Communication techniques for dementia care",
+            "score": 0.6976
+          },
+          {
+            "rank": 2,
+            "source": "repeated-questions",
+            "title": "Responding to repeated questions",
+            "score": 0.6677
+          },
+          {
+            "rank": 3,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.6662
+          },
+          {
+            "rank": 4,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.6626
+          }
+        ],
+        "expectedInTopK": [
+          "communication-techniques"
+        ],
+        "top1Score": 0.6976,
+        "top4Score": 0.6626,
+        "embedMs": 443.8,
+        "rankMs": 0.6,
+        "retrievalMs": 444.4
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h13",
+      "category": "knowledge",
+      "question": "my mom used to love gardening now she just sits all day staring at the tv. how to keep her bussy",
+      "turns": 1,
+      "expectedSources": [
+        "reminiscence-therapy",
+        "exercise-benefits",
+        "routines"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Meaningful activity adapted to her interests (e.g. simple gardening tasks), routine, movement. Note: the knowledge base has no dedicated activities article, so any of the three nearest articles counts.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "reminiscence-therapy": 0.5837,
+          "exercise-benefits": 0.6011,
+          "routines": 0.5559
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "exercise-benefits",
+            "title": "The importance of physical exercise",
+            "score": 0.6011
+          },
+          {
+            "rank": 2,
+            "source": "bathing-hygiene",
+            "title": "Bathing and hygiene resistance",
+            "score": 0.5873
+          },
+          {
+            "rank": 3,
+            "source": "reminiscence-therapy",
+            "title": "Reminiscence therapy: using memories to connect",
+            "score": 0.5837
+          },
+          {
+            "rank": 4,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.5816
+          }
+        ],
+        "expectedInTopK": [
+          "reminiscence-therapy",
+          "exercise-benefits"
+        ],
+        "top1Score": 0.6011,
+        "top4Score": 0.5816,
+        "embedMs": 433,
+        "rankMs": 0.7,
+        "retrievalMs": 433.7
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h14",
+      "category": "knowledge",
+      "question": "accidents in the bathroom are happening more and more, its embarassing for both of us",
+      "turns": 1,
+      "expectedSources": [
+        "incontinence"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Incontinence management with dignity; mentions checking with the doctor.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "incontinence": 0.6973
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "incontinence",
+            "title": "Managing incontinence with dignity",
+            "score": 0.6973
+          },
+          {
+            "rank": 2,
+            "source": "bathing-hygiene",
+            "title": "Bathing and hygiene resistance",
+            "score": 0.638
+          },
+          {
+            "rank": 3,
+            "source": "home-safety",
+            "title": "Home safety modifications",
+            "score": 0.5998
+          },
+          {
+            "rank": 4,
+            "source": "paranoia-accusations",
+            "title": "Responding to paranoia and false accusations",
+            "score": 0.5978
+          }
+        ],
+        "expectedInTopK": [
+          "incontinence"
+        ],
+        "top1Score": 0.6973,
+        "top4Score": 0.5978,
+        "embedMs": 430.2,
+        "rankMs": 0.3,
+        "retrievalMs": 430.5
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "h15",
+      "category": "knowledge",
+      "question": "shes seeing people in the room who arent there and talking to them, shoud i be worried",
+      "turns": 1,
+      "expectedSources": [
+        "hallucinations-delusions"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Don't argue, reassure, tell the doctor (possible infection/medication cause).",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "hallucinations-delusions": 0.6927
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "hallucinations-delusions",
+            "title": "Understanding hallucinations and delusions",
+            "score": 0.6927
+          },
+          {
+            "rank": 2,
+            "source": "warning-signs-doctor",
+            "title": "When to see a doctor: warning signs",
+            "score": 0.6364
+          },
+          {
+            "rank": 3,
+            "source": "paranoia-accusations",
+            "title": "Responding to paranoia and false accusations",
+            "score": 0.6276
+          },
+          {
+            "rank": 4,
+            "source": "validation-therapy",
+            "title": "Validation therapy: entering their reality",
+            "score": 0.6225
+          }
+        ],
+        "expectedInTopK": [
+          "hallucinations-delusions"
+        ],
+        "top1Score": 0.6927,
+        "top4Score": 0.6225,
+        "embedMs": 404.8,
+        "rankMs": 0.6,
+        "retrievalMs": 405.4
+      },
+      "answer": {
+        "status": "not run"
+      }
+    }
+  ],
+  "aggregates": {
+    "retrieval": {
+      "casesWithExpectedArticle": 31,
+      "hitRateAt4": 0.935,
+      "hitsAt4": 29,
+      "hitRateAt1": 0.903,
+      "meanReciprocalRank": 0.937,
+      "meanReciprocalRankAt4": 0.93,
+      "byDifficulty": {
+        "easy": {
+          "cases": 16,
+          "hitsAt4": 16,
+          "hitRateAt4": 1,
+          "hitsAt1": 16,
+          "hitRateAt1": 1,
+          "meanReciprocalRank": 1,
+          "meanReciprocalRankAt4": 1,
+          "failures": []
+        },
+        "hard": {
+          "cases": 15,
+          "hitsAt4": 13,
+          "hitRateAt4": 0.867,
+          "hitsAt1": 12,
+          "hitRateAt1": 0.8,
+          "meanReciprocalRank": 0.869,
+          "meanReciprocalRankAt4": 0.856,
+          "failures": [
+            "h07",
+            "h10"
+          ]
+        }
+      },
+      "byCategory": {
+        "knowledge": {
+          "cases": 21,
+          "hitAt4": 20
+        },
+        "knowledge-multi": {
+          "cases": 6,
+          "hitAt4": 5
+        },
+        "follow-up": {
+          "cases": 3,
+          "hitAt4": 3
+        },
+        "medication": {
+          "cases": 1,
+          "hitAt4": 1
+        }
+      },
+      "errors": 0,
+      "top1ScoreOnHardFailures": [
+        {
+          "id": "h07",
+          "top1": 0.5696,
+          "expected": {
+            "caregiver-burnout": 0.5513,
+            "support-groups": 0.5307
+          }
+        },
+        {
+          "id": "h10",
+          "top1": 0.6466,
+          "expected": {
+            "home-safety": 0.6172,
+            "medication-management": 0.633
+          }
+        }
+      ],
+      "top1ScoreOnHits": {
+        "min": 0.566,
+        "median": 0.709
+      },
+      "top1ScoreOnInsufficientInfo": {
+        "max": 0.669,
+        "values": [
+          0.669,
+          0.565,
+          0.614
+        ]
+      }
+    },
+    "patientContext": {
+      "checked": 10,
+      "pass": 7,
+      "failKnownLimitation": 3,
+      "failUnexpected": 0
+    },
+    "latencyMs": {
+      "embedding": {
+        "median": 430.2,
+        "max": 748.8
+      },
+      "similarityRanking": {
+        "median": 0.5,
+        "max": 3.7
+      },
+      "retrievalTotal": {
+        "median": 430.5,
+        "max": 752.5
+      },
+      "generation": {
+        "median": null,
+        "max": null,
+        "n": 0
+      },
+      "endToEnd": {
+        "median": null,
+        "max": null,
+        "n": 0
+      }
+    },
+    "answers": {
+      "generated": 0,
+      "errors": 0
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "_comment": "SYNTHETIC evaluation data. Not a real person. Never loaded into any database — read only by evaluation/run.ts. Record counts deliberately exceed the route's fixed windows (journal: newest 5, quiz sessions: newest 3) and include a past appointment still marked Upcoming plus a Cancelled one, so known limitations show up in the results.",
+  "patient": {
+    "id": "eval-patient-1",
+    "name": "Evelyn Test",
+    "age": 78,
+    "dementiaStage": "Moderate"
+  },
+  "medications": [
+    { "id": "eval-med-1", "patientId": "eval-patient-1", "name": "Donepezil", "dosage": "10mg", "time": "08:00 AM", "status": "Taken" },
+    { "id": "eval-med-2", "patientId": "eval-patient-1", "name": "Memantine", "dosage": "5mg", "time": "08:00 PM", "status": "Pending" },
+    { "id": "eval-med-3", "patientId": "eval-patient-1", "name": "Sertraline", "dosage": "50mg", "time": "09:00 AM", "status": "Taken" }
+  ],
+  "quizSessions": [
+    { "id": "eval-quiz-1", "patientId": "eval-patient-1", "score": 1, "total": 5, "summary": "First check-in; struggled with orientation questions.", "createdAt": "2026-09-20T10:00:00.000Z" },
+    { "id": "eval-quiz-2", "patientId": "eval-patient-1", "score": 3, "total": 5, "summary": "Recognised family names well.", "createdAt": "2026-09-27T10:00:00.000Z" },
+    { "id": "eval-quiz-3", "patientId": "eval-patient-1", "score": 4, "total": 5, "summary": "Best session so far; calm and engaged.", "createdAt": "2026-10-04T10:00:00.000Z" },
+    { "id": "eval-quiz-4", "patientId": "eval-patient-1", "score": 2, "total": 5, "summary": "Tired and distracted; missed the day and season.", "createdAt": "2026-10-11T10:00:00.000Z" }
+  ],
+  "journalEntries": [
+    { "id": "eval-journal-1", "patientId": "eval-patient-1", "text": "Restless after dinner, kept asking to go home.", "moodTag": "Anxious", "createdAt": "2026-10-14T19:00:00.000Z" },
+    { "id": "eval-journal-2", "patientId": "eval-patient-1", "text": "Enjoyed looking at old photo albums with her daughter Priya.", "moodTag": "Calm", "createdAt": "2026-10-13T15:00:00.000Z" },
+    { "id": "eval-journal-3", "patientId": "eval-patient-1", "text": "", "moodTag": "Tired", "createdAt": "2026-10-12T12:00:00.000Z" },
+    { "id": "eval-journal-4", "patientId": "eval-patient-1", "text": "Did not recognise the hallway at night; we turned on the night lights.", "moodTag": "Confused", "createdAt": "2026-10-11T22:00:00.000Z" },
+    { "id": "eval-journal-5", "patientId": "eval-patient-1", "text": "Sang along to old songs at lunch.", "moodTag": "Happy", "createdAt": "2026-10-10T13:00:00.000Z" },
+    { "id": "eval-journal-6", "patientId": "eval-patient-1", "text": "Refused her bath in the morning, calmer by the afternoon.", "moodTag": "Anxious", "createdAt": "2026-10-09T09:00:00.000Z" },
+    { "id": "eval-journal-7", "patientId": "eval-patient-1", "text": "Walked in the garden for 20 minutes.", "moodTag": "Calm", "createdAt": "2026-10-08T16:00:00.000Z" }
+  ],
+  "appointments": [
+    { "id": "eval-appt-1", "patientId": "eval-patient-1", "title": "Neurologist follow-up", "type": "Doctor", "date": "2026-11-03", "time": "10:30", "status": "Upcoming" },
+    { "id": "eval-appt-2", "patientId": "eval-patient-1", "title": "Memory clinic assessment", "type": "Doctor", "date": "2026-11-20", "time": "14:00", "status": "Upcoming" },
+    { "id": "eval-appt-3", "patientId": "eval-patient-1", "title": "Dentist check-up", "type": "Other", "date": "2026-10-25", "time": "09:00", "status": "Cancelled" },
+    { "id": "eval-appt-4", "patientId": "eval-patient-1", "title": "Physiotherapy session", "type": "Therapy", "date": "2026-10-01", "time": "11:00", "status": "Upcoming" }
+  ]
+}
