@@ -1,20 +1,13 @@
 import { NextResponse } from "next/server";
-import {
-  buildKnowledgeContext,
-  buildPatientContext,
-  buildRetrievalQuery,
-  buildSystemInstruction,
-  citedSources,
-  rankChunks,
-  TOP_K,
-} from "@/lib/assistant-context";
+import { buildKnowledgeContext, buildPatientContext, buildSystemInstruction, citedSources } from "@/lib/assistant-context";
 import { getCurrentUser } from "@/lib/auth";
 import { readJsonBody, validateHistory } from "@/lib/chat-validation";
 import { findPatientForUser, getCollections, withoutMongoId } from "@/lib/db";
 import { embedText } from "@/lib/embeddings";
-import { runAssistantTurn, type HistoryTurn } from "@/lib/gemini";
+import { runAssistantTurn, runJsonTask, type HistoryTurn } from "@/lib/gemini";
 import { runFinetunedTurn } from "@/lib/finetuned-model";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { retrieve } from "@/lib/retrieval";
 
 // This route does an embedding call, several DB reads, and a generation call
 // in sequence — comfortably over Vercel's default serverless timeout when
@@ -65,14 +58,14 @@ export async function POST(request: Request) {
       collections.appointments.find({ patientId: patient.id }, withoutMongoId).toArray(),
     ]);
 
-    const queryEmbedding = await embedText(buildRetrievalQuery(history));
-    const topChunks = rankChunks(queryEmbedding, chunks)
-      .slice(0, TOP_K)
-      .map((r) => r.chunk);
+    // Dense candidates, then an LLM relevance check; falls back to plain top-4 retrieval on any failure.
+    const retrieval = await retrieve(history, chunks, { embed: embedText, task: runJsonTask });
+    if (retrieval.errors.length) console.warn("Retrieval degraded:", retrieval.errors.join("; "));
+    const topChunks = retrieval.selected;
 
     const systemInstruction = buildSystemInstruction(
       buildKnowledgeContext(topChunks),
-      buildPatientContext({ patient, medications, sessions, journalEntries, appointments }, new Date())
+      buildPatientContext({ patient, medications, sessions, journalEntries, appointments }, new Date(), history[history.length - 1].text)
     );
     const message = await generateReply(systemInstruction, history);
 

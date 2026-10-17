@@ -113,6 +113,33 @@ export async function runQuizTurn(systemInstruction: string, history: HistoryTur
   return JSON.parse(text) as QuizTurn;
 }
 
+/**
+ * Small structured helper task (retrieval reranking, follow-up query rewriting) on the lite model: fast,
+ * and its quota is separate from the main assistant model's. Temperature 0 for stable judgements.
+ * Hard timeout per attempt; callers must handle failure (the assistant falls back to plain retrieval).
+ */
+export async function runJsonTask<T>(systemInstruction: string, prompt: string, responseSchema: object, timeoutMs = 8000): Promise<T> {
+  const ai = getClient();
+  const response = await withRetry(
+    () =>
+      ai.models.generateContent({
+        model: FALLBACK_MODEL,
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        config: {
+          systemInstruction,
+          responseMimeType: "application/json",
+          responseSchema,
+          temperature: 0,
+          abortSignal: AbortSignal.timeout(timeoutMs),
+        },
+      }),
+    2
+  );
+  const text = response.text;
+  if (!text) throw new Error("Empty response from Gemini.");
+  return JSON.parse(text) as T;
+}
+
 export async function runAssistantTurn(systemInstruction: string, history: HistoryTurn[]): Promise<string> {
   const ai = getClient();
 
