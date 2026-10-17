@@ -5,6 +5,7 @@ import { findPatientForUser, getCollections, withoutMongoId } from "@/lib/db";
 import { cosineSimilarity, embedText } from "@/lib/embeddings";
 import { runAssistantTurn, type HistoryTurn } from "@/lib/gemini";
 import { runFinetunedTurn } from "@/lib/finetuned-model";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // This route does an embedding call, several DB reads, and a generation call
 // in sequence — comfortably over Vercel's default serverless timeout when
@@ -44,6 +45,9 @@ export async function POST(request: Request) {
   const collections = await getCollections();
   const patient = await findPatientForUser(collections, user.id);
   if (!patient) return NextResponse.json({ error: "Complete onboarding first." }, { status: 400 });
+
+  const limit = await checkRateLimit(user.id, "assistant");
+  if (!limit.ok) return NextResponse.json({ error: limit.message }, { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } });
 
   try {
     const [chunks, medications, sessions, journalEntries, appointments] = await Promise.all([

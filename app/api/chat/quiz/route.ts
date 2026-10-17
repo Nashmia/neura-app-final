@@ -5,6 +5,7 @@ import { readJsonBody } from "@/lib/chat-validation";
 import { findPatientForUser, getCollections } from "@/lib/db";
 import { runQuizTurn } from "@/lib/gemini";
 import { handleQuizTurn } from "@/lib/quiz";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { QUIZ_MAX_ANSWER_CHARS } from "@/lib/quiz-limits";
 
 // A single Gemini call can occasionally take longer than Vercel's default
@@ -30,6 +31,11 @@ export async function POST(request: Request) {
   const collections = await getCollections();
   const patient = await findPatientForUser(collections, user.id);
   if (!patient) return NextResponse.json({ error: "Complete onboarding first." }, { status: 400 });
+
+  for (const scope of parsed.data.sessionId ? (["quizTurn"] as const) : (["quizTurn", "quizStart"] as const)) {
+    const limit = await checkRateLimit(user.id, scope);
+    if (!limit.ok) return NextResponse.json({ error: limit.message }, { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } });
+  }
 
   try {
     const result = await handleQuizTurn({
