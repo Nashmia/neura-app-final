@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
+import { readJsonBody, validateHistory } from "@/lib/chat-validation";
 import { findPatientForUser, getCollections, withoutMongoId } from "@/lib/db";
 import { cosineSimilarity, embedText } from "@/lib/embeddings";
 import { runAssistantTurn, type HistoryTurn } from "@/lib/gemini";
@@ -29,22 +29,17 @@ async function generateReply(systemInstruction: string, history: HistoryTurn[]):
   return runAssistantTurn(systemInstruction, history);
 }
 
-const schema = z.object({
-  history: z.array(z.object({ role: z.enum(["user", "model"]), text: z.string() })).min(1),
-});
-
 const TOP_K = 4;
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Please log in first." }, { status: 401 });
 
-  const parsed = schema.safeParse(await request.json());
-  if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
-
-  const { history } = parsed.data;
-  const lastTurn = history[history.length - 1];
-  if (lastTurn.role !== "user") return NextResponse.json({ error: "The last message must be from the caregiver." }, { status: 400 });
+  const body = await readJsonBody(request);
+  if (!body.ok) return NextResponse.json({ error: body.error }, { status: body.status });
+  const checked = validateHistory((body.data as { history?: unknown } | null)?.history);
+  if (!checked.ok) return NextResponse.json({ error: checked.error }, { status: checked.status });
+  const { history } = checked;
 
   const collections = await getCollections();
   const patient = await findPatientForUser(collections, user.id);

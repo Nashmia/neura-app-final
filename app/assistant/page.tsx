@@ -166,6 +166,7 @@ export default function AssistantPage() {
                   if (e.key === "Enter") send(input);
                 }}
                 disabled={sending}
+                maxLength={2000}
                 placeholder="Ask about care, symptoms, or this patient's recent activity..."
                 className="h-14 flex-1 rounded-2xl border border-border bg-surface px-5 text-lg text-slate-800 outline-none transition focus:border-blue-400 focus:bg-white disabled:opacity-60"
               />
