@@ -14,7 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Logo } from "@/components/layout/logo";
+import { QUIZ_MAX_QUESTIONS, QUIZ_MIN_QUESTIONS } from "@/lib/quiz-limits";
 import { api, resizeImageToDataUrl } from "@/lib/utils";
+
+const quizLengthMessage = `Choose between ${QUIZ_MIN_QUESTIONS} and ${QUIZ_MAX_QUESTIONS} questions.`;
 
 const labels = ["Caregiver Information", "Patient Details", "Family & Friends", "Quiz Setup"];
 
@@ -33,7 +36,11 @@ const schema = z.object({
       })
     )
     .default([]),
-  quizLength: z.coerce.number().min(3, "Choose between 3 and 20 questions.").max(20, "Choose between 3 and 20 questions."),
+  quizLength: z.coerce
+    .number()
+    .int(quizLengthMessage)
+    .min(QUIZ_MIN_QUESTIONS, quizLengthMessage)
+    .max(QUIZ_MAX_QUESTIONS, quizLengthMessage),
   quizDifficulty: z.string().trim().min(2, "Enter a difficulty, e.g. Easy."),
 });
 type Values = any;

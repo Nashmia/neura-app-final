@@ -1,0 +1,705 @@
+{
+  "startedAt": "2026-10-17T13:03:49.673Z",
+  "finishedAt": "2026-10-17T13:04:20.320Z",
+  "git": {
+    "commit": "0a55ebb7556731164d7f384e478609fdaf83c07f",
+    "productionCodeModified": true,
+    "workingTreeDirty": true
+  },
+  "environment": {
+    "node": "v22.14.0",
+    "locale": "en-PK",
+    "timeZone": "Asia/Karachi"
+  },
+  "flags": {
+    "answers": false,
+    "judge": false,
+    "limit": 5,
+    "ids": [
+      "f01",
+      "f02",
+      "f03",
+      "f04",
+      "f05"
+    ],
+    "delaySeconds": 20,
+    "embedDelayMs": 700,
+    "kb": "mongo",
+    "baseline": "none",
+    "label": "Phase 3 ablation: follow-ups without query rewriting",
+    "rerank": true,
+    "rewrite": false,
+    "taskDelayMs": 4000
+  },
+  "label": "Phase 3 ablation: follow-ups without query rewriting",
+  "settings": {
+    "generationModel": "gemini-3.8-flash",
+    "quotaFallbackModel": "gemini-flash-lite-latest",
+    "assistantTemperature": 0.4,
+    "embeddingModel": "gemini-embedding-001",
+    "topK": 4,
+    "evalNow": "2026-10-17T09:00:00.000Z",
+    "appTimeZone": "Asia/Karachi",
+    "retrievalQuery": "last 4 turns joined with newlines",
+    "pipeline": "dense top 8 -> LLM rerank (lite model), keep score >= 2, max 3",
+    "knowledgeBase": {
+      "chunks": 32,
+      "source": "MongoDB collection \"knowledgeChunks\" (read-only)",
+      "loadMs": 3453.1
+    }
+  },
+  "driftCheck": {
+    "ok": true,
+    "detail": "route.ts builds retrieval, prompt and sources with lib/retrieval.ts and lib/assistant-context.ts, which the evaluation imports directly."
+  },
+  "generationSkippedReason": "Answer generation not requested (run with --answers).",
+  "apiCalls": {
+    "summary": {
+      "total": 10,
+      "embedding": 5,
+      "generation": 5,
+      "failedHttp": 0,
+      "byPhase": {
+        "retrieval": 10
+      },
+      "byMethodAndModel": {
+        "batchEmbedContents · gemini-embedding-001": 5,
+        "generateContent · gemini-flash-lite-latest": 5
+      }
+    },
+    "log": [
+      {
+        "at": "2026-10-17T13:03:54.316Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 785,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T13:03:55.842Z",
+        "model": "gemini-flash-lite-latest",
+        "method": "generateContent",
+        "status": 200,
+        "ms": 1427,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T13:04:00.558Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 701,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T13:04:01.781Z",
+        "model": "gemini-flash-lite-latest",
+        "method": "generateContent",
+        "status": 200,
+        "ms": 1130,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T13:04:06.595Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 798,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T13:04:08.050Z",
+        "model": "gemini-flash-lite-latest",
+        "method": "generateContent",
+        "status": 200,
+        "ms": 1347,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T13:04:12.843Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 728,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T13:04:14.149Z",
+        "model": "gemini-flash-lite-latest",
+        "method": "generateContent",
+        "status": 200,
+        "ms": 1238,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T13:04:19.008Z",
+        "model": "gemini-embedding-001",
+        "method": "batchEmbedContents",
+        "status": 200,
+        "ms": 841,
+        "phase": "retrieval"
+      },
+      {
+        "at": "2026-10-17T13:04:20.316Z",
+        "model": "gemini-flash-lite-latest",
+        "method": "generateContent",
+        "status": 200,
+        "ms": 1225,
+        "phase": "retrieval"
+      }
+    ]
+  },
+  "results": [
+    {
+      "id": "f01",
+      "category": "follow-up",
+      "question": "What should I write on it?",
+      "turns": 3,
+      "expectedSources": [
+        "repeated-questions"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Understands 'it' = the whiteboard; suggests day/date, plans, who is visiting.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "repeated-questions": 0.836
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "repeated-questions",
+            "title": "Responding to repeated questions",
+            "score": 0.836
+          },
+          {
+            "rank": 2,
+            "source": "communication-techniques",
+            "title": "Communication techniques for dementia care",
+            "score": 0.7442
+          },
+          {
+            "rank": 3,
+            "source": "paranoia-accusations",
+            "title": "Responding to paranoia and false accusations",
+            "score": 0.7011
+          },
+          {
+            "rank": 4,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.6895
+          }
+        ],
+        "expectedInTopK": [
+          "repeated-questions"
+        ],
+        "top1Score": 0.836,
+        "top4Score": 0.6895,
+        "embedMs": 935.5,
+        "rankMs": 5.5,
+        "retrievalMs": 2376.4,
+        "pipeline": {
+          "mode": "reranked",
+          "selected": [
+            "repeated-questions"
+          ],
+          "relevance": {
+            "repeated-questions": 3,
+            "communication-techniques": 1,
+            "paranoia-accusations": 0,
+            "agitation-aggression": 0,
+            "talking-to-children": 0,
+            "denial": 0,
+            "holidays-visitors": 1,
+            "validation-therapy": 1
+          },
+          "status": "pass",
+          "precision": 1,
+          "candidateRecall": true,
+          "rerankMs": 1435.4,
+          "errors": []
+        }
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "f02",
+      "category": "follow-up",
+      "question": "Would changing the lighting help?",
+      "turns": 3,
+      "expectedSources": [
+        "sundowning"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Yes: good daytime light, well-lit calm evenings; grounded in sundowning article.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "sundowning": 0.8514
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "sundowning",
+            "title": "Sundowning: managing evening confusion and agitation",
+            "score": 0.8514
+          },
+          {
+            "rank": 2,
+            "source": "agitation-aggression",
+            "title": "Recognizing and responding to agitation or aggression",
+            "score": 0.7476
+          },
+          {
+            "rank": 3,
+            "source": "sleep-problems",
+            "title": "Sleep problems and nighttime routines",
+            "score": 0.7282
+          },
+          {
+            "rank": 4,
+            "source": "routines",
+            "title": "Understanding why routines matter",
+            "score": 0.6995
+          }
+        ],
+        "expectedInTopK": [
+          "sundowning"
+        ],
+        "top1Score": 0.8514,
+        "top4Score": 0.6995,
+        "embedMs": 792.8,
+        "rankMs": 0.4,
+        "retrievalMs": 1925.9,
+        "pipeline": {
+          "mode": "reranked",
+          "selected": [
+            "sundowning",
+            "agitation-aggression",
+            "routines"
+          ],
+          "relevance": {
+            "sundowning": 3,
+            "agitation-aggression": 2,
+            "sleep-problems": 1,
+            "routines": 2,
+            "home-safety": 1,
+            "hallucinations-delusions": 1,
+            "repeated-questions": 0,
+            "mealtime-challenges": 0
+          },
+          "status": "pass",
+          "precision": 0.3333,
+          "candidateRecall": true,
+          "rerankMs": 1132.7,
+          "errors": []
+        }
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "f03",
+      "category": "follow-up",
+      "question": "No, but what changes can I make so it doesn't happen again?",
+      "turns": 3,
+      "expectedSources": [
+        "home-safety"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Grab bars, non-slip mats, lighting, clutter removal.",
+      "answerSubset": false,
+      "difficulty": "easy",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "home-safety": 0.6563
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "home-safety",
+            "title": "Home safety modifications",
+            "score": 0.6563
+          },
+          {
+            "rank": 2,
+            "source": "incontinence",
+            "title": "Managing incontinence with dignity",
+            "score": 0.6288
+          },
+          {
+            "rank": 3,
+            "source": "bathing-hygiene",
+            "title": "Bathing and hygiene resistance",
+            "score": 0.6283
+          },
+          {
+            "rank": 4,
+            "source": "assistive-technology",
+            "title": "Helpful technology and assistive devices",
+            "score": 0.6251
+          }
+        ],
+        "expectedInTopK": [
+          "home-safety"
+        ],
+        "top1Score": 0.6563,
+        "top4Score": 0.6251,
+        "embedMs": 906,
+        "rankMs": 0.3,
+        "retrievalMs": 2313.5,
+        "pipeline": {
+          "mode": "reranked",
+          "selected": [
+            "home-safety",
+            "assistive-technology"
+          ],
+          "relevance": {
+            "home-safety": 3,
+            "incontinence": 0,
+            "bathing-hygiene": 1,
+            "assistive-technology": 2,
+            "doctor-appointment-prep": 1,
+            "repeated-questions": 0,
+            "validation-therapy": 0,
+            "hallucinations-delusions": 0
+          },
+          "status": "pass",
+          "precision": 0.5,
+          "candidateRecall": true,
+          "rerankMs": 1407.2,
+          "errors": []
+        }
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "f04",
+      "category": "follow-up",
+      "question": "how do i even bring it up with him without a huge fight",
+      "turns": 5,
+      "expectedSources": [
+        "driving-safety"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Approaches for raising driving cessation (involve the doctor, alternatives, preserve dignity); about the father's driving, not bathing.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 3,
+        "expectedScores": {
+          "driving-safety": 0.7625
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "bathing-hygiene",
+            "title": "Bathing and hygiene resistance",
+            "score": 0.822
+          },
+          {
+            "rank": 2,
+            "source": "incontinence",
+            "title": "Managing incontinence with dignity",
+            "score": 0.7678
+          },
+          {
+            "rank": 3,
+            "source": "driving-safety",
+            "title": "Driving safety and when to stop",
+            "score": 0.7625
+          },
+          {
+            "rank": 4,
+            "source": "talking-to-children",
+            "title": "Talking to children about a family member's dementia",
+            "score": 0.7561
+          }
+        ],
+        "expectedInTopK": [
+          "driving-safety"
+        ],
+        "top1Score": 0.822,
+        "top4Score": 0.7561,
+        "embedMs": 794.9,
+        "rankMs": 0.7,
+        "retrievalMs": 2036.1,
+        "pipeline": {
+          "mode": "reranked",
+          "selected": [
+            "driving-safety"
+          ],
+          "relevance": {
+            "bathing-hygiene": 1,
+            "incontinence": 0,
+            "driving-safety": 3,
+            "talking-to-children": 0,
+            "sleep-problems": 0,
+            "denial": 1,
+            "repeated-questions": 0,
+            "doctor-appointment-prep": 1
+          },
+          "status": "pass",
+          "precision": 1,
+          "candidateRecall": true,
+          "rerankMs": 1240.5,
+          "errors": []
+        }
+      },
+      "answer": {
+        "status": "not run"
+      }
+    },
+    {
+      "id": "f05",
+      "category": "follow-up",
+      "question": "she hardly drinks anything either, maybe one cup a day. is that dangerous?",
+      "turns": 3,
+      "expectedSources": [
+        "nutrition-hydration"
+      ],
+      "expectedFacts": [],
+      "forbiddenFacts": [],
+      "expectedBehaviour": "Dehydration risk and practical ways to encourage fluids; suggests the doctor.",
+      "answerSubset": false,
+      "difficulty": "hard",
+      "requireAllSources": false,
+      "context": {
+        "status": "n/a",
+        "missingFacts": [],
+        "presentForbidden": []
+      },
+      "retrieval": {
+        "status": "pass",
+        "rank": 1,
+        "expectedScores": {
+          "nutrition-hydration": 0.7154
+        },
+        "top": [
+          {
+            "rank": 1,
+            "source": "nutrition-hydration",
+            "title": "Nutrition and hydration tips",
+            "score": 0.7154
+          },
+          {
+            "rank": 2,
+            "source": "mealtime-challenges",
+            "title": "Managing mealtime challenges and appetite changes",
+            "score": 0.6991
+          },
+          {
+            "rank": 3,
+            "source": "end-of-life-planning",
+            "title": "End-of-life conversations and planning",
+            "score": 0.6546
+          },
+          {
+            "rank": 4,
+            "source": "doctor-appointment-prep",
+            "title": "Preparing for a doctor's appointment",
+            "score": 0.6478
+          }
+        ],
+        "expectedInTopK": [
+          "nutrition-hydration"
+        ],
+        "top1Score": 0.7154,
+        "top4Score": 0.6478,
+        "embedMs": 923.5,
+        "rankMs": 0.6,
+        "retrievalMs": 2153.1,
+        "pipeline": {
+          "mode": "reranked",
+          "selected": [
+            "nutrition-hydration",
+            "mealtime-challenges"
+          ],
+          "relevance": {
+            "nutrition-hydration": 3,
+            "mealtime-challenges": 2,
+            "end-of-life-planning": 0,
+            "doctor-appointment-prep": 0,
+            "talking-to-children": 0,
+            "bathing-hygiene": 0,
+            "exercise-benefits": 0,
+            "sleep-problems": 0
+          },
+          "status": "pass",
+          "precision": 0.5,
+          "candidateRecall": true,
+          "rerankMs": 1229,
+          "errors": []
+        }
+      },
+      "answer": {
+        "status": "not run"
+      }
+    }
+  ],
+  "aggregates": {
+    "retrieval": {
+      "casesWithExpectedArticle": 5,
+      "hitRateAt4": 1,
+      "hitsAt4": 5,
+      "hitRateAt1": 0.8,
+      "meanReciprocalRank": 0.867,
+      "meanReciprocalRankAt4": 0.867,
+      "byDifficulty": {
+        "easy": {
+          "cases": 3,
+          "hitsAt4": 3,
+          "hitRateAt4": 1,
+          "hitsAt1": 3,
+          "hitRateAt1": 1,
+          "meanReciprocalRank": 1,
+          "meanReciprocalRankAt4": 1,
+          "failures": []
+        },
+        "hard": {
+          "cases": 2,
+          "hitsAt4": 2,
+          "hitRateAt4": 1,
+          "hitsAt1": 1,
+          "hitRateAt1": 0.5,
+          "meanReciprocalRank": 0.667,
+          "meanReciprocalRankAt4": 0.667,
+          "failures": []
+        }
+      },
+      "byCategory": {
+        "follow-up": {
+          "cases": 5,
+          "hitAt4": 5
+        }
+      },
+      "errors": 0,
+      "top1ScoreOnHardFailures": [],
+      "top1ScoreOnHits": {
+        "min": 0.656,
+        "median": 0.822
+      },
+      "top1ScoreOnInsufficientInfo": {
+        "max": null,
+        "values": []
+      }
+    },
+    "pipeline": {
+      "mode": "reranked",
+      "fallbacks": [],
+      "all": {
+        "cases": 5,
+        "hits": 5,
+        "hitRate": 1,
+        "candidateRecall": 1,
+        "meanPrecision": 0.667,
+        "failures": []
+      },
+      "easy": {
+        "cases": 3,
+        "hits": 3,
+        "hitRate": 1,
+        "candidateRecall": 1,
+        "meanPrecision": 0.611,
+        "failures": []
+      },
+      "hard": {
+        "cases": 2,
+        "hits": 2,
+        "hitRate": 1,
+        "candidateRecall": 1,
+        "meanPrecision": 0.75,
+        "failures": []
+      },
+      "meanArticlesSent": 1.8,
+      "meanArticlesSentWhenNoneExpected": null,
+      "noArticleCasesWithZeroSent": "0/0",
+      "rerankMs": {
+        "median": 1240.5,
+        "max": 1435.4
+      }
+    },
+    "patientContext": {
+      "checked": 0,
+      "pass": 0,
+      "failKnownLimitation": 0,
+      "failUnexpected": 0
+    },
+    "latencyMs": {
+      "embedding": {
+        "median": 906,
+        "max": 935.5
+      },
+      "similarityRanking": {
+        "median": 0.6,
+        "max": 5.5
+      },
+      "retrievalTotal": {
+        "median": 2153.1,
+        "max": 2376.4
+      },
+      "generation": {
+        "median": null,
+        "max": null,
+        "n": 0
+      },
+      "endToEnd": {
+        "median": null,
+        "max": null,
+        "n": 0
+      }
+    },
+    "answers": {
+      "generated": 0,
+      "errors": 0,
+      "meanSourcesShown": null,
+      "answersWithCitations": 0,
+      "meanCitationPrecision": null,
+      "answersWithNumericDates": []
+    }
+  }
+}

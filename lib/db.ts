@@ -3,7 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 import { getMongoDb } from "@/lib/mongodb";
-import type { User, Patient, Medication, QuizSession, Appointment, JournalEntry, KnowledgeChunk } from "@/lib/types";
+import type { User, Patient, Medication, QuizSession, QuizTranscript, Appointment, JournalEntry, KnowledgeChunk } from "@/lib/types";
 
 /**
  * Data access layer (dual-mode).
@@ -37,16 +37,19 @@ export interface DataCollection<T> {
 /* Local JSON-file implementation                                     */
 /* ------------------------------------------------------------------ */
 
-const dbPath = path.join(process.cwd(), "data", "db.json");
+// NEURA_JSON_DB_PATH lets tests point the fallback store at a temporary file instead of data/db.json.
+const dbPath = () => process.env.NEURA_JSON_DB_PATH || path.join(process.cwd(), "data", "db.json");
 type Row = Record<string, unknown>;
 type FileShape = {
   users: Row[];
   patients: Row[];
   medications: Row[];
   quizSessions: Row[];
+  quizTranscripts: Row[];
   appointments: Row[];
   journalEntries: Row[];
   knowledgeChunks: Row[];
+  rateLimits: Row[];
 };
 
 const emptyFileShape: FileShape = {
@@ -54,14 +57,16 @@ const emptyFileShape: FileShape = {
   patients: [],
   medications: [],
   quizSessions: [],
+  quizTranscripts: [],
   appointments: [],
   journalEntries: [],
   knowledgeChunks: [],
+  rateLimits: [],
 };
 
 async function readFile(): Promise<FileShape> {
   try {
-    const data = JSON.parse(await fs.readFile(dbPath, "utf8")) as Partial<FileShape>;
+    const data = JSON.parse(await fs.readFile(dbPath(), "utf8")) as Partial<FileShape>;
     return { ...emptyFileShape, ...data };
   } catch {
     return { ...emptyFileShape };
@@ -69,8 +74,8 @@ async function readFile(): Promise<FileShape> {
 }
 
 async function writeFile(data: FileShape): Promise<void> {
-  await fs.mkdir(path.dirname(dbPath), { recursive: true });
-  await fs.writeFile(dbPath, JSON.stringify(data, null, 2), "utf8");
+  await fs.mkdir(path.dirname(dbPath()), { recursive: true });
+  await fs.writeFile(dbPath(), JSON.stringify(data, null, 2), "utf8");
 }
 
 /** Every key in the filter must match the document (equality, or array-contains when the field is an array). */
@@ -140,6 +145,7 @@ export async function getCollections(): Promise<{
   patients: DataCollection<Patient>;
   medications: DataCollection<Medication>;
   quizSessions: DataCollection<QuizSession>;
+  quizTranscripts: DataCollection<QuizTranscript>;
   appointments: DataCollection<Appointment>;
   journalEntries: DataCollection<JournalEntry>;
   knowledgeChunks: DataCollection<KnowledgeChunk>;
@@ -151,6 +157,7 @@ export async function getCollections(): Promise<{
       patients: new JsonCollection<Patient>("patients"),
       medications: new JsonCollection<Medication>("medications"),
       quizSessions: new JsonCollection<QuizSession>("quizSessions"),
+      quizTranscripts: new JsonCollection<QuizTranscript>("quizTranscripts"),
       appointments: new JsonCollection<Appointment>("appointments"),
       journalEntries: new JsonCollection<JournalEntry>("journalEntries"),
       knowledgeChunks: new JsonCollection<KnowledgeChunk>("knowledgeChunks"),
@@ -163,6 +170,7 @@ export async function getCollections(): Promise<{
     patients: db.collection("patients") as unknown as DataCollection<Patient>,
     medications: db.collection("medications") as unknown as DataCollection<Medication>,
     quizSessions: db.collection("quizSessions") as unknown as DataCollection<QuizSession>,
+    quizTranscripts: db.collection("quizTranscripts") as unknown as DataCollection<QuizTranscript>,
     appointments: db.collection("appointments") as unknown as DataCollection<Appointment>,
     journalEntries: db.collection("journalEntries") as unknown as DataCollection<JournalEntry>,
     knowledgeChunks: db.collection("knowledgeChunks") as unknown as DataCollection<KnowledgeChunk>,
@@ -187,4 +195,44 @@ export async function findPatientForUser(
   userId: string
 ): Promise<Patient | null> {
   return collections.patients.findOne({ caregiverIds: userId }, withoutMongoId);
+}
+
+/* ------------------------------------------------------------------ */
+/* Rate-limit counters                                                */
+/* ------------------------------------------------------------------ */
+
+let rateLimitIndexReady: Promise<unknown> | null = null;
+
+/**
+ * Atomically adds 1 to the counter `key` and returns the new count. The counter disappears after
+ * `expiresAt`. Stored in the database (not in memory) so limits hold across serverless instances:
+ * MongoDB uses a single upserting $inc plus a TTL index; the local JSON store does the same in-file.
+ */
+export async function incrementCounter(key: string, expiresAt: Date): Promise<number> {
+  if (!process.env.MONGODB_URI) {
+    const data = await readFile();
+    const now = Date.now();
+    data.rateLimits = data.rateLimits.filter((row) => Date.parse(String(row.expiresAt)) > now);
+    let row = data.rateLimits.find((r) => r.key === key);
+    if (!row) {
+      row = { key, count: 0, expiresAt: expiresAt.toISOString() };
+      data.rateLimits.push(row);
+    }
+    row.count = Number(row.count) + 1;
+    await writeFile(data);
+    return row.count as number;
+  }
+
+  const db = await getMongoDb();
+  const collection = db.collection<{ _id: string; count: number; expiresAt: Date }>("rateLimits");
+  rateLimitIndexReady ??= collection.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }).catch((error) => {
+    rateLimitIndexReady = null; // counters still work without the index; retry creating it next time
+    console.error("Could not create the rateLimits TTL index:", error);
+  });
+  const doc = await collection.findOneAndUpdate(
+    { _id: key },
+    { $inc: { count: 1 }, $setOnInsert: { expiresAt } },
+    { upsert: true, returnDocument: "after" }
+  );
+  return doc?.count ?? 1;
 }

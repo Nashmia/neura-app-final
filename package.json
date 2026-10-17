@@ -9,7 +9,10 @@
     "lint": "next lint",
     "seed:kb": "tsx --conditions=react-server scripts/seed-knowledge-base.ts",
     "gen:dataset": "tsx --conditions=react-server training/generate_dataset.ts",
-    "users:list": "tsx --conditions=react-server scripts/list-users.ts"
+    "gen:context-dataset": "tsx --conditions=react-server training/generate_context_dataset.ts",
+    "users:list": "tsx --conditions=react-server scripts/list-users.ts",
+    "eval:rag": "tsx --conditions=react-server evaluation/run.ts",
+    "test": "tsx --conditions=react-server --test tests/*.test.ts"
   },
   "dependencies": {
     "@google/genai": "^1.52.0",

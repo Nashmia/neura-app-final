@@ -60,7 +60,25 @@ export type QuizSession = {
   score: number;
   total: number;
   summary?: string;
+  // Every question and answer of the check-in, so the score can be audited. Absent on older sessions.
+  items?: QuizItem[];
   createdAt: string;
+};
+
+export type QuizItem = { questionNumber: number; question: string; answer: string };
+
+/** A check-in in progress. The server keeps the transcript, so the saved score never depends on client-supplied history. */
+export type QuizTranscript = {
+  id: string;
+  userId: string;
+  patientId: string;
+  questionCount: number;
+  items: QuizItem[];
+  pendingQuestion: string;
+  status: "in_progress" | "complete";
+  version: number; // bumped on every write; guards against double submissions
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Appointment = {
@@ -101,6 +119,7 @@ export type DB = {
   patients: Patient[];
   medications: Medication[];
   quizSessions: QuizSession[];
+  quizTranscripts: QuizTranscript[];
   appointments: Appointment[];
   journalEntries: JournalEntry[];
   knowledgeChunks: KnowledgeChunk[];
