@@ -1,5 +1,6 @@
 import { cosineSimilarity } from "@/lib/embeddings";
 import type { HistoryTurn } from "@/lib/gemini";
+import { detectRecordIntent, selectJournal, selectSessions } from "@/lib/patient-records";
 import type { Appointment, JournalEntry, KnowledgeChunk, Medication, Patient, QuizSession } from "@/lib/types";
 
 /**
@@ -62,7 +63,7 @@ export function rankChunks(queryEmbedding: number[], chunks: KnowledgeChunk[]) {
 export function buildKnowledgeContext(chunks: KnowledgeChunk[]) {
   return chunks.length
     ? chunks.map((c, i) => `[${i + 1}] ${c.title}\n${c.text}`).join("\n\n")
-    : "(No knowledge base articles matched this question.)";
+    : "(No knowledge base article is relevant to this question.)";
 }
 
 export type PatientData = {
@@ -73,11 +74,17 @@ export type PatientData = {
   appointments: Appointment[];
 };
 
-export function buildPatientContext(data: PatientData, now: Date) {
+/**
+ * The patient's care data for the prompt. `question` (the caregiver's latest message) lets the record
+ * selection add older journal notes or check-ins the question asks about (lib/patient-records.ts).
+ */
+export function buildPatientContext(data: PatientData, now: Date, question = "") {
   const { patient, medications, sessions, journalEntries, appointments } = data;
-  const recentSessions = [...sessions].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 3);
-  const recentJournal = [...journalEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
-  const upcoming = upcomingAppointments(appointments, todayIn(now));
+  const today = todayIn(now);
+  const intent = detectRecordIntent(question, today);
+  const journal = selectJournal(journalEntries, intent, today, (iso) => todayIn(new Date(iso)));
+  const checkIns = selectSessions(sessions, intent);
+  const upcoming = upcomingAppointments(appointments, today);
 
   return [
     `Today is ${formatTimestamp(now.toISOString())}.`,
@@ -85,11 +92,13 @@ export function buildPatientContext(data: PatientData, now: Date) {
     medications.length
       ? `Current medications: ${medications.map((m) => `${m.name} (${m.dosage}, ${m.time}, ${m.status})`).join("; ")}.`
       : "No medications recorded.",
-    recentSessions.length
-      ? `Recent cognitive check-ins: ${recentSessions.map((s) => `${s.score}/${s.total} on ${formatTimestamp(s.createdAt)}`).join("; ")}.`
+    checkIns.sessions.length
+      ? `Cognitive check-ins (newest first, ${checkIns.sessions.length} of ${sessions.length}): ${checkIns.sessions
+          .map((s) => `${s.score}/${s.total} on ${formatTimestamp(s.createdAt)}${s.id === checkIns.firstId ? " (first check-in)" : ""}`)
+          .join("; ")}.`
       : "No cognitive check-ins recorded yet.",
-    recentJournal.length
-      ? `Recent caregiver journal notes: ${recentJournal
+    journal.length
+      ? `Caregiver journal notes (newest first, ${journal.length} of ${journalEntries.length}): ${journal
           .map((j) => `[${formatTimestamp(j.createdAt)}${j.moodTag ? `, mood: ${j.moodTag}` : ""}] ${j.text || "(mood check-in only)"}`)
           .join(" | ")}.`
       : "No journal notes recorded yet.",
