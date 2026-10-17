@@ -34,6 +34,19 @@ export type CaseResult = {
     retrievalMs?: number;
     warning?: string;
     error?: string;
+    /** Phase 3: what the production retrieval pipeline actually sends to the model. */
+    pipeline?: {
+      mode: string;
+      selected: string[];
+      relevance?: Record<string, number>;
+      rewrittenQuery?: string;
+      status: string;
+      precision: number | null;
+      candidateRecall: boolean | null;
+      rewriteMs?: number;
+      rerankMs?: number;
+      errors: string[];
+    };
   };
   answer: {
     status: string;
@@ -97,6 +110,39 @@ function retrievalStats(scored: CaseResult[]) {
   };
 }
 
+/** Phase 3 pipeline metrics: hit rate of the articles actually sent, how many are sent, and how many are right. */
+export function pipelineStats(results: CaseResult[]) {
+  const ran = results.filter((r) => r.retrieval.pipeline);
+  if (!ran.length) return null;
+  const scoredIn = (rs: CaseResult[]) => rs.filter((r) => r.retrieval.pipeline!.status === "pass" || r.retrieval.pipeline!.status === "fail");
+  const group = (rs: CaseResult[]) => {
+    const s = scoredIn(rs);
+    const hits = s.filter((r) => r.retrieval.pipeline!.status === "pass").length;
+    const precisions = s.map((r) => r.retrieval.pipeline!.precision).filter((n): n is number => typeof n === "number");
+    return {
+      cases: s.length,
+      hits,
+      hitRate: s.length ? r3(hits / s.length) : null,
+      candidateRecall: s.length ? r3(s.filter((r) => r.retrieval.pipeline!.candidateRecall).length / s.length) : null,
+      meanPrecision: precisions.length ? r3(precisions.reduce((a, b) => a + b, 0) / precisions.length) : null,
+      failures: s.filter((r) => r.retrieval.pipeline!.status === "fail").map((r) => r.id),
+    };
+  };
+  const sent = (rs: CaseResult[]) => (rs.length ? r3(rs.reduce((n, r) => n + r.retrieval.pipeline!.selected.length, 0) / rs.length) : null);
+  const noArticleExpected = ran.filter((r) => !r.expectedSources.length);
+  return {
+    mode: [...new Set(ran.map((r) => r.retrieval.pipeline!.mode))].join(", "),
+    fallbacks: ran.filter((r) => r.retrieval.pipeline!.mode === "dense-fallback").map((r) => r.id),
+    all: group(ran),
+    easy: group(ran.filter((r) => r.difficulty !== "hard")),
+    hard: group(ran.filter((r) => r.difficulty === "hard")),
+    meanArticlesSent: sent(ran),
+    meanArticlesSentWhenNoneExpected: sent(noArticleExpected),
+    noArticleCasesWithZeroSent: `${noArticleExpected.filter((r) => !r.retrieval.pipeline!.selected.length).length}/${noArticleExpected.length}`,
+    rerankMs: { median: median(ran.map((r) => r.retrieval.pipeline!.rerankMs).filter((n): n is number => typeof n === "number")), max: max(ran.map((r) => r.retrieval.pipeline!.rerankMs).filter((n): n is number => typeof n === "number")) },
+  };
+}
+
 export function aggregate(results: CaseResult[]) {
   const scored = results.filter(isScored);
   const all = retrievalStats(scored);
@@ -137,6 +183,7 @@ export function aggregate(results: CaseResult[]) {
       top1ScoreOnHits: { min: hitTop1.length ? r3(Math.min(...hitTop1)) : null, median: hitTop1.length ? r3(median(hitTop1.map((x) => x * 1000))! / 1000) : null },
       top1ScoreOnInsufficientInfo: { max: insufficientTop1.length ? r3(Math.max(...insufficientTop1)) : null, values: insufficientTop1.map(r3) },
     },
+    pipeline: pipelineStats(results),
     patientContext: {
       checked: ctx.length,
       pass: ctx.filter((r) => r.context.status === "pass").length,
@@ -244,6 +291,16 @@ function renderMarkdown(report: RunReport): string {
   L.push(`- **Similarity scores:** top-1 score on hits — min ${a.retrieval.top1ScoreOnHits.min ?? "n/a"}, median ${a.retrieval.top1ScoreOnHits.median ?? "n/a"}; top-1 score on insufficient-information questions — max ${a.retrieval.top1ScoreOnInsufficientInfo.max ?? "n/a"} (${a.retrieval.top1ScoreOnInsufficientInfo.values.join(", ")}). There is no score threshold today, so 4 articles are always sent.`);
   if (a.retrieval.errors) L.push(`- **Errors:** ${a.retrieval.errors} retrieval calls failed (see cases below).`);
   L.push("");
+  if (a.pipeline) {
+    const p = a.pipeline;
+    L.push("### Retrieval pipeline (articles actually sent to the model)", "");
+    L.push(`Mode: ${p.mode}${p.fallbacks.length ? ` · ⚠️ fell back to dense top-4 on: ${p.fallbacks.join(", ")}` : ""}. The dense @4 numbers above are the Phase 1/2 behaviour, computed from the same embeddings.`, "");
+    L.push("| Set | Cases | Hit (expected article sent) | Expected article in the 8 candidates | Precision of sent articles | Failed |", "|---|---|---|---|---|---|");
+    for (const [k, v] of [["all", p.all], ["easy", p.easy], ["hard", p.hard]] as const) {
+      L.push(`| ${k} | ${v.cases} | ${pct(v.hitRate)} (${v.hits}) | ${pct(v.candidateRecall)} | ${v.meanPrecision ?? "n/a"} | ${v.failures.join(", ") || "–"} |`);
+    }
+    L.push("", `Articles sent per question: ${p.meanArticlesSent} on average (dense top-4 always sent 4); ${p.meanArticlesSentWhenNoneExpected} for questions that need no article, ${p.noArticleCasesWithZeroSent} of which got none. Rerank latency: median ${p.rerankMs.median ?? "–"} ms, max ${p.rerankMs.max ?? "–"} ms.`, "");
+  }
   L.push("### Patient-context coverage (does the prompt contain the facts needed?)", "");
   L.push(`${a.patientContext.pass}/${a.patientContext.checked} pass · ${a.patientContext.failKnownLimitation} fail because of a known limitation · ${a.patientContext.failUnexpected} unexpected failures.`, "");
   if (a.answers.generated) {
@@ -271,7 +328,9 @@ function renderMarkdown(report: RunReport): string {
     L.push(`### ${r.id} — ${r.category}${r.difficulty === "hard" ? " (hard)" : ""}${r.turns > 1 ? ` (${r.turns}-turn conversation)` : ""}`, "");
     L.push(`**Question:** ${r.question}`, "");
     if (r.expectedSources.length) L.push(`**Expected article(s):** ${r.expectedSources.join(", ")} → **${r.retrieval.status}**${r.retrieval.rank ? ` (best rank ${r.retrieval.rank})` : ""}; expected scores ${JSON.stringify(r.retrieval.expectedScores ?? {})}${r.requireAllSources ? ` — all required; in top 4: ${(r.retrieval.expectedInTopK ?? []).join(", ") || "none"}` : ""}`, "");
-    if (r.retrieval.top) L.push(`**Retrieved top 4:** ${r.retrieval.top.map((t) => `${t.rank}. ${t.source} (${t.score})`).join(" · ")} — retrieval ${r.retrieval.retrievalMs} ms (embed ${r.retrieval.embedMs}, rank ${r.retrieval.rankMs})`, "");
+    const pl = r.retrieval.pipeline;
+    if (pl) L.push(`**Sent to the model (${pl.mode}):** ${pl.selected.join(", ") || "no articles"} → **${pl.status}**${pl.relevance ? ` · rerank scores ${JSON.stringify(pl.relevance)}` : ""}${pl.rewrittenQuery ? ` · rewritten query: "${pl.rewrittenQuery}"` : ""}${pl.errors.length ? ` · ⚠️ ${pl.errors.join("; ")}` : ""}`, "");
+    if (r.retrieval.top) L.push(`**Dense top 4:** ${r.retrieval.top.map((t) => `${t.rank}. ${t.source} (${t.score})`).join(" · ")} — retrieval ${r.retrieval.retrievalMs} ms (embed ${r.retrieval.embedMs}, rank ${r.retrieval.rankMs})`, "");
     if (r.retrieval.error) L.push(`**Retrieval error:** ${r.retrieval.error}`, "");
     if (r.retrieval.warning) L.push(`**Warning:** ${r.retrieval.warning}`, "");
     if (r.context.status !== "n/a") {

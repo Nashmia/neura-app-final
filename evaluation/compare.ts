@@ -62,6 +62,26 @@ export function compareWithBaseline(current: RunReport, baselineDir: string): st
   }
   L.push("");
 
+  // Articles actually sent to the model. Before Phase 3 that was always the dense top 4.
+  const sentBefore = (stats: typeof b) => stats.pipeline ?? null;
+  const p = a.pipeline;
+  const bp = sentBefore(b);
+  if (p) {
+    const before = (level: "all" | "easy" | "hard") => {
+      if (bp) return `${pct(bp[level].hitRate)} (${bp[level].hits}/${bp[level].cases}), sent ${bp.meanArticlesSent}`;
+      const d = level === "all" ? { hitRate: b.retrieval.hitRateAt4, hits: b.retrieval.hitsAt4, cases: b.retrieval.casesWithExpectedArticle } : { hitRate: b.retrieval.byDifficulty?.[level]?.hitRateAt4 ?? null, hits: b.retrieval.byDifficulty?.[level]?.hitsAt4, cases: b.retrieval.byDifficulty?.[level]?.cases };
+      return `${pct(d.hitRate)} (${d.hits}/${d.cases}), dense top 4`;
+    };
+    L.push("### Articles actually sent to the model", "");
+    L.push("| | Baseline | Now |", "|---|---|---|");
+    for (const level of ["all", "easy", "hard"] as const) L.push(`| ${level}: expected article sent | ${before(level)} | ${pct(p[level].hitRate)} (${p[level].hits}/${p[level].cases}) |`);
+    L.push(`| Precision of sent articles (cases with an expected article) | ${bp ? val(bp.all.meanPrecision) : "≤ 0.25–0.5 (4 sent, usually 1–2 relevant)"} | ${val(p.all.meanPrecision)} |`);
+    L.push(`| Articles sent per question | ${bp ? val(bp.meanArticlesSent) : "4"} | ${val(p.meanArticlesSent)} |`);
+    L.push(`| Articles sent when no article is needed (patient-data / insufficient-info questions) | ${bp ? `${val(bp.meanArticlesSentWhenNoneExpected)} (${bp.noArticleCasesWithZeroSent} got none)` : "4 (0 got none)"} | ${val(p.meanArticlesSentWhenNoneExpected)} (${p.noArticleCasesWithZeroSent} got none) |`);
+    if (p.fallbacks.length) L.push(`| ⚠️ Fell back to dense top 4 | | ${p.fallbacks.join(", ")} |`);
+    L.push("");
+  }
+
   L.push("### Patient-context coverage", "");
   L.push("| | Baseline | Now |", "|---|---|---|");
   L.push(`| Pass | ${b.patientContext.pass}/${b.patientContext.checked} | ${a.patientContext.pass}/${a.patientContext.checked} |`);

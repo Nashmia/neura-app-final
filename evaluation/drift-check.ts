@@ -9,18 +9,18 @@ import { join } from "node:path";
 
 const ROOT = join(__dirname, "..");
 const ROUTE = join(ROOT, "app/api/assistant/chat/route.ts");
-const SHARED = ["buildRetrievalQuery", "rankChunks", "TOP_K", "buildKnowledgeContext", "buildPatientContext", "buildSystemInstruction", "citedSources"];
+const SHARED = ["retrieve", "buildKnowledgeContext", "buildPatientContext", "buildSystemInstruction", "citedSources"];
 
 export type DriftResult = { ok: boolean; detail: string };
 
 export function checkRouteDrift(): DriftResult {
   const src = readFileSync(ROUTE, "utf8");
-  const importsShared = /from "@\/lib\/assistant-context"/.test(src);
+  const importsShared = /from "@\/lib\/assistant-context"/.test(src) && /from "@\/lib\/retrieval"/.test(src);
   const unused = SHARED.filter((name) => !new RegExp(`\\b${name}\\b[^]*\\b${name}\\b`).test(src)); // imported AND used
   if (!importsShared || unused.length) {
-    return { ok: false, detail: `route.ts no longer uses lib/assistant-context.ts for: ${importsShared ? unused.join(", ") : "anything"}. The evaluation may not reflect production.` };
+    return { ok: false, detail: `route.ts no longer uses lib/assistant-context.ts / lib/retrieval.ts for: ${importsShared ? unused.join(", ") : "anything"}. The evaluation may not reflect production.` };
   }
-  return { ok: true, detail: "route.ts builds retrieval, prompt and sources with lib/assistant-context.ts, which the evaluation imports directly." };
+  return { ok: true, detail: "route.ts builds retrieval, prompt and sources with lib/retrieval.ts and lib/assistant-context.ts, which the evaluation imports directly." };
 }
 
 /** Reads the model names / temperature the evaluation relies on straight from production source. */

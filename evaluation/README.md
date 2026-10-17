@@ -5,7 +5,7 @@ Measures how well the **existing** Care Assistant pipeline retrieves knowledge-b
 ## Run it
 
 ```
-npm run eval:rag                       # retrieval + patient-context checks for all 43 cases (embeddings only, 0 generation calls)
+npm run eval:rag                       # retrieval + patient-context checks for all 45 cases (1 embedding + 1 lite rerank call per case)
 npm run eval:rag -- --answers          # also generate answers for the 5-case subset (Gemini path, 20 s between calls)
 npm run eval:rag -- --answers --judge  # also add the ADVISORY LLM judge (one extra generation call per answer)
 ```
@@ -21,6 +21,9 @@ npm run eval:rag -- --answers --judge  # also add the ADVISORY LLM judge (one ex
 | `--kb=mongo\|local` | mongo | Knowledge chunks from MongoDB `knowledgeChunks` (read-only) or `data/db.json` |
 | `--baseline=DIR` | `reports/2026-10-17T10-48-38` (Phase 1) | Report folder to compare against; writes `comparison.md`. `none` skips it |
 | `--label=TEXT` | generic | Description shown at the top of the report |
+| `--rerank=on\|off` | production default (on) | LLM reranking of the dense candidates (lib/retrieval.ts) |
+| `--rewrite=on\|off` | production default (off) | Rewrite follow-ups into a standalone query before embedding |
+| `--task-delay=MS` | 4000 | Milliseconds between cases when reranking (lite-model rate limit) |
 
 Each run writes `evaluation/reports/<timestamp>/`:
 - `report.json`: everything (settings, git commit, every case, every API request's model/method/status/time)
@@ -38,7 +41,7 @@ The free tier allows very few **generation** requests per day and the live app s
 
 | Run | Embedding requests | Generation requests |
 |---|---|---|
-| default | one per case (43) | 0 |
+| default | one per case (45) | 0 on the assistant model; 1 lite-model rerank call per case (45), +1 per follow-up case with `--rewrite=on` |
 | `--answers` | +0 (reuses the run's embeddings) | 5 normally; up to 8 per answer in the worst case (lib/gemini.ts retries 503s 4 times, then the fallback model 4 times on a 429) |
 | `--judge` | +0 | +1 per answer (same worst case) |
 
@@ -47,6 +50,7 @@ The report counts every real HTTP request, including hidden retries, so you alwa
 ## What is measured
 
 - **Retrieval** (cases with an expected article): is it in the top 4 (hit @4), its rank in the full ranking, similarity scores; aggregate hit rate @4 and @1 and mean reciprocal rank. Insufficient-information questions record their best similarity score for reference (there's no threshold today).
+- **Retrieval pipeline** (Phase 3): the articles production actually sends — dense top 8, LLM relevance 0–3, keep ≥ 2, max 3. Reported: hit rate (expected article sent), whether it was among the 8 candidates, precision of the sent articles, how many are sent, and how many questions that need no article get none. The dense @4 numbers are kept for comparison with Phases 1–2.
 - **Easy vs hard**: the 28 original cases are *easy* (written knowing the article titles). The 15 *hard* cases (h01–h15) are written like a stressed caregiver types: vague, no article keywords, misspellings, two topics in one message, emotional context. They were drafted before looking at the titles and labelled afterwards. Retrieval is reported for all, easy and hard separately. h10 (two topics) passes only if both articles are in the top 4.
 - **Patient-context coverage**: builds the exact patient-data text the route would send for the synthetic patient and checks the expected facts are present (and forbidden ones absent). No API calls. Some cases are *designed* to fail because of known limits (only the 5 newest journal entries and the 3 newest quiz sessions; the missing date check on "Upcoming" appointments was fixed in Phase 2); these are labelled "fail (known limitation)".
 - **Latency**: embedding call, in-process similarity ranking, retrieval total, generation, end to end.

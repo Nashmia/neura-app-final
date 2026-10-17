@@ -1,6 +1,8 @@
 /**
- * Care Assistant evaluation test set (43 cases: 28 easy + 15 hard).
+ * Care Assistant evaluation test set (45 cases: 28 easy + 17 hard).
  * p07 was a known limitation in Phase 1 (past "Upcoming" appointments were listed); fixed in Phase 2.
+ * p03 and p10 were known limitations (fixed 5-note / 3-check-in windows); fixed in Phase 3 by date- and intent-aware record selection.
+ * f04 and f05 were added in Phase 3 (hard follow-ups).
  *
  * - expectedSources: knowledge-base `source` ids; retrieval counts as a hit if ANY of them is in the top K.
  * - expectedFacts: strings that must appear in the patient-context text the route would build from
@@ -78,11 +80,24 @@ export const testCases: TestCase[] = [
     { role: "model", text: "I'm sorry to hear that. Was he hurt?" },
     { role: "user", text: "No, but what changes can I make so it doesn't happen again?" },
   ], expectedSources: ["home-safety"], expectedBehaviour: "Grab bars, non-slip mats, lighting, clutter removal." },
+  // Added in Phase 3 to test follow-ups the "last 4 turns" query handles badly: a topic switch, and a bare "that".
+  { id: "f04", category: "follow-up", difficulty: "hard", history: [
+    { role: "user", text: "My mum has stopped wanting to shower, she gets upset every time I mention it." },
+    { role: "model", text: "That's very common. Try a calm, unhurried routine at the time of day she's usually most relaxed, keep the bathroom warm, offer simple choices, and use a towel or robe for privacy. A sponge bath on harder days is fine too." },
+    { role: "user", text: "ok thanks. also my dad still drives himself to the shops and im worried about him" },
+    { role: "model", text: "It's understandable to worry. Signs like getting lost, near misses or new dents can mean driving is no longer safe, and his doctor can help assess it." },
+    { role: "user", text: "how do i even bring it up with him without a huge fight" },
+  ], expectedSources: ["driving-safety"], expectedBehaviour: "Approaches for raising driving cessation (involve the doctor, alternatives, preserve dignity); about the father's driving, not bathing." },
+  { id: "f05", category: "follow-up", difficulty: "hard", history: [
+    { role: "user", text: "She's barely eating these days." },
+    { role: "model", text: "I'm sorry, that's worrying. Small, frequent meals and finger foods can help, and it's worth mentioning to her doctor." },
+    { role: "user", text: "she hardly drinks anything either, maybe one cup a day. is that dangerous?" },
+  ], expectedSources: ["nutrition-hydration"], expectedBehaviour: "Dehydration risk and practical ways to encourage fluids; suggests the doctor." },
 
   // ── Mood trends (patient data) ──────────────────────────────────────────────
   { id: "p01", category: "mood", history: ask("How has her mood been over the last few days?"), expectedFacts: ["mood: Anxious", "mood: Calm", "mood: Tired", "mood: Confused", "mood: Happy"], expectedBehaviour: "Summarises the recent mix of moods from the journal (anxious after dinner, calm with photos, etc.) without inventing entries.", answerSubset: true },
   { id: "p02", category: "mood", history: ask("Was there anything that seemed to calm her down recently?"), expectedFacts: ["old photo albums"], expectedBehaviour: "Mentions the photo albums with Priya (and possibly singing old songs)." },
-  { id: "p03", category: "mood", history: ask("She refused her bath on the 9th of October. Has she been refusing baths before that too?"), expectedFacts: ["Refused her bath"], knownLimitation: "The route only passes the 5 newest journal entries; the 9 Oct entry is the 6th newest, so the model never sees it.", expectedBehaviour: "Ideally confirms the 9 Oct entry; with the current window it should say it can't see that entry rather than guess." },
+  { id: "p03", category: "mood", history: ask("She refused her bath on the 9th of October. Has she been refusing baths before that too?"), expectedFacts: ["Refused her bath"], expectedBehaviour: "Ideally confirms the 9 Oct entry; with the current window it should say it can't see that entry rather than guess." },
 
   // ── Medication history (patient data) ───────────────────────────────────────
   { id: "p04", category: "medication", history: ask("Which medications is she on, and which doses are still pending today?"), expectedFacts: ["Donepezil (10mg, 08:00 AM, Taken)", "Memantine (5mg, 08:00 PM, Pending)", "Sertraline (50mg, 09:00 AM, Taken)"], expectedBehaviour: "Lists all three correctly; Memantine 8 PM is pending.", answerSubset: true },
@@ -95,7 +110,7 @@ export const testCases: TestCase[] = [
 
   // ── Cognitive quiz progress (patient data) ──────────────────────────────────
   { id: "p09", category: "quiz-progress", history: ask("What was her most recent cognitive check-in score?"), expectedFacts: ["2/5"], expectedBehaviour: "2 out of 5 on 11 Oct; may note it's lower than the previous 4/5." },
-  { id: "p10", category: "quiz-progress", history: ask("Has her check-in score improved since her very first check-in?"), expectedFacts: ["1/5"], knownLimitation: "The route only passes the 3 newest sessions; the first session (1/5 on 20 Sep) is dropped.", expectedBehaviour: "Ideally compares to the first 1/5; with the current window it should say it can only see recent sessions." },
+  { id: "p10", category: "quiz-progress", history: ask("Has her check-in score improved since her very first check-in?"), expectedFacts: ["1/5"], expectedBehaviour: "Ideally compares to the first 1/5; with the current window it should say it can only see recent sessions." },
 
   // ── Insufficient information ─────────────────────────────────────────────────
   { id: "i01", category: "insufficient-info", history: ask("What did the neurologist say at her last appointment?"), expectedBehaviour: "Says it has no record of what the neurologist said; suggests asking the doctor / noting it in the journal. Must not invent findings.", answerSubset: true },

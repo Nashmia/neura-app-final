@@ -41,6 +41,10 @@ const flags = {
   kb: (argValue("kb", "mongo") === "local" ? "local" : "mongo") as "mongo" | "local",
   baseline: argValue("baseline", "reports/2026-10-17T10-48-38"),
   label: argValue("label", "Evaluation of the current Care Assistant pipeline"),
+  // Retrieval stages; default to what production uses (lib/retrieval.ts RETRIEVAL_DEFAULTS).
+  rerank: arg("rerank") ? argValue("rerank", "on") !== "off" : undefined,
+  rewrite: arg("rewrite") ? argValue("rewrite", "on") !== "off" : undefined,
+  taskDelayMs: Number(argValue("task-delay", "4000")),
 };
 
 /**
@@ -64,6 +68,10 @@ async function main() {
   // Production code, imported unchanged (after the fetch counter is installed).
   const { embedText } = await import("../lib/embeddings");
   const ctx = await import("../lib/assistant-context");
+  const { retrieve, RETRIEVAL_DEFAULTS, CANDIDATE_K, MAX_SELECTED, MIN_RELEVANCE } = await import("../lib/retrieval");
+  const { runJsonTask } = await import("../lib/gemini");
+  flags.rerank ??= RETRIEVAL_DEFAULTS.rerank;
+  flags.rewrite ??= RETRIEVAL_DEFAULTS.rewrite;
 
   // 1. Check the route still uses the shared module the evaluation imports (no API calls).
   const drift = checkRouteDrift();
@@ -78,12 +86,11 @@ async function main() {
   const titleOf = new Map(chunks.map((c) => [c.source, c.title]));
   log(`Knowledge base: ${chunks.length} chunks from ${kbSource} in ${kbLoadMs} ms`);
 
-  const patientContext = ctx.buildPatientContext(
-    { patient: fixture.patient, medications: fixture.medications, sessions: fixture.quizSessions, journalEntries: fixture.journalEntries, appointments: fixture.appointments },
-    EVAL_NOW
-  );
+  const patientData = { patient: fixture.patient, medications: fixture.medications, sessions: fixture.quizSessions, journalEntries: fixture.journalEntries, appointments: fixture.appointments };
+  // Built per case: like the route, the record selection depends on the caregiver's latest message.
+  const patientContextFor = (tc: TestCase) => ctx.buildPatientContext(patientData, EVAL_NOW, tc.history[tc.history.length - 1].text);
   const results: CaseResult[] = [];
-  const queryEmbeddings = new Map<string, number[]>();
+  const retrievals = new Map<string, Awaited<ReturnType<typeof retrieve>>>();
 
   // 3. Patient-context checks + retrieval for every case.
   setPhase("retrieval");
@@ -100,22 +107,18 @@ async function main() {
 
     // Patient-context coverage (deterministic, no API call).
     if (r.expectedFacts.length || r.forbiddenFacts.length) {
+      const patientContext = patientContextFor(tc);
       const missingFacts = r.expectedFacts.filter((f) => !patientContext.includes(f));
       const presentForbidden = r.forbiddenFacts.filter((f) => patientContext.includes(f));
       const passed = !missingFacts.length && !presentForbidden.length;
       r.context = { status: passed ? "pass" : tc.knownLimitation ? "fail (known limitation)" : "fail", missingFacts, presentForbidden };
     }
 
-    // Retrieval (one embedding call), with the route's own functions.
-    const query = ctx.buildRetrievalQuery(tc.history);
+    // Retrieval with the route's own pipeline (lib/retrieval.ts): 1 embedding, + 1 rerank call, + 1 rewrite call for follow-ups.
     try {
-      const t0 = performance.now();
-      const embedding = await embedText(query);
-      const embedMs = ms(t0);
-      const t1 = performance.now();
-      const ranking = ctx.rankChunks(embedding, chunks);
-      const rankMs = ms(t1);
-      queryEmbeddings.set(tc.id, embedding);
+      const res = await retrieve(tc.history, chunks, { embed: embedText, task: runJsonTask }, { rerank: flags.rerank, rewrite: flags.rewrite });
+      retrievals.set(tc.id, res);
+      const { ranking } = res;
       const top = ranking.slice(0, ctx.TOP_K);
       const expectedRank = r.expectedSources.length
         ? Math.min(...r.expectedSources.map((s) => ranking.findIndex((x) => x.chunk.source === s) + 1).filter((n) => n > 0))
@@ -124,22 +127,41 @@ async function main() {
       const hit = r.requireAllSources
         ? inTopK.length === r.expectedSources.length
         : expectedRank !== null && Number.isFinite(expectedRank) && expectedRank <= ctx.TOP_K;
+      const selected = res.selected.map((c) => c.source);
+      const selectedExpected = r.expectedSources.filter((s) => selected.includes(s));
       r.retrieval = {
+        // Dense top-4 (the Phase 1/2 behaviour), kept for comparability.
         status: r.expectedSources.length ? (hit ? "pass" : "fail") : "n/a (no expected article)",
         rank: expectedRank !== null && Number.isFinite(expectedRank) ? expectedRank : null,
         expectedScores: Object.fromEntries(r.expectedSources.map((s) => [s, round(ranking.find((x) => x.chunk.source === s)?.score)])),
         top: top.map((x, k) => ({ rank: k + 1, source: x.chunk.source, title: x.chunk.title, score: round(x.score) })),
         expectedInTopK: inTopK,
         top1Score: round(ranking[0]?.score), top4Score: round(top[top.length - 1]?.score),
-        embedMs, rankMs, retrievalMs: Math.round((embedMs + rankMs) * 10) / 10,
+        embedMs: res.timings.embedMs, rankMs: res.timings.rankMs,
+        retrievalMs: Math.round(((res.timings.rewriteMs ?? 0) + res.timings.embedMs + res.timings.rankMs + (res.timings.rerankMs ?? 0)) * 10) / 10,
+        // What production now sends to the model.
+        pipeline: {
+          mode: res.mode,
+          selected,
+          relevance: res.relevance,
+          rewrittenQuery: res.rewrittenQuery,
+          status: r.expectedSources.length
+            ? (r.requireAllSources ? selectedExpected.length === r.expectedSources.length : selectedExpected.length > 0) ? "pass" : "fail"
+            : selected.length ? `n/a (${selected.length} article${selected.length === 1 ? "" : "s"} sent)` : "n/a (no articles sent)",
+          precision: selected.length && r.expectedSources.length ? round(selectedExpected.length / selected.length) : null,
+          candidateRecall: r.expectedSources.length ? res.candidates.some((c) => r.expectedSources.includes(c.chunk.source)) : null,
+          rewriteMs: res.timings.rewriteMs, rerankMs: res.timings.rerankMs,
+          errors: res.errors.map((e) => redact(e)),
+        },
       };
       for (const s of r.expectedSources) if (!titleOf.has(s)) r.retrieval.warning = `Expected source "${s}" is not in the knowledge base.`;
     } catch (error) {
       r.retrieval = { status: "error", error: redact(String(error instanceof Error ? error.message : error)).slice(0, 300) };
     }
     results.push(r);
-    log(`[${i + 1}/${cases.length}] ${tc.id.padEnd(4)} ${r.difficulty.padEnd(4)} retrieval=${r.retrieval.status}${r.retrieval.rank ? ` (rank ${r.retrieval.rank})` : ""} context=${r.context.status}`);
-    if (i < cases.length - 1) await sleep(flags.embedDelayMs);
+    const p = r.retrieval.pipeline;
+    log(`[${i + 1}/${cases.length}] ${tc.id.padEnd(4)} ${r.difficulty.padEnd(4)} dense@4=${r.retrieval.status}${r.retrieval.rank ? ` (rank ${r.retrieval.rank})` : ""} pipeline=${p ? `${p.status} [${p.selected.join(", ") || "none"}]${p.mode === "dense-fallback" ? " FALLBACK" : ""}` : "–"} context=${r.context.status}`);
+    if (i < cases.length - 1) await sleep(flags.rerank ? flags.taskDelayMs : flags.embedDelayMs);
   }
 
   // 4. Optional answer generation (Gemini path only; ASSISTANT_MODEL_PROVIDER is ignored on purpose).
@@ -147,15 +169,15 @@ async function main() {
   if (flags.answers) {
     const { runAssistantTurn } = await import("../lib/gemini");
     const { judgeAnswer } = await import("./judge");
-    const subset = results.filter((r) => (flags.ids ? true : r.answerSubset) && queryEmbeddings.has(r.id)).slice(0, flags.limit);
+    const subset = results.filter((r) => (flags.ids ? true : r.answerSubset) && retrievals.has(r.id)).slice(0, flags.limit);
     let quotaHit = false;
     for (const [i, r] of subset.entries()) {
       if (quotaHit) { r.answer = { status: "not run (quota exhausted earlier in this run)" }; continue; }
       const tc = cases.find((c) => c.id === r.id)!;
       setPhase(`answer:${r.id}`);
       const t0 = performance.now();
-      const top = ctx.rankChunks(queryEmbeddings.get(r.id)!, chunks).slice(0, ctx.TOP_K).map((x) => x.chunk);
-      const systemInstruction = ctx.buildSystemInstruction(ctx.buildKnowledgeContext(top), patientContext);
+      const top = retrievals.get(r.id)!.selected; // exactly what the route sends
+      const systemInstruction = ctx.buildSystemInstruction(ctx.buildKnowledgeContext(top), patientContextFor(tc));
       const contextMs = ms(t0);
       try {
         const g0 = performance.now();
@@ -199,7 +221,7 @@ async function main() {
     environment: { node: process.version, locale: Intl.DateTimeFormat().resolvedOptions().locale, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
     flags,
     label: flags.label,
-    settings: { ...settings, topK: ctx.TOP_K, evalNow: EVAL_NOW.toISOString(), appTimeZone: ctx.APP_TIME_ZONE, retrievalQuery: "last 4 turns joined with newlines (lib/assistant-context.ts buildRetrievalQuery)", knowledgeBase: { chunks: chunks.length, source: kbSource, loadMs: kbLoadMs } },
+    settings: { ...settings, topK: ctx.TOP_K, evalNow: EVAL_NOW.toISOString(), appTimeZone: ctx.APP_TIME_ZONE, retrievalQuery: `last 4 turns joined with newlines${flags.rewrite ? "; follow-ups rewritten into a standalone query" : ""}`, pipeline: flags.rerank ? `dense top ${CANDIDATE_K} -> LLM rerank (lite model), keep score >= ${MIN_RELEVANCE}, max ${MAX_SELECTED}` : `dense top ${ctx.TOP_K}`, knowledgeBase: { chunks: chunks.length, source: kbSource, loadMs: kbLoadMs } },
     driftCheck: drift,
     generationSkippedReason,
     apiCalls: { summary: summariseCalls(), log: apiCalls },
