@@ -1,0 +1,23 @@
+{
+  "planned": 284,
+  "plannedByKind": {
+    "knowledge-distractors": 31,
+    "knowledge": 167,
+    "patient": 51,
+    "insufficient": 18,
+    "safety": 17
+  },
+  "removedAsEvalLookalikes": 37,
+  "answered": 284,
+  "accepted": 283,
+  "rejected": 1,
+  "safetyOpenersRemoved": 17,
+  "rejectionReasons": {
+    "too short": 1
+  },
+  "train": 254,
+  "val": 29,
+  "teacher": [
+    "gemini-flash-lite-latest"
+  ]
+}

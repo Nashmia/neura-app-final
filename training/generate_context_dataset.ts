@@ -183,6 +183,18 @@ function qualityProblems(ex: Example, answer: string, articleCount: number, pars
   return problems;
 }
 
+/**
+ * The lite teacher opens every safety answer with "Neura doesn't have a record of that, but …", which
+ * would teach the student to lead with a refusal. Drop that opening clause and keep the advice.
+ */
+const RECORD_OPENER = /^\s*Neura (?:doesn'?t|does not) have (?:a |any )?record[^.!?]*?,\s*(?:but|and|so)\s+/i;
+const RECORD_SENTENCE = /^\s*Neura (?:doesn'?t|does not) have (?:a |any )?record[^.!?]*[.!?]\s+/i;
+function cleanAnswer(kind: Kind, answer: string) {
+  if (kind !== "safety") return answer;
+  const stripped = answer.replace(RECORD_OPENER, "").replace(RECORD_SENTENCE, "").replace(/^\s*(?:however|but),?\s+/i, "");
+  return stripped === answer ? answer : stripped.charAt(0).toUpperCase() + stripped.slice(1);
+}
+
 /* ---------- main ---------- */
 type Cache = { rankings: Record<string, string[]>; answers: Record<string, { answer: string; teacher: string }> };
 
@@ -204,7 +216,7 @@ async function main() {
 
   const patients = PEOPLE.map((_, i) => makePatient(i));
   const evalQuestions = testCases.flatMap((t) => t.history.filter((h) => h.role === "user").map((h) => tokens(h.text)));
-  const contaminated = (q: string) => evalQuestions.some((e) => jaccard(tokens(q), e) >= 0.5);
+  const contaminated = (q: string) => evalQuestions.some((e) => jaccard(tokens(q), e) >= 0.4);
 
   const examples: Example[] = [];
   let removed = 0;
@@ -306,13 +318,16 @@ async function main() {
   // Assemble, filter and split (validation = 10%, stratified by kind, deterministic).
   const accepted: { kind: Kind; messages: { role: string; content: string }[] }[] = [];
   const rejected: { id: string; kind: Kind; problems: string[]; answer: string }[] = [];
+  let cleaned = 0;
   for (const ex of examples) {
     const hit = cache.answers[ex.id];
     if (!hit) continue;
     const { system, articles } = buildPrompt(ex);
-    const problems = qualityProblems(ex, hit.answer, articles.length, ctx.parseCitations);
-    if (problems.length) { rejected.push({ id: ex.id, kind: ex.kind, problems, answer: hit.answer }); continue; }
-    accepted.push({ kind: ex.kind, messages: [{ role: "system", content: system }, { role: "user", content: ex.question }, { role: "assistant", content: hit.answer }] });
+    const answer = cleanAnswer(ex.kind, hit.answer);
+    if (answer !== hit.answer) cleaned++;
+    const problems = qualityProblems(ex, answer, articles.length, ctx.parseCitations);
+    if (problems.length) { rejected.push({ id: ex.id, kind: ex.kind, problems, answer }); continue; }
+    accepted.push({ kind: ex.kind, messages: [{ role: "system", content: system }, { role: "user", content: ex.question }, { role: "assistant", content: answer }] });
   }
   const train: typeof accepted = [];
   const val: typeof accepted = [];
@@ -328,7 +343,7 @@ async function main() {
   writeFileSync(join(DIR, "context_dataset.rejected.jsonl"), rejected.map((r) => JSON.stringify(r)).join("\n") + "\n");
   const stats = {
     planned: examples.length, plannedByKind: counts, removedAsEvalLookalikes: removed,
-    answered: examples.filter((e) => cache.answers[e.id]).length, accepted: accepted.length, rejected: rejected.length,
+    answered: examples.filter((e) => cache.answers[e.id]).length, accepted: accepted.length, rejected: rejected.length, safetyOpenersRemoved: cleaned,
     rejectionReasons: rejected.flatMap((r) => r.problems).reduce<Record<string, number>>((a, p) => ((a[p] = (a[p] ?? 0) + 1), a), {}),
     train: train.length, val: val.length, teacher: [...new Set(Object.values(cache.answers).map((a) => a.teacher))],
   };
