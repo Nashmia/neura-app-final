@@ -10,7 +10,8 @@ import { Logo } from "@/components/layout/logo";
 import { api } from "@/lib/utils";
 
 type HistoryTurn = { role: "user" | "model"; text: string };
-type Source = { title: string; source: string };
+// Only the knowledge-base articles the reply cites, numbered as in the reply ("[1]").
+type Source = { n: number; title: string; source: string };
 type ChatMessage = { role: "user" | "assistant"; text: string; sources?: Source[] };
 
 const starterPrompts = [
@@ -141,7 +142,7 @@ export default function AssistantPage() {
                         {message.sources.map((s) => (
                           <span key={s.source} className="flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-primary shadow-sm">
                             <BookOpen className="size-3" />
-                            {s.title}
+                            [{s.n}] {s.title}
                           </span>
                         ))}
                       </div>

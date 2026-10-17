@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
+import {
+  buildKnowledgeContext,
+  buildPatientContext,
+  buildRetrievalQuery,
+  buildSystemInstruction,
+  citedSources,
+  rankChunks,
+  TOP_K,
+} from "@/lib/assistant-context";
 import { getCurrentUser } from "@/lib/auth";
 import { readJsonBody, validateHistory } from "@/lib/chat-validation";
 import { findPatientForUser, getCollections, withoutMongoId } from "@/lib/db";
-import { cosineSimilarity, embedText } from "@/lib/embeddings";
+import { embedText } from "@/lib/embeddings";
 import { runAssistantTurn, type HistoryTurn } from "@/lib/gemini";
 import { runFinetunedTurn } from "@/lib/finetuned-model";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -30,8 +39,6 @@ async function generateReply(systemInstruction: string, history: HistoryTurn[]):
   return runAssistantTurn(systemInstruction, history);
 }
 
-const TOP_K = 4;
-
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Please log in first." }, { status: 401 });
@@ -58,69 +65,19 @@ export async function POST(request: Request) {
       collections.appointments.find({ patientId: patient.id }, withoutMongoId).toArray(),
     ]);
 
-    // Embed the last couple of turns, not just the latest message, so
-    // pronoun-heavy follow-ups ("what should I write on it?") still retrieve
-    // the article the conversation is actually about.
-    const retrievalQuery = history
-      .slice(-4)
-      .map((turn) => turn.text)
-      .join("\n");
-    const queryEmbedding = await embedText(retrievalQuery);
-    const topChunks = [...chunks]
-      .map((chunk) => ({ chunk, score: cosineSimilarity(queryEmbedding, chunk.embedding) }))
-      .sort((a, b) => b.score - a.score)
+    const queryEmbedding = await embedText(buildRetrievalQuery(history));
+    const topChunks = rankChunks(queryEmbedding, chunks)
       .slice(0, TOP_K)
       .map((r) => r.chunk);
 
-    const knowledgeContext = topChunks.length
-      ? topChunks.map((c) => `### ${c.title}\n${c.text}`).join("\n\n")
-      : "(No knowledge base articles matched this question.)";
+    const systemInstruction = buildSystemInstruction(
+      buildKnowledgeContext(topChunks),
+      buildPatientContext({ patient, medications, sessions, journalEntries, appointments }, new Date())
+    );
+    const message = await generateReply(systemInstruction, history);
 
-    const recentSessions = [...sessions].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 3);
-    const recentJournal = [...journalEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
-    const upcomingAppointments = appointments
-      .filter((a) => a.status === "Upcoming")
-      .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))
-      .slice(0, 3);
-
-    const patientContext = [
-      `Patient: ${patient.name}, age ${patient.age}, ${patient.dementiaStage} stage dementia.`,
-      medications.length
-        ? `Current medications: ${medications.map((m) => `${m.name} (${m.dosage}, ${m.time}, ${m.status})`).join("; ")}.`
-        : "No medications recorded.",
-      recentSessions.length
-        ? `Recent cognitive check-ins: ${recentSessions.map((s) => `${s.score}/${s.total} on ${new Date(s.createdAt).toLocaleDateString()}`).join("; ")}.`
-        : "No cognitive check-ins recorded yet.",
-      recentJournal.length
-        ? `Recent caregiver journal notes: ${recentJournal
-            .map((j) => `[${new Date(j.createdAt).toLocaleDateString()}${j.moodTag ? `, mood: ${j.moodTag}` : ""}] ${j.text || "(mood check-in only)"}`)
-            .join(" | ")}.`
-        : "No journal notes recorded yet.",
-      upcomingAppointments.length
-        ? `Upcoming appointments: ${upcomingAppointments.map((a) => `${a.title} on ${a.date} at ${a.time}`).join("; ")}.`
-        : "No upcoming appointments scheduled.",
-    ].join("\n");
-
-    const systemInstruction = `You are Neura's Care Assistant, a supportive AI for caregivers of dementia patients. Answer the caregiver's question grounded in the two sources of information below. Be warm, concise, and practical.
-
-Rules:
-- Base your answer on the knowledge base excerpts and the patient's recent care data provided below.
-- If the knowledge base doesn't cover the question, say so honestly rather than inventing advice.
-- Never provide a medical diagnosis or tell them to change a medication dose — for medical decisions, recommend contacting the patient's doctor.
-- Keep answers focused and readable (a few short paragraphs or a short list), not an essay.
-
-## Knowledge base excerpts
-${knowledgeContext}
-
-## This patient's recent care data
-${patientContext}`;
-
-    const message = await generateReply(systemInstruction, history as HistoryTurn[]);
-
-    return NextResponse.json({
-      message,
-      sources: topChunks.map((c) => ({ title: c.title, source: c.source })),
-    });
+    // Show only the excerpts the reply actually cites; uncited (often irrelevant) articles are dropped.
+    return NextResponse.json({ message, sources: citedSources(message, topChunks) });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "The care assistant is unavailable right now." }, { status: 502 });
