@@ -232,24 +232,21 @@ details.faq[open] .faq-chevron { transform: rotate(180deg); }
 }
 
 /*
-  Landing header: solid navy by default. Where scroll-driven animations are
-  supported it starts transparent over the navy hero (so no seam crosses the
-  hero artwork) and turns solid over the first 96px of scroll.
+  Landing header: always solid navy, so nothing on the page shows through
+  the nav text. Where scroll-driven animations are supported, a soft shadow
+  fades in over the first 96px of scroll to lift it off light sections.
 */
-.landing-header { background-color: color-mix(in srgb, var(--navy) 96%, transparent); }
+.landing-header { background-color: var(--navy); }
 @supports (animation-timeline: scroll()) {
   .landing-header {
-    background-color: transparent;
-    animation: landing-header-solid linear both;
+    animation: landing-header-shadow linear both;
     animation-timeline: scroll(root);
     animation-range: 0 96px;
   }
 }
-@keyframes landing-header-solid {
-  to {
-    background-color: color-mix(in srgb, var(--navy) 96%, transparent);
-    box-shadow: 0 10px 30px -18px rgba(22, 26, 69, 0.55);
-  }
+@keyframes landing-header-shadow {
+  from { box-shadow: 0 10px 30px -18px rgba(22, 26, 69, 0); }
+  to { box-shadow: 0 10px 30px -18px rgba(22, 26, 69, 0.55); }
 }
 
 /* Landing hero artwork: fade its top and side edges into the navy background. */

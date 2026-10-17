@@ -56,7 +56,7 @@ export default function LandingPage() {
 
       {/* ───────────── Hero ───────────── */}
       <section className="on-dark relative -mt-16 overflow-hidden bg-navy pt-16 text-white lg:-mt-[72px] lg:pt-[72px]">
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_75%_40%,rgba(142,160,255,0.10),transparent_45%)]" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_75%_40%,rgba(142,160,255,0.10),transparent_45%)] [mask-image:linear-gradient(to_bottom,transparent_72px,#000_240px)]" />
 
         <div id="top" className="mx-auto w-full max-w-[1352px] px-4 sm:px-6 lg:px-8 relative grid scroll-mt-20 items-center lg:min-h-[438px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div className="relative z-10 max-w-[560px] pb-10 pt-8 sm:pt-10 lg:pb-14 lg:pt-6">

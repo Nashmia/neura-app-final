@@ -13,8 +13,8 @@ const navLink =
   "rounded-full px-3.5 py-2 text-[14px] font-medium text-white/75 transition-colors hover:bg-white/[0.07] hover:text-white active:bg-white/10 focus-visible:text-white";
 
 /**
- * Landing-page header. Sticky; transparent over the hero, then a solid navy
- * bar (matching the footer) once the page scrolls. See `.landing-header`.
+ * Landing-page header. Sticky and solid navy (matching the footer), so the
+ * links stay readable over any section. See `.landing-header`.
  */
 export function SiteHeader() {
   return (
