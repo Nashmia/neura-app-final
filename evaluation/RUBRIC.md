@@ -24,7 +24,7 @@ For **insufficient-information** cases, "correct" means clearly saying the infor
 
 ## 3. Source attribution — does the answer make clear where its information comes from?
 
-The current app shows the 4 retrieved article titles under every answer but does not ask the model to cite them, so expect low scores here; it's the baseline for later improvements.
+In the Phase 1 baseline the app showed all 4 retrieved article titles under every answer and did not ask the model to cite them. Since Phase 2 the model must cite excerpts as [1]–[4] and name patient-data sources in plain words, and only cited articles are shown. The definitions below are unchanged so scores stay comparable across phases.
 
 | Score | Definition |
 |---|---|

@@ -38,7 +38,12 @@ export type CaseResult = {
   answer: {
     status: string;
     text?: string;
-    sourcesShown?: string[];
+    sourcesShown?: string[]; // what the user sees: only the cited articles (Phase 2+)
+    retrievedTitles?: string[];
+    citedNumbers?: number[];
+    citationPrecision?: number | null; // cited and expected / cited, for cases with an expected article
+    numericDates?: string[]; // ambiguous numeric dates found in the answer, e.g. 11/10
+
     contextMs?: number;
     generationMs?: number;
     endToEndMs?: number;
@@ -55,8 +60,9 @@ export type RunReport = {
   environment: { node: string; locale: string; timeZone: string };
   flags: Record<string, unknown>;
   settings: Record<string, unknown>;
+  label: string;
   driftCheck: { ok: boolean; detail: string };
-  equivalenceCheck: { ok: boolean; detail: string };
+  comparison?: string; // Markdown before/after comparison with a baseline run
   generationSkippedReason?: string;
   apiCalls: { summary: ReturnType<typeof import("./call-counter").summariseCalls>; log: ApiCall[] };
   results: CaseResult[];
@@ -147,7 +153,20 @@ export function aggregate(results: CaseResult[]) {
     answers: {
       generated: results.filter((r) => r.answer.status.startsWith("generated")).length,
       errors: results.filter((r) => r.answer.status.startsWith("error")).length,
+      ...answerChecks(results),
     },
+  };
+}
+
+/** Automatic answer checks (no API calls). Human rubric scores remain the answer-quality result. */
+export function answerChecks(results: CaseResult[]) {
+  const answered = results.filter((r) => r.answer.text);
+  const precisions = answered.map((r) => r.answer.citationPrecision).filter((n): n is number => typeof n === "number");
+  return {
+    meanSourcesShown: answered.length ? r3(answered.reduce((s, r) => s + (r.answer.sourcesShown?.length ?? 0), 0) / answered.length) : null,
+    answersWithCitations: answered.filter((r) => (r.answer.citedNumbers?.length ?? 0) > 0).length,
+    meanCitationPrecision: precisions.length ? r3(precisions.reduce((a, b) => a + b, 0) / precisions.length) : null,
+    answersWithNumericDates: answered.filter((r) => (r.answer.numericDates?.length ?? 0) > 0).map((r) => r.id),
   };
 }
 
@@ -166,6 +185,7 @@ export function writeReports(report: RunReport, reportsRoot: string): string {
   writeFileSync(join(dir, "report.json"), redact(JSON.stringify(report, null, 2)));
   writeFileSync(join(dir, "report.md"), redact(renderMarkdown(report)));
   writeFileSync(join(dir, "scoring-sheet.csv"), redact(renderScoringSheet(report)));
+  if (report.comparison) writeFileSync(join(dir, "comparison.md"), redact(report.comparison));
   return dir;
 }
 
@@ -190,8 +210,8 @@ function renderMarkdown(report: RunReport): string {
   const pct = (x: number | null) => (x === null ? "n/a" : `${Math.round(x * 1000) / 10}%`);
 
   L.push(`# Care Assistant RAG evaluation — ${report.startedAt.slice(0, 16).replace("T", " ")} UTC`, "");
-  L.push(`> Baseline evaluation of the existing pipeline. Patient data is synthetic (evaluation/fixtures). Knowledge chunks: ${s.knowledgeBase.source}. Generated answers are **not deterministic** (temperature ${s.assistantTemperature}); re-runs can differ.`, "");
-  if (!report.driftCheck.ok || !report.equivalenceCheck.ok) L.push(`> ⚠️ **DRIFT:** ${!report.driftCheck.ok ? report.driftCheck.detail : ""} ${!report.equivalenceCheck.ok ? report.equivalenceCheck.detail : ""}`, "");
+  L.push(`> ${report.label}. Patient data is synthetic (evaluation/fixtures). Knowledge chunks: ${s.knowledgeBase.source}. Generated answers are **not deterministic** (temperature ${s.assistantTemperature}); re-runs can differ.`, "");
+  if (!report.driftCheck.ok) L.push(`> ⚠️ **DRIFT:** ${report.driftCheck.detail}`, "");
 
   L.push("## Run details", "");
   L.push("| | |", "|---|---|");
@@ -202,8 +222,7 @@ function renderMarkdown(report: RunReport): string {
   L.push(`| Generation model (Gemini path forced) | ${s.generationModel} (quota fallback: ${s.quotaFallbackModel}), temperature ${s.assistantTemperature} |`);
   L.push(`| Retrieval | top-K = ${s.topK}; query = ${s.retrievalQuery}; ${s.knowledgeBase.chunks} chunks, loaded in ${s.knowledgeBase.loadMs} ms |`);
   L.push(`| Flags | \`${JSON.stringify(report.flags)}\` |`);
-  L.push(`| Route drift check | ${report.driftCheck.ok ? "✅" : "❌"} ${report.driftCheck.detail} |`);
-  L.push(`| Replica equivalence check | ${report.equivalenceCheck.ok ? "✅" : "❌"} ${report.equivalenceCheck.detail} |`);
+  L.push(`| Production-code check | ${report.driftCheck.ok ? "✅" : "❌"} ${report.driftCheck.detail} |`);
   L.push("");
 
   L.push("## Gemini API requests made by this run", "");
@@ -227,6 +246,10 @@ function renderMarkdown(report: RunReport): string {
   L.push("");
   L.push("### Patient-context coverage (does the prompt contain the facts needed?)", "");
   L.push(`${a.patientContext.pass}/${a.patientContext.checked} pass · ${a.patientContext.failKnownLimitation} fail because of a known limitation · ${a.patientContext.failUnexpected} unexpected failures.`, "");
+  if (a.answers.generated) {
+    L.push("### Automatic answer checks", "");
+    L.push(`${a.answers.generated} answers generated · sources shown per answer: ${a.answers.meanSourcesShown} · answers with at least one citation: ${a.answers.answersWithCitations}/${a.answers.generated} · mean citation precision (cases with an expected article): ${a.answers.meanCitationPrecision ?? "n/a"} · answers with numeric dates: ${a.answers.answersWithNumericDates.join(", ") || "none"}. Human rubric scores (scoring-sheet.csv) are the answer-quality result.`, "");
+  }
   L.push("### Latency (ms)", "");
   L.push("| Stage | Median | Max | n |", "|---|---|---|---|");
   L.push(`| Embedding call | ${a.latencyMs.embedding.median ?? "–"} | ${a.latencyMs.embedding.max ?? "–"} | ${report.results.filter((r) => r.retrieval.embedMs != null).length} |`);
@@ -258,8 +281,10 @@ function renderMarkdown(report: RunReport): string {
     L.push(`**Expected behaviour:** ${r.expectedBehaviour}`, "");
     if (r.answer.text) {
       L.push(`**Answer** (${r.answer.generationMs} ms generation, ${r.answer.endToEndMs} ms end to end) — score in scoring-sheet.csv:`, "", ...r.answer.text.split("\n").map((l) => `> ${l}`), "");
+      L.push(`**Sources shown to the user (cited):** ${r.answer.sourcesShown?.length ? r.answer.sourcesShown.join("; ") : "none"} · retrieved: ${r.answer.retrievedTitles?.join("; ") ?? "–"}${r.answer.citationPrecision != null ? ` · citation precision ${r.answer.citationPrecision}` : ""}${r.answer.numericDates?.length ? ` · ⚠️ numeric dates: ${r.answer.numericDates.join(", ")}` : ""}`, "");
       if (r.answer.judge) L.push(`*LLM judge (ADVISORY ONLY, not a result):* ${"error" in r.answer.judge ? r.answer.judge.error : `groundedness ${r.answer.judge.groundedness}, correctness ${r.answer.judge.correctness}, attribution ${r.answer.judge.attribution}, safety ${r.answer.judge.safety} — ${r.answer.judge.rationale}`}`, "");
     } else if (r.answer.status !== "not run") L.push(`**Answer:** ${r.answer.status}${r.answer.error ? ` — ${r.answer.error}` : ""}`, "");
   }
+  if (report.comparison) L.push("", report.comparison);
   return L.join("\n") + "\n";
 }

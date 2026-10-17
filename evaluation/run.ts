@@ -9,6 +9,8 @@
  *   --embed-delay=MS  Milliseconds between embedding calls (default 700).
  *   --judge           Also score answers with the ADVISORY LLM judge (one extra generation per answer).
  *   --kb=mongo|local  Where to read knowledge chunks: MongoDB knowledgeChunks, read-only (default), or data/db.json.
+ *   --baseline=DIR    Report folder to compare against (default: the Phase 1 baseline run). --baseline=none to skip.
+ *   --label=TEXT      Description shown at the top of the report.
  *
  * Writes evaluation/reports/<timestamp>/{report.json, report.md, scoring-sheet.csv}.
  * Never reads or writes patient data in any database: patient data comes from fixtures/synthetic-patient.json.
@@ -19,11 +21,10 @@ import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { apiCalls, installFetchCounter, redact, setPhase, summariseCalls } from "./call-counter";
 import { checkRouteDrift, readModelSettings } from "./drift-check";
-import { checkReplicaEquivalence } from "./equivalence-check";
 import { loadKnowledgeChunks } from "./kb-source";
-import * as replica from "./replica";
 import { testCases, type TestCase } from "./test-cases";
 import { writeReports, type CaseResult, type RunReport } from "./report";
+import { compareWithBaseline, NUMERIC_DATE } from "./compare";
 
 config({ path: join(__dirname, "..", ".env.local"), quiet: true });
 installFetchCounter(); // before anything imports @google/genai
@@ -38,7 +39,15 @@ const flags = {
   delaySeconds: Number(argValue("delay", "20")),
   embedDelayMs: Number(argValue("embed-delay", "700")),
   kb: (argValue("kb", "mongo") === "local" ? "local" : "mongo") as "mongo" | "local",
+  baseline: argValue("baseline", "reports/2026-10-17T10-48-38"),
+  label: argValue("label", "Evaluation of the current Care Assistant pipeline"),
 };
+
+/**
+ * The fixture's dates are fixed (Oct-Nov 2026), so "today" is pinned too: the appointment filter and the
+ * "Today is ..." line then give the same prompt on every run, whatever the real date.
+ */
+const EVAL_NOW = new Date("2026-10-17T09:00:00Z");
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const ms = (start: number) => Math.round((performance.now() - start) * 10) / 10;
 const log = (...parts: unknown[]) => console.log(redact(parts.map(String).join(" ")));
@@ -52,15 +61,14 @@ async function main() {
   const cases: TestCase[] = flags.ids ? testCases.filter((c) => flags.ids!.includes(c.id)) : testCases;
   if (!cases.length) throw new Error("No test cases selected.");
 
-  // Production helpers, imported unchanged (after the fetch counter is installed).
-  const { embedText, cosineSimilarity } = await import("../lib/embeddings");
+  // Production code, imported unchanged (after the fetch counter is installed).
+  const { embedText } = await import("../lib/embeddings");
+  const ctx = await import("../lib/assistant-context");
 
-  // 1. Drift checks (no API calls).
+  // 1. Check the route still uses the shared module the evaluation imports (no API calls).
   const drift = checkRouteDrift();
-  const equivalence = await checkReplicaEquivalence(fixture, testCases, cosineSimilarity);
   const settings = readModelSettings();
-  log(`Drift: ${drift.ok ? "OK" : "DRIFT"} — ${drift.detail}`);
-  log(`Equivalence: ${equivalence.ok ? "OK" : "MISMATCH"} — ${equivalence.detail}`);
+  log(`Production-code check: ${drift.ok ? "OK" : "DRIFT"} — ${drift.detail}`);
 
   // 2. Knowledge base (read-only).
   setPhase("kb-load");
@@ -70,7 +78,10 @@ async function main() {
   const titleOf = new Map(chunks.map((c) => [c.source, c.title]));
   log(`Knowledge base: ${chunks.length} chunks from ${kbSource} in ${kbLoadMs} ms`);
 
-  const patientContext = replica.buildPatientContext(fixture);
+  const patientContext = ctx.buildPatientContext(
+    { patient: fixture.patient, medications: fixture.medications, sessions: fixture.quizSessions, journalEntries: fixture.journalEntries, appointments: fixture.appointments },
+    EVAL_NOW
+  );
   const results: CaseResult[] = [];
   const queryEmbeddings = new Map<string, number[]>();
 
@@ -95,24 +106,24 @@ async function main() {
       r.context = { status: passed ? "pass" : tc.knownLimitation ? "fail (known limitation)" : "fail", missingFacts, presentForbidden };
     }
 
-    // Retrieval (one embedding call), exactly as route.ts:65-74.
-    const query = replica.buildRetrievalQuery(tc.history);
+    // Retrieval (one embedding call), with the route's own functions.
+    const query = ctx.buildRetrievalQuery(tc.history);
     try {
       const t0 = performance.now();
       const embedding = await embedText(query);
       const embedMs = ms(t0);
       const t1 = performance.now();
-      const ranking = replica.rankChunks(embedding, chunks, cosineSimilarity);
+      const ranking = ctx.rankChunks(embedding, chunks);
       const rankMs = ms(t1);
       queryEmbeddings.set(tc.id, embedding);
-      const top = replica.topK(ranking);
+      const top = ranking.slice(0, ctx.TOP_K);
       const expectedRank = r.expectedSources.length
         ? Math.min(...r.expectedSources.map((s) => ranking.findIndex((x) => x.chunk.source === s) + 1).filter((n) => n > 0))
         : null;
       const inTopK = r.expectedSources.filter((s) => top.some((x) => x.chunk.source === s));
       const hit = r.requireAllSources
         ? inTopK.length === r.expectedSources.length
-        : expectedRank !== null && Number.isFinite(expectedRank) && expectedRank <= replica.TOP_K;
+        : expectedRank !== null && Number.isFinite(expectedRank) && expectedRank <= ctx.TOP_K;
       r.retrieval = {
         status: r.expectedSources.length ? (hit ? "pass" : "fail") : "n/a (no expected article)",
         rank: expectedRank !== null && Number.isFinite(expectedRank) ? expectedRank : null,
@@ -143,15 +154,19 @@ async function main() {
       const tc = cases.find((c) => c.id === r.id)!;
       setPhase(`answer:${r.id}`);
       const t0 = performance.now();
-      const top = replica.topK(replica.rankChunks(queryEmbeddings.get(r.id)!, chunks, cosineSimilarity)).map((x) => x.chunk);
-      const systemInstruction = replica.buildSystemInstruction(replica.buildKnowledgeContext(top), patientContext);
+      const top = ctx.rankChunks(queryEmbeddings.get(r.id)!, chunks).slice(0, ctx.TOP_K).map((x) => x.chunk);
+      const systemInstruction = ctx.buildSystemInstruction(ctx.buildKnowledgeContext(top), patientContext);
       const contextMs = ms(t0);
       try {
         const g0 = performance.now();
         const answer = await runAssistantTurn(systemInstruction, tc.history);
         const generationMs = ms(g0);
+        const cited = ctx.citedSources(answer, top); // what the route returns and the user sees
         r.answer = {
-          status: "generated — awaiting human score", text: answer, sourcesShown: top.map((c) => c.title),
+          status: "generated — awaiting human score", text: answer, sourcesShown: cited.map((c) => c.title),
+          retrievedTitles: top.map((c) => c.title), citedNumbers: cited.map((c) => c.n),
+          citationPrecision: r.expectedSources.length && cited.length ? Math.round((cited.filter((c) => r.expectedSources.includes(c.source)).length / cited.length) * 1000) / 1000 : null,
+          numericDates: answer.match(NUMERIC_DATE) ?? [],
           contextMs, generationMs, endToEndMs: Math.round(((r.retrieval.retrievalMs ?? 0) + contextMs + generationMs) * 10) / 10,
           systemInstruction,
         };
@@ -183,13 +198,14 @@ async function main() {
     },
     environment: { node: process.version, locale: Intl.DateTimeFormat().resolvedOptions().locale, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
     flags,
-    settings: { ...settings, topK: replica.TOP_K, retrievalQuery: "last 4 turns joined with newlines (route.ts:65-68)", knowledgeBase: { chunks: chunks.length, source: kbSource, loadMs: kbLoadMs } },
+    label: flags.label,
+    settings: { ...settings, topK: ctx.TOP_K, evalNow: EVAL_NOW.toISOString(), appTimeZone: ctx.APP_TIME_ZONE, retrievalQuery: "last 4 turns joined with newlines (lib/assistant-context.ts buildRetrievalQuery)", knowledgeBase: { chunks: chunks.length, source: kbSource, loadMs: kbLoadMs } },
     driftCheck: drift,
-    equivalenceCheck: equivalence,
     generationSkippedReason,
     apiCalls: { summary: summariseCalls(), log: apiCalls },
     results,
   };
+  if (flags.baseline !== "none") report.comparison = compareWithBaseline(report, join(__dirname, flags.baseline));
   const dir = writeReports(report, join(__dirname, "reports"));
   const calls = report.apiCalls.summary;
   log(`\nAPI requests this run: ${calls.total} (embedding ${calls.embedding}, generation ${calls.generation}, non-200 ${calls.failedHttp})`);

@@ -10,7 +10,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { MongoClient, type Db } from "mongodb";
-import type { Chunk } from "./replica";
+import type { KnowledgeChunk as Chunk } from "../lib/types";
 
 const ALLOWED_COLLECTION = "knowledgeChunks";
 
