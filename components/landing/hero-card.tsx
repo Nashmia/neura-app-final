@@ -43,14 +43,14 @@ export function HeroCard({ icon, title, subtitle, x, y, mobileX, mobileY, rotate
     <div className="hero-card" style={style}>
       <div
         className={cn(
-          "hero-card-float flex flex-col rounded-[1.6em] border p-[0.85em] sm:aspect-square",
+          "hero-card-float flex flex-col rounded-[1.6em] border px-[0.95em] pb-[0.9em] pt-[0.85em] sm:aspect-square",
           tone === "lavender" ? "hero-card-lavender text-navy" : "hero-card-light text-[#262a3f]",
         )}
       >
-        <span className="grid size-[2.5em] place-items-center">{icon}</span>
-        <span className="mt-[0.7em] whitespace-nowrap text-[1em] font-medium leading-tight tracking-[-0.01em] sm:mt-auto">{title}</span>
-        <span className="mt-[0.25em] flex items-center justify-between gap-[0.5em] whitespace-nowrap text-[0.82em] leading-tight">
-          <span className={tone === "lavender" ? "text-[#4a5080]" : "text-[#5d6075]"}>{subtitle}</span>
+        <span className="-ml-[0.2em] flex h-[2.2em] items-center sm:h-[2.5em]">{icon}</span>
+        <span className="mt-[0.6em] whitespace-nowrap text-[0.96em] font-medium leading-tight tracking-[-0.01em] sm:mt-auto">{title}</span>
+        <span className="mt-[0.3em] flex items-center justify-between gap-[0.5em] whitespace-nowrap text-[0.86em] leading-tight">
+          <span className={tone === "lavender" ? "text-[#424878]" : "text-[#4f5368]"}>{subtitle}</span>
           <ArrowRight className="size-[1.15em] shrink-0" strokeWidth={2} />
         </span>
       </div>

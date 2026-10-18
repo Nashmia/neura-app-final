@@ -12,6 +12,12 @@ import { HeroCard, PillIcon, type HeroCardProps } from "@/components/landing/her
 
   Everything is positioned in the artwork's own frame (1684×934), so cards and
   caption stay locked to the sculpture as the artwork scales.
+
+  Composition (desktop/tablet): Medication and Mood Notes sit on the orbit's
+  left and right loops, so the baked ring passes behind their opaque faces and
+  never crosses text; Memory Exercise sits in the clear space below the ring,
+  close to the sculpture. Phones use their own anchors (mobileX/mobileY),
+  favouring legibility over the exact desktop arrangement.
 */
 
 const SRC_W = 1684;
@@ -26,7 +32,7 @@ const cards: (HeroCardProps & { key: string })[] = [
     icon: <PillIcon className="size-[2.4em]" />,
     title: "Medication",
     subtitle: "Stay on track",
-    x: 26, y: 25, mobileX: 18, rotate: 7,
+    x: 29.8, y: 36, mobileX: 18, mobileY: 23, rotate: 6,
     float: { duration: 6.5, delay: -1.2, distance: 5 },
   },
   {
@@ -35,7 +41,7 @@ const cards: (HeroCardProps & { key: string })[] = [
     title: "Memory Exercise",
     subtitle: "Build & maintain",
     tone: "lavender",
-    x: 25, y: 70, mobileX: 19, rotate: -8,
+    x: 30.4, y: 74, mobileX: 19, mobileY: 74, rotate: -6,
     float: { duration: 8, delay: -3.4, distance: 4 },
   },
   {
@@ -43,7 +49,7 @@ const cards: (HeroCardProps & { key: string })[] = [
     icon: <Smile className="size-[2.05em]" strokeWidth={1.7} />,
     title: "Mood Notes",
     subtitle: "See changes",
-    x: 86.5, y: 44, mobileX: 80, mobileY: 56, rotate: -10,
+    x: 85.8, y: 58.5, mobileX: 80, mobileY: 56, rotate: -8,
     float: { duration: 7.2, delay: -5.1, distance: 6 },
   },
 ];
@@ -65,8 +71,8 @@ export function HeroArt({ className }: { className?: string }) {
 
       {/* Caption and its leader line */}
       <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} className="pointer-events-none absolute inset-0 size-full" aria-hidden>
-        <path d="M531 100 588 61h6" fill="none" stroke="#c9d0ff" strokeOpacity={0.7} strokeWidth={1.1} strokeLinecap="round" strokeLinejoin="round" />
-        <text className="font-display" fontStyle="italic" fontSize={17} fill="#e3e7ff">
+        <path d="M531 100 588 61h6" fill="none" stroke="#c9d0ff" strokeOpacity={0.4} strokeWidth={1.1} strokeLinecap="round" strokeLinejoin="round" />
+        <text className="font-display" fontStyle="italic" fontSize={17} fill="#e3e7ff" fillOpacity={0.72}>
           <tspan x={605} y={65}>A clearer picture</tspan>
           <tspan x={605} y={87}>of care, day by day.</tspan>
         </text>

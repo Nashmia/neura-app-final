@@ -271,10 +271,13 @@ details.faq[open] .faq-chevron { transform: rotate(180deg); }
   left: var(--card-x-mobile);
   top: var(--card-y-mobile);
   width: 10em;
-  font-size: clamp(11px, calc(var(--art-w) * 0.0152), 12.5px);
-  transform: translate(-50%, -50%) rotate(var(--card-rotate));
+  font-size: clamp(11px, calc(var(--art-w) * 0.0146), 12px);
+  /* Half the tilt on phones: easier to read, and the stacked cards stay apart. */
+  transform: translate(-50%, -50%) rotate(calc(var(--card-rotate) * 0.5));
 }
-@media (min-width: 640px) { .hero-card { left: var(--card-x); top: var(--card-y); width: 9.6em; } }
+@media (min-width: 640px) {
+  .hero-card { left: var(--card-x); top: var(--card-y); transform: translate(-50%, -50%) rotate(var(--card-rotate)); }
+}
 
 .hero-card-light {
   border-color: rgba(255, 255, 255, 0.75);
