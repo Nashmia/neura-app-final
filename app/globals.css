@@ -411,3 +411,23 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--accent-ink); }
   .landing-lead { font-size: 17px; }
   .landing-body { font-size: 16px; }
 }
+
+/*
+  Neura logo entrance (components/brand/neura-logo.tsx), once per mount:
+  the hook and stem draw in, the shoulder follows into the foot, then the
+  wordmark fades up 3px. About 1.15s in total, then completely still. The
+  resting state is the static logo; reduced motion shows it immediately.
+*/
+.neura-logo[data-animate] .nl-stroke {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: nl-draw 480ms cubic-bezier(0.65, 0, 0.35, 1) 60ms forwards;
+}
+.neura-logo[data-animate] .nl-stroke-2 { animation-duration: 620ms; animation-delay: 360ms; }
+.neura-logo[data-animate] .nl-word { opacity: 0; animation: nl-rise 480ms cubic-bezier(0.22, 1, 0.36, 1) 680ms forwards; }
+@keyframes nl-draw { to { stroke-dashoffset: 0; } }
+@keyframes nl-rise { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .neura-logo[data-animate] .nl-stroke { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; }
+  .neura-logo[data-animate] .nl-word { animation: none; opacity: 1; }
+}

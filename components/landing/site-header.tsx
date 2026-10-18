@@ -20,7 +20,7 @@ export function SiteHeader() {
   return (
     <header className="landing-header on-dark section-padding sticky top-0 z-50 text-white">
       <div className="container-neura relative flex h-16 items-center lg:h-[72px]">
-        <Logo tone="light" className="-ml-0.5 shrink-0" />
+        <Logo tone="light" animate className="-ml-0.5 shrink-0" />
 
         <nav aria-label="Main" className="ml-10 hidden items-center gap-1 md:flex lg:ml-14">
           {landingNavLinks.map((link) => (
