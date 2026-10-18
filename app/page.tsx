@@ -74,7 +74,7 @@ export default function LandingPage() {
       </section>
 
       {/* ───────────── Care is more than a checklist ───────────── */}
-      <section id="about" className="section-padding scroll-mt-16 py-20 lg:scroll-mt-[72px] lg:py-24">
+      <section id="about" className="section-padding scroll-mt-16 bg-section-offwhite py-20 lg:scroll-mt-[72px] lg:py-24">
         <div className="container-neura grid gap-12 lg:grid-cols-[435px_1fr] lg:gap-0">
           <div>
             <h2 className="max-w-[300px] text-[2.75rem] leading-[1.1] text-ink" style={{ fontWeight: 600 }}>Care is more than a <em>checklist</em>.</h2>
@@ -93,8 +93,7 @@ export default function LandingPage() {
       </section>
 
       {/* ───────────── How it works ───────────── */}
-      <div aria-hidden className="section-padding"><div className="container-neura border-t border-slate-300/80" /></div>
-      <section id="how" className="section-padding scroll-mt-16 py-20 lg:scroll-mt-[72px] lg:py-24">
+      <section id="how" className="section-padding scroll-mt-16 bg-section-sage py-20 lg:scroll-mt-[72px] lg:py-24">
         <div className="container-neura">
           <span className="eyebrow">How it works</span>
           <div className="mt-5 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -117,7 +116,7 @@ export default function LandingPage() {
       </section>
 
       {/* ───────────── Features ───────────── */}
-      <section id="features" className="section-padding scroll-mt-8 pb-16 pt-8 lg:pb-20">
+      <section id="features" className="section-padding scroll-mt-16 bg-section-offwhite py-16 lg:scroll-mt-[72px] lg:py-20">
         <div className="container-neura">
           <div className="flex flex-col gap-6 pb-7 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -142,7 +141,7 @@ export default function LandingPage() {
       </section>
 
       {/* ───────────── Week at a glance ───────────── */}
-      <section className="section-padding py-16 lg:py-20">
+      <section className="section-padding bg-section-lavender py-16 lg:py-20">
         <div className="container-neura">
           <span className="eyebrow">Inside Neura</span>
           <div className="mt-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -176,7 +175,7 @@ export default function LandingPage() {
       </section>
 
       {/* ───────────── Progress ───────────── */}
-      <section className="section-padding py-16 lg:py-20">
+      <section className="section-padding bg-section-offwhite py-16 lg:py-20">
         <div className="container-neura grid items-center gap-12 lg:grid-cols-[420px_1fr] lg:gap-16">
           <div>
             <span className="eyebrow">Progress</span>
@@ -203,7 +202,7 @@ export default function LandingPage() {
       </section>
 
       {/* ───────────── Today's care ───────────── */}
-      <section className="section-padding py-16 lg:py-20">
+      <section className="section-padding bg-section-offwhite py-16 lg:py-20">
         <div className="container-neura grid items-center gap-12 lg:grid-cols-[minmax(0,776px)_1fr] lg:gap-[72px]">
           <div className="on-dark rounded-[1.75rem] bg-navy p-6 text-white shadow-[0_40px_70px_-36px_rgba(31,37,92,0.65)] sm:p-8">
             <div className="flex items-center justify-between"><h3 className="text-[1.65rem] text-white">Today&apos;s care</h3><span className="text-[13px] text-white/70">Thu, Oct 23</span></div>
@@ -232,7 +231,7 @@ export default function LandingPage() {
       </section>
 
       {/* ───────────── Testimonials ───────────── */}
-      <section className="section-padding py-16 lg:py-20">
+      <section className="section-padding bg-section-sage py-16 lg:py-20">
         <div className="container-neura">
           <div className="text-center">
             <span className="eyebrow">Testimonials</span>
@@ -257,7 +256,7 @@ export default function LandingPage() {
       </section>
 
       {/* ───────────── FAQ ───────────── */}
-      <section id="faq" className="section-padding scroll-mt-16 pb-24 pt-16 lg:scroll-mt-[72px] lg:pb-28 lg:pt-20">
+      <section id="faq" className="section-padding scroll-mt-16 bg-section-offwhite pb-24 pt-16 lg:scroll-mt-[72px] lg:pb-28 lg:pt-20">
         <div className="container-neura grid gap-10 lg:grid-cols-[500px_1fr] lg:gap-0">
           <div>
             <span className="eyebrow">FAQ</span>
@@ -266,7 +265,7 @@ export default function LandingPage() {
           </div>
           <div>
             {faqs.map((item, i) => (
-              <details key={item.question} open={i === 0} className="faq group border-b border-slate-300/80 open:rounded-2xl open:border-transparent open:bg-white open:shadow-[0_20px_44px_-28px_rgba(31,37,92,0.35)]">
+              <details key={item.question} open={i === 0} className="faq group border-b border-slate-300/80 open:rounded-2xl open:border open:border-border open:bg-white open:shadow-[0_20px_44px_-28px_rgba(31,37,92,0.35)]">
                 <summary className="flex items-center justify-between gap-4 rounded-2xl px-6 py-6 font-display text-[1.2rem] text-ink transition-colors hover:text-accent-ink">{i + 1}. {item.question}<ChevronDown className="faq-chevron size-4 shrink-0 text-ink transition-transform" /></summary>
                 <p className="-mt-2 max-w-[560px] px-6 pb-6 text-[14px] leading-[1.7] text-slate-600">{item.answer}</p>
               </details>
@@ -276,15 +275,15 @@ export default function LandingPage() {
       </section>
 
       {/* ───────────── Closing CTA ───────────── */}
-      <section className="grid lg:grid-cols-2">
+      <section className="on-dark grid bg-navy lg:grid-cols-2">
         <div aria-hidden className="relative h-64 overflow-hidden bg-navy-deep sm:h-80 lg:h-auto lg:min-h-[460px]">
           <GlowWave className="absolute inset-0 size-full" />
         </div>
-        <div className="flex flex-col justify-center bg-periwinkle px-6 py-16 text-navy sm:px-14 lg:py-20">
-          <p className="kicker text-navy/80">Start with Neura</p>
-          <h2 className="mt-3 max-w-[520px] text-[2.5rem] leading-[1.12] text-navy sm:text-[3.25rem] [&_em]:!text-navy">Give caregivers a <em>calmer way</em> to manage daily cognitive support.</h2>
-          <p className="mt-6 max-w-[420px] text-[17px] leading-[1.6] text-navy/90">Create an account, add patient details, and begin guided daily care routines.</p>
-          <Button asChild className="mt-8 h-12 w-fit pl-6 pr-4 text-[14px] focus-visible:ring-offset-periwinkle"><Link href="/signup">Create account <ArrowBubble /></Link></Button>
+        <div className="flex flex-col justify-center px-6 py-16 text-white sm:px-14 lg:py-20">
+          <p className="kicker text-white/75">Start with Neura</p>
+          <h2 className="mt-3 max-w-[520px] text-[2.5rem] leading-[1.12] text-white sm:text-[3.25rem]">Give caregivers a <em>calmer way</em> to manage daily cognitive support.</h2>
+          <p className="mt-6 max-w-[420px] text-[17px] leading-[1.6] text-white/80">Create an account, add patient details, and begin guided daily care routines.</p>
+          <Button asChild variant="accent" className="mt-8 h-12 w-fit pl-6 pr-4 text-[14px] font-semibold focus-visible:ring-offset-navy"><Link href="/signup">Create account <ArrowBubble /></Link></Button>
         </div>
       </section>
 

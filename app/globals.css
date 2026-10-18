@@ -37,6 +37,10 @@
   --navy: #1f255c;
   --navy-deep: #161a45;
   --surface: #f5f6f8;
+  /* Landing-page section backgrounds (alternated with --navy). */
+  --section-offwhite: #f7f8fc;
+  --section-sage: #e9f2ef;
+  --section-lavender: #eceeff;
   --radius: 1rem;
 }
 
@@ -67,6 +71,9 @@
   --color-navy: var(--navy);
   --color-navy-deep: var(--navy-deep);
   --color-surface: var(--surface);
+  --color-section-offwhite: var(--section-offwhite);
+  --color-section-sage: var(--section-sage);
+  --color-section-lavender: var(--section-lavender);
   --color-ink: #1a1f4e;
   --color-periwinkle: #8ea0ff;
   --color-lavender: #e3e7ff;
