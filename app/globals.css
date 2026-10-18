@@ -214,11 +214,11 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--accent-ink); }
   results, Today's care). It sits on the card itself, inside its
   .reveal-item wrapper, so it never fights the scroll reveal.
 */
-.card-float { animation: card-float 7s ease-in-out infinite alternate; }
-.card-float-alt { animation-duration: 8.5s; animation-delay: -3s; }
+.card-float { animation: card-float 4s ease-in-out infinite alternate; will-change: transform; }
+.card-float-alt { animation-duration: 4.6s; animation-delay: -2.3s; }
 @keyframes card-float {
   from { transform: translateY(0); }
-  to { transform: translateY(-8px); }
+  to { transform: translateY(-16px); }
 }
 @media (prefers-reduced-motion: reduce) { .card-float { animation: none; } }
 
