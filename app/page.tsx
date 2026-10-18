@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DM_Serif_Display, Fraunces, Manrope } from "next/font/google";
+import { DM_Serif_Display, Manrope } from "next/font/google";
 import { Brain, CalendarDays, Check, ChevronDown, Eye, FilePlus2, Pill, Smile } from "lucide-react";
 import { ArrowBubble, Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
@@ -9,17 +9,8 @@ import { GlowWave } from "@/components/layout/glow-wave";
 import { cn } from "@/lib/utils";
 import { faqs, howItWorks, landingFeatures } from "@/lib/frontend-data";
 
-// Landing-only display face. Scoped via `.landing-type` (globals.css) so the
-// app's own screens keep Source Serif 4.
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  variable: "--font-fraunces",
-  display: "swap",
-  style: ["normal", "italic"],
-  axes: ["opsz", "SOFT"],
-});
-
-// Hero and navigation only (see `.landing-hero` / `.landing-header` in globals.css).
+// Landing-only fonts, scoped via `.landing-type` (globals.css) so the app's
+// own screens keep DM Sans and Source Serif 4.
 const heroDisplay = DM_Serif_Display({
   subsets: ["latin"],
   weight: "400",
@@ -85,7 +76,7 @@ const todaysCare = [
 
 export default function LandingPage() {
   return (
-    <main className={cn(fraunces.variable, heroDisplay.variable, manrope.variable, "landing-type min-h-screen bg-background text-ink")}>
+    <main className={cn(heroDisplay.variable, manrope.variable, "landing-type min-h-screen bg-background text-ink")}>
       <SiteHeader />
 
       {/* ───────────── Hero ───────────── */}

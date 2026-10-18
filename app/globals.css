@@ -316,34 +316,25 @@ details.faq[open] .faq-chevron { transform: rotate(180deg); }
 }
 
 /*
-  Landing-page typography ("editorial warmth meets healthcare software").
-  Scoped to <main class="landing-type"> so the app's screens are untouched.
-  Display: Fraunces (loaded in app/page.tsx as --font-fraunces).
-  Interface: DM Sans (--font-sans, from the root layout).
+  Landing-page typography, scoped to <main class="landing-type"> so the app's
+  screens are untouched. Fonts are loaded in app/page.tsx:
+    Display: DM Serif Display 400 (--font-hero-display) for every heading.
+    Interface: Manrope (--font-manrope) for all other text.
+  Illustrations keep the product's own fonts: the hero artwork (DM Sans cards,
+  Source Serif caption), the dashboard mockups and the Neura wordmark.
 */
+.landing-type { font-family: var(--font-manrope), var(--font-sans), ui-sans-serif, system-ui, sans-serif; }
 .landing-type :is(h1, h2, h3, .font-display) {
-  font-family: var(--font-fraunces), Georgia, ui-serif, serif;
-  font-variation-settings: "SOFT" 40;
+  font-family: var(--font-hero-display), Georgia, ui-serif, serif;
+  font-weight: 400;
 }
-/* Keep the app's own serif where the landing page shows the product itself:
-   the wordmark, the hero artwork caption and the dashboard mockups. */
+.landing-type :is(.hero-art, .app-preview) { font-family: var(--font-sans); }
 .landing-type :is(header, footer, .hero-art, .app-preview) :is(h3, .font-display) {
   font-family: var(--font-display), "Source Serif 4", Georgia, ui-serif, serif;
-  font-variation-settings: normal;
+  font-weight: 500;
 }
 
-/*
-  Hero and navigation type: DM Serif Display for the headline, Manrope for
-  everything else in the hero and the header. The hero artwork keeps DM Sans
-  (its cards) and Source Serif (its caption), so the illustration is unchanged.
-*/
-.landing-type :is(.landing-hero, .landing-header) { font-family: var(--font-manrope), var(--font-sans), ui-sans-serif, system-ui, sans-serif; }
-.landing-type .landing-hero .hero-art { font-family: var(--font-sans); }
-.landing-type .landing-hero .landing-eyebrow { font-family: inherit; }
-.landing-type .landing-hero h1.landing-h1 {
-  font-family: var(--font-hero-display), Georgia, ui-serif, serif;
-  font-variation-settings: normal;
-  font-weight: 400;
+.landing-type h1.landing-h1 {
   font-size: clamp(2.75rem, 1.55rem + 3.6vw, 4.5rem);
   line-height: 1.03;
   letter-spacing: -0.015em;
@@ -352,23 +343,20 @@ details.faq[open] .faq-chevron { transform: rotate(180deg); }
 
 .landing-h2 {
   font-size: clamp(2.1rem, 1.6rem + 1.4vw, 3rem);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
   text-wrap: balance;
 }
 .landing-h3 {
-  font-size: clamp(1.2rem, 1.08rem + 0.35vw, 1.4rem);
-  line-height: 1.25;
-  letter-spacing: -0.01em;
-  font-weight: 500;
+  font-size: clamp(1.25rem, 1.12rem + 0.4vw, 1.5rem);
+  line-height: 1.22;
+  letter-spacing: -0.005em;
 }
 /* For the one two-sentence heading that sits in a narrow column. */
 .landing-h2.landing-h2-compact { font-size: clamp(2.1rem, 1.7rem + 1vw, 2.6rem); }
 
 /* Short sentence-case label above a heading. */
 .landing-eyebrow {
-  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.01em;
