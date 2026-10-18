@@ -224,8 +224,8 @@ export default function LandingPage() {
             <p className="landing-body mt-5 text-ink">A clearer record for caregivers. More context for conversations with healthcare professionals.</p>
             <p className="mt-3 text-[13px] leading-[1.55] text-slate-600">Activity scores are tracking information, not a diagnosis or a measure of disease progression.</p>
           </div>
-          <div className="reveal-item">
-          <div className="card-float app-preview rounded-[1.75rem] border border-border bg-white p-5 shadow-[0_30px_60px_-36px_rgba(31,37,92,0.3)] sm:p-8">
+          <div className="reveal-item card-glow">
+          <div className="app-preview rounded-[1.75rem] border border-border bg-white p-5 shadow-[0_30px_60px_-36px_rgba(31,37,92,0.3)] sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-2xl text-ink">Weekly activity results</h3>
               <div className="flex items-center gap-3"><SampleChip /><Link href="/dashboard" className="text-xs text-accent-ink underline underline-offset-2 hover:text-navy">View full report →</Link></div>
@@ -239,8 +239,8 @@ export default function LandingPage() {
       {/* ───────────── Daily routine ───────────── */}
       <section className="section-padding bg-section-offwhite py-16 lg:py-20">
         <RevealGroup className="container-neura grid items-center gap-12 lg:grid-cols-[minmax(0,776px)_1fr] lg:gap-[72px]">
-          <div className="reveal-item">
-          <div className="card-float card-float-alt app-preview on-dark rounded-[1.75rem] bg-navy p-6 text-white shadow-[0_40px_70px_-36px_rgba(31,37,92,0.65)] sm:p-8">
+          <div className="reveal-item card-glow card-glow-alt">
+          <div className="app-preview on-dark rounded-[1.75rem] bg-navy p-6 text-white shadow-[0_40px_70px_-36px_rgba(31,37,92,0.65)] sm:p-8">
             <div className="flex items-center justify-between"><h3 className="text-[1.65rem] text-white">Today&apos;s care</h3><span className="text-[13px] text-white/70">{SAMPLE_TODAY}</span></div>
             <div className="mt-5 flex items-center gap-4"><div className="h-2 flex-1 overflow-hidden rounded-full bg-white/15"><div className="h-full w-1/2 rounded-full bg-periwinkle" /></div><span className="text-[13px] text-white/85">2 of 4 done</span></div>
             <div className="mt-3">

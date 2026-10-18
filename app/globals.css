@@ -210,17 +210,28 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--accent-ink); }
 }
 
 /*
-  Gentle continuous float for the landing dashboard cards (Weekly activity
-  results, Today's care). It sits on the card itself, inside its
-  .reveal-item wrapper, so it never fights the scroll reveal.
+  Soft breathing glow behind the landing dashboard cards (Weekly activity
+  results, Today's care). The halo is a static blurred shadow painted once;
+  only its opacity animates, which the compositor handles off the main
+  thread, so it stays smooth while scrolling. Shadows don't add scrollable
+  overflow, so it never causes horizontal scroll on phones.
 */
-.card-float { animation: card-float 4s ease-in-out infinite alternate; will-change: transform; }
-.card-float-alt { animation-duration: 4.6s; animation-delay: -2.3s; }
-@keyframes card-float {
-  from { transform: translateY(0); }
-  to { transform: translateY(-16px); }
+.card-glow { position: relative; isolation: isolate; }
+.card-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 1.75rem;
+  box-shadow: 0 0 46px 6px rgba(142, 160, 255, 0.55), 0 22px 70px -8px rgba(101, 115, 224, 0.45);
+  opacity: 0.25;
+  animation: card-glow 3.6s ease-in-out infinite alternate;
+  will-change: opacity;
 }
-@media (prefers-reduced-motion: reduce) { .card-float { animation: none; } }
+.card-glow-alt::before { animation-delay: -1.8s; }
+@keyframes card-glow { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .card-glow::before { animation: none; opacity: 0.6; } }
 
 /*
   Scroll reveal (components/landing/reveal-group.tsx). Only below-the-fold
