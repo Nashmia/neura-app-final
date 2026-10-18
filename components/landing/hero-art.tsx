@@ -1,96 +1,81 @@
+import { Brain, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HeroCard, PillIcon, type HeroCardProps } from "@/components/landing/hero-card";
 
 /*
   Landing hero artwork.
 
-  The source render is only 822×454, so text baked into it (card labels,
-  icons, the caption) turned to mush on any screen above 1× density. The
-  raster now carries only the soft, low-frequency parts — the glass
-  sculpture, card bodies, orbit and shadows — and every high-frequency detail
-  is drawn here as vector SVG in the image's own coordinate space
-  (viewBox 0 0 822 454), so it stays crisp at any size or pixel density.
+  The raster (public/hero-sculpture-*.webp, encoded from hero-sculpture.png)
+  carries only the glass sculpture, orbit ring, backdrop and floor light. The
+  three feature cards are real HTML (HeroCard) and the caption is vector SVG,
+  so all text stays crisp at any size or pixel density.
 
-  Each card group is rotated about its centre to match the card's tilt in the
-  render. Replace the raster with a 2× export of the same scene
-  (1644×908, no text) for a fully sharp sculpture on high-density screens.
+  Everything is positioned in the artwork's own frame (1684×934), so cards and
+  caption stay locked to the sculpture as the artwork scales.
 */
 
-const W = 822;
-const H = 454;
+const SRC_W = 1684;
+const SRC_H = 934;
+// Caption coordinates are authored on an 822px-wide frame.
+const VIEW_W = 822;
+const VIEW_H = (VIEW_W * SRC_H) / SRC_W;
 
-const titleProps = { className: "font-sans", fontWeight: 500, fill: "#262a3f" } as const;
-const subtitleProps = { className: "font-sans", fontWeight: 400, fontSize: 9, fill: "#5d6075" } as const;
-
-function Arrow({ x, y, color = "#262a3f" }: { x: number; y: number; color?: string }) {
-  return (
-    <path
-      d={`M${x - 4} ${y}h8m-3-3 3 3-3 3`}
-      fill="none"
-      stroke={color}
-      strokeWidth={1.1}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  );
-}
+const cards: (HeroCardProps & { key: string })[] = [
+  {
+    key: "medication",
+    icon: <PillIcon className="size-[2.4em]" />,
+    title: "Medication",
+    subtitle: "Stay on track",
+    x: 26, y: 25, mobileX: 18, rotate: 7,
+    float: { duration: 6.5, delay: -1.2, distance: 5 },
+  },
+  {
+    key: "memory",
+    icon: <Brain className="size-[2.05em]" strokeWidth={1.7} />,
+    title: "Memory Exercise",
+    subtitle: "Build & maintain",
+    tone: "lavender",
+    x: 25, y: 70, mobileX: 19, rotate: -8,
+    float: { duration: 8, delay: -3.4, distance: 4 },
+  },
+  {
+    key: "mood",
+    icon: <Smile className="size-[2.05em]" strokeWidth={1.7} />,
+    title: "Mood Notes",
+    subtitle: "See changes",
+    x: 86.5, y: 44, mobileX: 80, mobileY: 56, rotate: -10,
+    float: { duration: 7.2, delay: -5.1, distance: 6 },
+  },
+];
 
 export function HeroArt({ className }: { className?: string }) {
   return (
-    <div className={cn("hero-art-mask relative aspect-[822/454]", className)}>
+    <div className={cn("hero-art relative aspect-[1684/934]", className)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/hero-art-base.webp"
+        src="/hero-sculpture-842.webp"
+        srcSet="/hero-sculpture-842.webp 842w, /hero-sculpture-1684.webp 1684w"
+        sizes="(min-width: 1024px) min(822px, 57vw), min(100vw, 640px)"
         alt="A glass sculpture orbited by Medication, Memory Exercise and Mood Notes cards"
-        width={W}
-        height={H}
+        width={SRC_W}
+        height={SRC_H}
         fetchPriority="high"
-        className="absolute inset-0 size-full"
+        className="hero-art-mask absolute inset-0 size-full"
       />
-      <svg viewBox={`0 0 ${W} ${H}`} className="absolute inset-0 size-full" aria-hidden>
-        {/* Medication */}
-        <g transform="translate(181 104.5) rotate(7.3)">
-          <g transform="translate(-17 -29) rotate(-45)">
-            <rect x={-16} y={-6} width={32} height={12} rx={6} fill="#e0794a" stroke="#2b2b33" strokeWidth={1.4} />
-            <path d="M0 -6v12" stroke="#2b2b33" strokeWidth={1.4} />
-            <rect x={-14.6} y={-4.6} width={14.6} height={9.2} rx={4.6} fill="#c9603a" />
-          </g>
-          <text x={-38.5} y={15.4} fontSize={12} {...titleProps}>Medication</text>
-          <text x={-39.8} y={35} {...subtitleProps}>Stay on track</text>
-          <Arrow x={36.5} y={32.5} />
-        </g>
 
-        {/* Memory Exercise */}
-        <g transform="translate(160.5 321) rotate(-7.8)">
-          <svg x={-39.5} y={-39} width={29} height={29} viewBox="0 0 24 24" fill="none" stroke="#1f255c" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
-            <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
-            <path d="M12 5v13M9 9.5h.01M15 9.5h.01M8 14h.01M16 14h.01" />
-          </svg>
-          <text x={-42} y={15.9} fontSize={10.5} {...titleProps} fill="#1f255c">Memory Exercise</text>
-          <text x={-42.5} y={34.3} {...subtitleProps} fill="#4a5080">Build &amp; maintain</text>
-          <Arrow x={39.5} y={31.5} color="#1f255c" />
-        </g>
-
-        {/* Mood Notes */}
-        <g transform="translate(605 224.5) rotate(-10.5)">
-          <g transform="translate(-19.7 -25.5)" fill="none" stroke="#262a3f" strokeWidth={1.5} strokeLinecap="round">
-            <circle r={13} />
-            <path d="M-6 3.5a7.5 7.5 0 0 0 12 0" />
-            <circle cx={-4.6} cy={-3.4} r={0.6} fill="#262a3f" strokeWidth={1.8} />
-            <circle cx={4.6} cy={-3.4} r={0.6} fill="#262a3f" strokeWidth={1.8} />
-          </g>
-          <text x={-39.9} y={13.3} fontSize={11.6} {...titleProps}>Mood Notes</text>
-          <text x={-40.8} y={31.4} {...subtitleProps}>See changes</text>
-          <Arrow x={36.7} y={29.5} />
-        </g>
-
-        {/* Caption and its leader line */}
+      {/* Caption and its leader line */}
+      <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} className="pointer-events-none absolute inset-0 size-full" aria-hidden>
         <path d="M531 100 588 61h6" fill="none" stroke="#c9d0ff" strokeOpacity={0.7} strokeWidth={1.1} strokeLinecap="round" strokeLinejoin="round" />
         <text className="font-display" fontStyle="italic" fontSize={17} fill="#e3e7ff">
           <tspan x={605} y={65}>A clearer picture</tspan>
           <tspan x={605} y={87}>of care, day by day.</tspan>
         </text>
       </svg>
+
+      {/* Decorative: the image alt text already names the three cards. */}
+      <div aria-hidden className="absolute inset-0">
+        {cards.map(({ key, ...card }) => <HeroCard key={key} {...card} />)}
+      </div>
     </div>
   );
 }

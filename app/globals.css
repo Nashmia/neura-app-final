@@ -256,3 +256,51 @@ details.faq[open] .faq-chevron { transform: rotate(180deg); }
   mask-image: linear-gradient(to right, transparent, #000 10%, #000 94%, transparent), linear-gradient(to bottom, transparent, #000 9%);
   mask-composite: intersect;
 }
+
+/*
+  Landing hero cards (components/landing/hero-card.tsx).
+  --art-w mirrors the artwork's rendered width (see HeroArt's classes in
+  app/page.tsx) so the card's font size, and with it every em-based
+  dimension, scales with the artwork. It never drops below 11px for legibility.
+*/
+.hero-art { --art-w: min(100vw, 640px); }
+@media (min-width: 1024px) { .hero-art { --art-w: min(822px, 57vw); } }
+
+.hero-card {
+  position: absolute;
+  left: var(--card-x-mobile);
+  top: var(--card-y-mobile);
+  width: 10em;
+  font-size: clamp(11px, calc(var(--art-w) * 0.0152), 12.5px);
+  transform: translate(-50%, -50%) rotate(var(--card-rotate));
+}
+@media (min-width: 640px) { .hero-card { left: var(--card-x); top: var(--card-y); width: 9.6em; } }
+
+.hero-card-light {
+  border-color: rgba(255, 255, 255, 0.75);
+  background: linear-gradient(155deg, #fdfdff 0%, #eceef5 52%, #d9dce8 100%);
+}
+.hero-card-lavender {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: linear-gradient(155deg, #f4f5ff 0%, #dfe3fb 50%, #c7cef3 100%);
+}
+.hero-card-light, .hero-card-lavender {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -0.25em 0.6em rgba(31, 37, 92, 0.12),
+    0 1.6em 2.6em -1em rgba(8, 10, 40, 0.65),
+    0 0.35em 0.9em -0.3em rgba(8, 10, 40, 0.45);
+}
+
+/* Each card drifts on its own cycle; the tilt stays on the outer element. */
+.hero-card-float {
+  animation: hero-card-float var(--float-duration, 7s) ease-in-out var(--float-delay, 0s) infinite alternate;
+  will-change: transform;
+}
+@keyframes hero-card-float {
+  from { transform: translateY(0); }
+  to { transform: translateY(var(--float-distance, -5px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-card-float { animation: none; will-change: auto; }
+}
