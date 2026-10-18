@@ -1,10 +1,13 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { DM_Serif_Display, Manrope } from "next/font/google";
-import { Brain, CalendarDays, Check, ChevronDown, Eye, FilePlus2, Pill, Smile } from "lucide-react";
+import { Brain, CalendarDays, Check, Eye, FilePlus2, Pill, Smile } from "lucide-react";
 import { ArrowBubble, Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
 import { SiteHeader } from "@/components/landing/site-header";
 import { HeroArt } from "@/components/landing/hero-art";
+import { FaqAccordion } from "@/components/landing/faq-accordion";
+import { RevealGroup } from "@/components/landing/reveal-group";
 import { GlowWave } from "@/components/layout/glow-wave";
 import { cn } from "@/lib/utils";
 import { faqs, howItWorks, landingFeatures } from "@/lib/frontend-data";
@@ -267,19 +270,28 @@ export default function LandingPage() {
             <h2 className="landing-h2 mt-4 text-ink">Made for the realities of everyday care.</h2>
             <p className="landing-lead mt-4 text-slate-600">Caregiving involves many small tasks, observations, and decisions. Neura brings the practical details together in a workspace designed to feel clear, calm, and manageable.</p>
           </div>
-          <div className="mt-14 grid items-start gap-5 lg:grid-cols-3">
+          <RevealGroup className="mt-14 grid items-start gap-5 lg:grid-cols-3">
             {benefits.map((b, i) => {
               const Glyph = benefitGlyphs[i] ?? Burst;
               const featured = i === 1;
               return (
-                <div key={b.title} className={cn("rounded-[1.75rem] p-7 sm:p-8", featured ? "on-dark bg-navy text-white shadow-[0_34px_60px_-30px_rgba(31,37,92,0.6)] lg:mt-12" : "bg-white shadow-[0_24px_50px_-34px_rgba(31,37,92,0.3)]")}>
-                  <Glyph className={cn("size-[18px]", featured ? "text-blue-300" : i === 0 ? "text-blue-500" : "text-accent-ink")} />
-                  <h3 className={cn("landing-h3 mt-5", featured ? "text-white" : "text-ink")}>{b.title}</h3>
-                  <p className={cn("landing-body mt-3", featured ? "text-white/80" : "text-slate-600")}>{b.description}</p>
+                <div key={b.title} className={cn("reveal-item", featured && "lg:mt-12")} style={{ "--i": i } as CSSProperties}>
+                  <div
+                    className={cn(
+                      "group rounded-[1.75rem] p-7 transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1.5 sm:p-8",
+                      featured
+                        ? "on-dark bg-navy text-white shadow-[0_34px_60px_-30px_rgba(31,37,92,0.6)] hover:shadow-[0_44px_70px_-30px_rgba(31,37,92,0.7)]"
+                        : "bg-white shadow-[0_24px_50px_-34px_rgba(31,37,92,0.3)] hover:shadow-[0_34px_60px_-30px_rgba(31,37,92,0.38)]",
+                    )}
+                  >
+                    <Glyph className={cn("size-[18px] transition-transform duration-500 ease-out group-hover:rotate-[20deg] group-hover:scale-110", featured ? "text-blue-300" : i === 0 ? "text-blue-500" : "text-accent-ink")} />
+                    <h3 className={cn("landing-h3 mt-5", featured ? "text-white" : "text-ink")}>{b.title}</h3>
+                    <p className={cn("landing-body mt-3", featured ? "text-white/80" : "text-slate-600")}>{b.description}</p>
+                  </div>
                 </div>
               );
             })}
-          </div>
+          </RevealGroup>
         </div>
       </section>
 
@@ -290,14 +302,7 @@ export default function LandingPage() {
             <p className="landing-eyebrow">Good to know</p>
             <h2 className="landing-h2 mt-4 max-w-[420px] text-ink">Common questions about Neura.</h2>
           </div>
-          <div>
-            {faqs.map((item, i) => (
-              <details key={item.question} open={i === 0} className="faq group border-b border-slate-300/80 open:rounded-2xl open:border open:border-border open:bg-white open:shadow-[0_20px_44px_-28px_rgba(31,37,92,0.35)]">
-                <summary className="flex items-center justify-between gap-4 rounded-2xl px-6 py-6 font-display text-[1.25rem] leading-snug text-ink transition-colors hover:text-accent-ink">{item.question}<ChevronDown className="faq-chevron size-4 shrink-0 text-ink transition-transform" /></summary>
-                <p className="landing-body -mt-2 max-w-[600px] px-6 pb-6 text-slate-600">{item.answer}</p>
-              </details>
-            ))}
-          </div>
+          <FaqAccordion items={faqs} />
         </div>
       </section>
 
