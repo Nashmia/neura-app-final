@@ -210,14 +210,14 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--accent-ink); }
 }
 
 /*
-  Scroll reveal (components/landing/reveal-group.tsx): children with
-  .reveal-item fade and rise in, staggered by --i. The hidden state is only
-  applied once JS has armed the group, and never under reduced motion.
+  Scroll reveal (components/landing/reveal-group.tsx). Only below-the-fold
+  cards are ever "armed", and only after hydration; once a card has settled
+  the attribute is removed, so these rules never touch it again.
 */
-.reveal-group[data-reveal="armed"] .reveal-item { opacity: 0; transform: translateY(28px); }
-.reveal-group[data-reveal="shown"] .reveal-item {
-  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-  transition-delay: calc(var(--i, 0) * 120ms);
+[data-reveal="armed"] { opacity: 0; transform: translateY(24px); }
+[data-reveal="shown"] {
+  transition: opacity 650ms cubic-bezier(0.22, 1, 0.36, 1), transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
 }
 
 @keyframes neura-float {

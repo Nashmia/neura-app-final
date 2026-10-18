@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import { DM_Serif_Display, Manrope } from "next/font/google";
 import { Brain, CalendarDays, Check, Eye, FilePlus2, Pill, Smile } from "lucide-react";
@@ -109,15 +108,15 @@ export default function LandingPage() {
             <h2 className="landing-h2 landing-h2-compact mt-4 text-ink">There&apos;s a lot to keep track of. <span className="text-accent-ink">You shouldn&apos;t have to keep it all in your head.</span></h2>
             <p className="landing-lead mt-5 max-w-[380px] text-slate-600">Between medication schedules, daily activities, changing moods, and appointments, the little details can be easy to lose track of. Neura brings them together, giving you a clearer picture of your loved one&apos;s day.</p>
           </div>
-          <div className="grid gap-10 sm:grid-cols-3 sm:gap-0 lg:pt-10">
+          <RevealGroup className="grid gap-10 sm:grid-cols-3 sm:gap-0 lg:pt-10">
             {values.map((item, i) => (
-              <div key={item.title} className={cn("sm:pl-8 sm:pr-4", i === 0 && "sm:pl-0", i > 0 && "sm:border-l sm:border-slate-300/70")}>
+              <div key={item.title} className={cn("reveal-item sm:pl-8 sm:pr-4", i === 0 && "sm:pl-0", i > 0 && "sm:border-l sm:border-slate-300/70")}>
                 <span className="grid size-[50px] place-items-center rounded-full border border-periwinkle text-navy"><item.icon className="size-5" strokeWidth={1.6} /></span>
                 <h3 className="landing-h3 mt-5 text-ink">{item.title}</h3>
                 <p className="landing-body mt-3 max-w-[270px] text-slate-600">{item.description}</p>
               </div>
             ))}
-          </div>
+          </RevealGroup>
         </div>
       </section>
 
@@ -132,15 +131,15 @@ export default function LandingPage() {
             </div>
             <Button asChild className="h-12 w-fit shrink-0 pl-6 pr-4 text-[15px]"><Link href="/signup">Create caregiver account <ArrowBubble /></Link></Button>
           </div>
-          <div className="mt-16 grid gap-12 md:grid-cols-3 md:gap-0">
+          <RevealGroup className="mt-16 grid gap-12 md:grid-cols-3 md:gap-0">
             {howItWorks.map((step, i) => (
-              <div key={step.title} className={cn("md:px-9", i === 0 && "md:pl-0", i > 0 && "md:border-l md:border-dashed md:border-slate-300")}>
+              <div key={step.title} className={cn("reveal-item md:px-9", i === 0 && "md:pl-0", i > 0 && "md:border-l md:border-dashed md:border-slate-300")}>
                 <p className="font-display text-[4rem] leading-none text-accent-ink">0{i + 1}</p>
                 <h3 className="landing-h3 mt-6 text-ink md:mt-10">{step.title}</h3>
                 <p className="landing-body mt-3 max-w-[300px] text-slate-600">{step.description}</p>
               </div>
             ))}
-          </div>
+          </RevealGroup>
         </div>
       </section>
 
@@ -155,18 +154,18 @@ export default function LandingPage() {
             </div>
             <Button asChild variant="accent" className="h-12 w-fit shrink-0 px-6 text-[15px] font-semibold"><Link href="/signup">Explore all features</Link></Button>
           </div>
-          <div className="border-t border-slate-300/80">
+          <RevealGroup className="border-t border-slate-300/80">
             {landingFeatures.map((feature, i) => {
               const Glyph = featureGlyphs[i] ?? Burst;
               return (
-                <div key={feature.title} className="grid items-center gap-4 border-b border-slate-300/80 py-7 sm:grid-cols-[1fr_auto] lg:grid-cols-[minmax(0,1fr)_460px_46px] lg:gap-x-[60px]">
+                <div key={feature.title} className="reveal-item grid items-center gap-4 border-b border-slate-300/80 py-7 sm:grid-cols-[1fr_auto] lg:grid-cols-[minmax(0,1fr)_460px_46px] lg:gap-x-[60px]">
                   <h3 className="flex items-center gap-4 text-[1.55rem] leading-tight text-ink sm:text-[1.8rem]"><Glyph className={cn("size-5 shrink-0", i === 0 ? "text-blue-500" : "text-accent-ink")} />{feature.title}</h3>
                   <p className="landing-body max-w-[460px] text-slate-600 sm:order-3 sm:col-span-2 lg:order-none lg:col-span-1">{feature.description}</p>
                   <Link href={featureLinks[i]} aria-label={`Open ${feature.title}`} className="hidden size-[46px] place-items-center rounded-full border border-border bg-white text-navy transition hover:border-periwinkle hover:bg-lavender active:scale-95 sm:grid"><svg viewBox="0 0 12 12" className="size-3" fill="none"><path d="M3.5 8.5l5-5M4.5 3.5h4v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></Link>
                 </div>
               );
             })}
-          </div>
+          </RevealGroup>
         </div>
       </section>
 
@@ -178,7 +177,8 @@ export default function LandingPage() {
             <h2 className="landing-h2 text-ink">The little details add up.</h2>
             <p className="landing-lead max-w-[460px] text-slate-600 lg:pb-1">See medication routines, cognitive activities, mood notes, and appointments together in one weekly view — without piecing the story together from different places.</p>
           </div>
-          <div className="app-preview mt-10 rounded-[1.75rem] border border-border bg-white p-5 shadow-[0_30px_60px_-36px_rgba(31,37,92,0.3)] sm:p-8">
+          <RevealGroup>
+          <div className="reveal-item app-preview mt-10 rounded-[1.75rem] border border-border bg-white p-5 shadow-[0_30px_60px_-36px_rgba(31,37,92,0.3)] sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-2xl text-ink">This week at a glance</h3>
               <div className="flex items-center gap-3 text-[13px] text-slate-600">{SAMPLE_RANGE} <SampleChip /></div>
@@ -201,13 +201,14 @@ export default function LandingPage() {
               <span className="flex items-center gap-2"><span className="size-3 rounded-full border border-dashed border-slate-400" />Appointment</span>
             </div>
           </div>
+          </RevealGroup>
           <p className="mt-4 text-[13px] text-slate-600">Illustrative dashboard using sample data.</p>
         </div>
       </section>
 
       {/* ───────────── Progress insights ───────────── */}
       <section className="section-padding bg-section-offwhite py-16 lg:py-20">
-        <div className="container-neura grid items-center gap-12 lg:grid-cols-[440px_1fr] lg:gap-16">
+        <RevealGroup className="container-neura grid items-center gap-12 lg:grid-cols-[440px_1fr] lg:gap-16">
           <div>
             <p className="landing-eyebrow">Look back. See what&apos;s been recorded.</p>
             <h2 className="landing-h2 mt-4 text-ink">Progress is easier to review when the details are together.</h2>
@@ -223,20 +224,20 @@ export default function LandingPage() {
             <p className="landing-body mt-5 text-ink">A clearer record for caregivers. More context for conversations with healthcare professionals.</p>
             <p className="mt-3 text-[13px] leading-[1.55] text-slate-600">Activity scores are tracking information, not a diagnosis or a measure of disease progression.</p>
           </div>
-          <div className="app-preview rounded-[1.75rem] border border-border bg-white p-5 shadow-[0_30px_60px_-36px_rgba(31,37,92,0.3)] sm:p-8">
+          <div className="reveal-item app-preview rounded-[1.75rem] border border-border bg-white p-5 shadow-[0_30px_60px_-36px_rgba(31,37,92,0.3)] sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-2xl text-ink">Weekly activity results</h3>
               <div className="flex items-center gap-3"><SampleChip /><Link href="/dashboard" className="text-xs text-accent-ink underline underline-offset-2 hover:text-navy">View full report →</Link></div>
             </div>
             <ProgressChart />
           </div>
-        </div>
+        </RevealGroup>
       </section>
 
       {/* ───────────── Daily routine ───────────── */}
       <section className="section-padding bg-section-offwhite py-16 lg:py-20">
-        <div className="container-neura grid items-center gap-12 lg:grid-cols-[minmax(0,776px)_1fr] lg:gap-[72px]">
-          <div className="app-preview on-dark rounded-[1.75rem] bg-navy p-6 text-white shadow-[0_40px_70px_-36px_rgba(31,37,92,0.65)] sm:p-8">
+        <RevealGroup className="container-neura grid items-center gap-12 lg:grid-cols-[minmax(0,776px)_1fr] lg:gap-[72px]">
+          <div className="reveal-item app-preview on-dark rounded-[1.75rem] bg-navy p-6 text-white shadow-[0_40px_70px_-36px_rgba(31,37,92,0.65)] sm:p-8">
             <div className="flex items-center justify-between"><h3 className="text-[1.65rem] text-white">Today&apos;s care</h3><span className="text-[13px] text-white/70">{SAMPLE_TODAY}</span></div>
             <div className="mt-5 flex items-center gap-4"><div className="h-2 flex-1 overflow-hidden rounded-full bg-white/15"><div className="h-full w-1/2 rounded-full bg-periwinkle" /></div><span className="text-[13px] text-white/85">2 of 4 done</span></div>
             <div className="mt-3">
@@ -259,7 +260,7 @@ export default function LandingPage() {
               <MiniStat label="Done today" title="2 of 4 tasks" detail="Medication & exercise" />
             </div>
           </div>
-        </div>
+        </RevealGroup>
       </section>
 
       {/* ───────────── Designed around caregiving ───────────── */}
@@ -275,7 +276,7 @@ export default function LandingPage() {
               const Glyph = benefitGlyphs[i] ?? Burst;
               const featured = i === 1;
               return (
-                <div key={b.title} className={cn("reveal-item", featured && "lg:mt-12")} style={{ "--i": i } as CSSProperties}>
+                <div key={b.title} className={cn("reveal-item", featured && "lg:mt-12")}>
                   <div
                     className={cn(
                       "group rounded-[1.75rem] p-7 transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1.5 sm:p-8",
@@ -349,7 +350,7 @@ function SampleChip() {
 
 function MiniStat({ label, title, detail }: { label: string; title: string; detail: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-white px-5 py-5">
+    <div className="reveal-item rounded-2xl border border-border bg-white px-5 py-5">
       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-ink">{label}</p>
       <p className="mt-2 text-[15px] font-semibold text-ink">{title}</p>
       <p className="mt-0.5 text-xs text-slate-600">{detail}</p>
