@@ -1,30 +1,24 @@
 import { Activity, Brain, CalendarCheck, HeartPulse, Home, LayoutDashboard, MessageCircle, Pill, Settings, ShieldCheck, Sparkles, UserRound } from "lucide-react";
 
 export const landingFeatures = [
-  { icon: Brain, title: "Cognitive Quizzes", description: "Large, calm, one-question screens for supervised memory and recognition activities." },
-  { icon: Pill, title: "Medication Tracking", description: "Caregivers can add medicines, update status, and see pending doses clearly." },
-  { icon: Activity, title: "Progress Insights", description: "Weekly trends turn quiz sessions into simple, readable progress summaries." },
-  { icon: ShieldCheck, title: "Caregiver First", description: "Sensitive records are managed by caregivers while patients use simplified screens." },
+  { icon: Brain, title: "Guided cognitive activities", description: "Offer supervised memory, recognition, and other cognitive exercises through a simple, easy-to-follow interface." },
+  { icon: Pill, title: "Medication tracking", description: "Record medications, update dose status, and see what's due next in the daily routine." },
+  { icon: Activity, title: "Progress at a glance", description: "Review recorded cognitive activity results and weekly trends in a clear, readable dashboard." },
+  { icon: ShieldCheck, title: "Caregiver-first workspace", description: "Manage the patient's profile and care records from your caregiver account, with simplified screens for supervised activities." },
 ];
 
 export const howItWorks = [
-  { title: "Create caregiver account", description: "Sign up securely and access a private caregiver workspace." },
-  { title: "Add patient details", description: "Set up patient profile, dementia stage, medical notes, and quiz preferences." },
-  { title: "Support daily care", description: "Track medication, start quizzes, and review dashboard insights." },
-];
-
-// Placeholder quotes from the design — replace with real feedback from user testing.
-export const testimonials = [
-  { name: "[Name]", role: "Family caregiver", quote: "Neura makes daily care feel organized instead of overwhelming." },
-  { name: "[Name]", role: "Care advisor", quote: "The calm quiz interface is much easier for elderly patients to follow." },
-  { name: "[Name]", role: "Care coordinator", quote: "The dashboard gives families a clear picture of daily care routines." },
+  { title: "Create your caregiver account", description: "Set up your caregiver workspace to manage your loved one's care information." },
+  { title: "Add your loved one's profile", description: "Record relevant patient details and organize the information you need for everyday care." },
+  { title: "Make daily care easier to follow", description: "Track medication, guide cognitive activities, record observations, and review activity history over time." },
 ];
 
 export const faqs = [
-  { question: "Is Neura a diagnosis tool?", answer: "No. Neura is a supportive care platform and does not replace professional medical advice." },
-  { question: "Who manages the patient data?", answer: "The caregiver owns the account and manages patient profile, medication, and quiz activity." },
-  { question: "Is it responsive?", answer: "Yes. The layouts are built for laptop, tablet, and mobile screens." },
-  { question: "Is chat included?", answer: "Yes. The cognitive quiz is a live AI chat, powered by Gemini and personalized to the patient's profile." },
+  { question: "Is Neura a diagnostic tool?", answer: "No. Neura is a caregiver support and tracking platform. It does not diagnose dementia, replace a healthcare professional, or provide a substitute for medical advice." },
+  { question: "Who manages the patient's information?", answer: "The caregiver creates and manages the account and the patient's care information within the application." },
+  { question: "Can I use Neura on my phone?", answer: "Neura is designed to adapt to laptop, tablet, and mobile screens." },
+  { question: "What are the cognitive activities for?", answer: "They provide guided, supervised activities and let caregivers record results over time. They are not diagnostic tests and should not be used to draw medical conclusions." },
+  { question: "Does Neura use AI?", answer: "Neura includes AI-powered functionality for supported features. AI-generated responses can be imperfect and should not replace professional medical guidance." },
 ];
 
 export const sidebarItems = [

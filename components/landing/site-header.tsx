@@ -35,10 +35,7 @@ export function SiteHeader() {
             variant="accent"
             className="h-10 px-5 text-[14px] font-semibold shadow-[0_8px_20px_-10px_rgba(142,160,255,0.7)] focus-visible:ring-offset-navy"
           >
-            <Link href="/signup">
-              <span className="lg:hidden">Create account</span>
-              <span className="hidden lg:inline">Create caregiver account</span>
-            </Link>
+            <Link href="/signup">Create account</Link>
           </Button>
           <MobileNav links={landingNavLinks} />
         </div>

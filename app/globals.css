@@ -314,3 +314,61 @@ details.faq[open] .faq-chevron { transform: rotate(180deg); }
 @media (prefers-reduced-motion: reduce) {
   .hero-card-float { animation: none; will-change: auto; }
 }
+
+/*
+  Landing-page typography ("editorial warmth meets healthcare software").
+  Scoped to <main class="landing-type"> so the app's screens are untouched.
+  Display: Fraunces (loaded in app/page.tsx as --font-fraunces).
+  Interface: DM Sans (--font-sans, from the root layout).
+*/
+.landing-type :is(h1, h2, h3, .font-display) {
+  font-family: var(--font-fraunces), Georgia, ui-serif, serif;
+  font-variation-settings: "SOFT" 40;
+}
+/* Keep the app's own serif where the landing page shows the product itself:
+   the wordmark, the hero artwork caption and the dashboard mockups. */
+.landing-type :is(header, footer, .hero-art, .app-preview) :is(h3, .font-display) {
+  font-family: var(--font-display), "Source Serif 4", Georgia, ui-serif, serif;
+  font-variation-settings: normal;
+}
+
+.landing-h1 {
+  font-size: clamp(2.5rem, 1.35rem + 3.6vw, 4.25rem);
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  font-weight: 500;
+  text-wrap: balance;
+}
+.landing-h2 {
+  font-size: clamp(2.1rem, 1.6rem + 1.4vw, 3rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+  text-wrap: balance;
+}
+.landing-h3 {
+  font-size: clamp(1.2rem, 1.08rem + 0.35vw, 1.4rem);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+/* For the one two-sentence heading that sits in a narrow column. */
+.landing-h2.landing-h2-compact { font-size: clamp(2.1rem, 1.7rem + 1vw, 2.6rem); }
+
+/* Short sentence-case label above a heading. */
+.landing-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+  color: var(--accent-ink);
+}
+.on-dark .landing-eyebrow { color: rgba(255, 255, 255, 0.78); }
+
+.landing-lead { font-size: 16px; line-height: 1.65; }
+.landing-body { font-size: 15px; line-height: 1.65; }
+@media (min-width: 640px) {
+  .landing-lead { font-size: 17px; }
+  .landing-body { font-size: 16px; }
+}
