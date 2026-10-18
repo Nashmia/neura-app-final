@@ -332,13 +332,24 @@ details.faq[open] .faq-chevron { transform: rotate(180deg); }
   font-variation-settings: normal;
 }
 
-.landing-h1 {
-  font-size: clamp(2.5rem, 1.35rem + 3.6vw, 4.25rem);
-  line-height: 1.04;
-  letter-spacing: -0.025em;
-  font-weight: 500;
+/*
+  Hero and navigation type: DM Serif Display for the headline, Manrope for
+  everything else in the hero and the header. The hero artwork keeps DM Sans
+  (its cards) and Source Serif (its caption), so the illustration is unchanged.
+*/
+.landing-type :is(.landing-hero, .landing-header) { font-family: var(--font-manrope), var(--font-sans), ui-sans-serif, system-ui, sans-serif; }
+.landing-type .landing-hero .hero-art { font-family: var(--font-sans); }
+.landing-type .landing-hero .landing-eyebrow { font-family: inherit; }
+.landing-type .landing-hero h1.landing-h1 {
+  font-family: var(--font-hero-display), Georgia, ui-serif, serif;
+  font-variation-settings: normal;
+  font-weight: 400;
+  font-size: clamp(2.75rem, 1.55rem + 3.6vw, 4.5rem);
+  line-height: 1.03;
+  letter-spacing: -0.015em;
   text-wrap: balance;
 }
+
 .landing-h2 {
   font-size: clamp(2.1rem, 1.6rem + 1.4vw, 3rem);
   line-height: 1.1;

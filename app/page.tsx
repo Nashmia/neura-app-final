@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Fraunces } from "next/font/google";
+import { DM_Serif_Display, Fraunces, Manrope } from "next/font/google";
 import { Brain, CalendarDays, Check, ChevronDown, Eye, FilePlus2, Pill, Smile } from "lucide-react";
 import { ArrowBubble, Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
@@ -17,6 +17,20 @@ const fraunces = Fraunces({
   display: "swap",
   style: ["normal", "italic"],
   axes: ["opsz", "SOFT"],
+});
+
+// Hero and navigation only (see `.landing-hero` / `.landing-header` in globals.css).
+const heroDisplay = DM_Serif_Display({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-hero-display",
+  display: "swap",
+});
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-manrope",
+  display: "swap",
 });
 
 const values = [
@@ -71,17 +85,17 @@ const todaysCare = [
 
 export default function LandingPage() {
   return (
-    <main className={cn(fraunces.variable, "landing-type min-h-screen bg-background text-ink")}>
+    <main className={cn(fraunces.variable, heroDisplay.variable, manrope.variable, "landing-type min-h-screen bg-background text-ink")}>
       <SiteHeader />
 
       {/* ───────────── Hero ───────────── */}
-      <section className="on-dark relative -mt-16 overflow-hidden bg-navy pt-16 text-white lg:-mt-[72px] lg:pt-[72px]">
+      <section className="landing-hero on-dark relative -mt-16 overflow-hidden bg-navy pt-16 text-white lg:-mt-[72px] lg:pt-[72px]">
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_75%_40%,rgba(142,160,255,0.10),transparent_45%)] [mask-image:linear-gradient(to_bottom,transparent_72px,#000_240px)]" />
 
         <div id="top" className="mx-auto w-full max-w-[1352px] px-4 sm:px-6 lg:px-8 relative grid scroll-mt-20 items-center lg:min-h-[438px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div className="relative z-10 max-w-[560px] pb-10 pt-8 sm:pt-10 lg:pb-14 lg:pt-6">
             <p className="landing-eyebrow">Support for the everyday moments of dementia care</p>
-            <h1 className="landing-h1 mt-4 text-[#f1f2fb]">Care for today. <em>Clarity for what comes next.</em></h1>
+            <h1 className="landing-h1 mt-4 text-[#f1f2fb]">Care for today.<br /> <em>Clarity for what comes next.</em></h1>
             <p className="landing-lead mt-6 max-w-[29rem] text-white/80">Neura brings medication routines, guided cognitive activities, mood notes, and care progress into one simple workspace — helping at-home dementia caregivers stay organized and keep track of what matters.</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild variant="accent" className="h-11 px-6 text-[15px] font-semibold focus-visible:ring-offset-navy"><Link href="/signup">Create caregiver account</Link></Button>
