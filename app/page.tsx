@@ -85,11 +85,11 @@ export default function LandingPage() {
       <section className="landing-hero on-dark relative -mt-16 overflow-hidden bg-navy pt-16 text-white lg:-mt-[72px] lg:pt-[72px]">
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_75%_40%,rgba(142,160,255,0.10),transparent_45%)] [mask-image:linear-gradient(to_bottom,transparent_72px,#000_240px)]" />
 
-        <div id="top" className="mx-auto w-full max-w-[1352px] px-4 sm:px-6 lg:px-8 relative grid scroll-mt-20 items-center lg:min-h-[438px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <div className="relative z-10 max-w-[560px] pb-10 pt-8 sm:pt-10 lg:pb-14 lg:pt-6">
+        <div id="top" className="mx-auto w-full max-w-[1352px] px-4 sm:px-6 lg:px-8 relative grid scroll-mt-20 items-center lg:min-h-[calc(min(822px,57vw)*0.555+64px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="relative z-10 max-w-[560px] pb-10 pt-8 sm:pt-10 lg:py-12">
             <p className="landing-eyebrow">Support for the everyday moments of dementia care</p>
             <h1 className="landing-h1 mt-4 text-[#f1f2fb]">Dementia care, less scattered.<br /> <em>Everything you need to stay on track.</em></h1>
-            <p className="landing-lead mt-6 max-w-[29rem] text-white/80">Keep medications, cognitive exercises, daily observations, and care progress connected in one simple workspace — without juggling different tools to manage the day.</p>
+            <p className="landing-hero-lead mt-6 max-w-[31rem] text-white/80">Keep medications, cognitive exercises, daily observations, and care progress connected in one simple workspace — without juggling different tools to manage the day.</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild variant="accent" className="h-11 px-6 text-[15px] font-semibold focus-visible:ring-offset-navy"><Link href="/signup">Create caregiver account</Link></Button>
               <Button asChild variant="ghost" className="h-11 border border-white/30 px-6 text-[15px] text-white/90 hover:border-white/50 hover:bg-white/[0.07] hover:text-white focus-visible:ring-offset-navy"><a href="#how">Explore how it works</a></Button>
@@ -97,7 +97,7 @@ export default function LandingPage() {
             <p className="mt-10 flex items-center gap-4 text-[13px] text-white/65"><span aria-hidden className="h-px w-9 bg-white/50" />Designed around caregivers. Built for everyday care.</p>
           </div>
         </div>
-        <HeroArt className="mx-auto w-full max-w-[640px] lg:absolute lg:bottom-0 lg:right-[max(0px,calc((100vw-1487px)/2))] lg:mx-0 lg:w-[822px] lg:max-w-[57vw]" />
+        <HeroArt className="mx-auto w-full max-w-[640px] lg:absolute lg:right-[max(0px,calc((100vw-1487px)/2))] lg:top-[calc(50%+36px)] lg:mx-0 lg:w-[822px] lg:max-w-[57vw] lg:-translate-y-[57%]" />
       </section>
 
       {/* ───────────── The problem ───────────── */}

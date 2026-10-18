@@ -293,6 +293,14 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--accent-ink); }
   mask-image: linear-gradient(to right, transparent, #000 10%, #000 94%, transparent), linear-gradient(to bottom, transparent, #000 9%);
   mask-composite: intersect;
 }
+/* Desktop: the artwork is centred on the hero copy rather than resting on the
+   section's bottom edge, so its floor light also fades out at the bottom. */
+@media (min-width: 1024px) {
+  .hero-art-mask {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 94%, transparent), linear-gradient(to bottom, transparent, #000 9%, #000 84%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 10%, #000 94%, transparent), linear-gradient(to bottom, transparent, #000 9%, #000 84%, transparent);
+  }
+}
 
 /*
   Landing hero cards (components/landing/hero-card.tsx).
@@ -365,11 +373,13 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--accent-ink); }
 }
 
 .landing-type h1.landing-h1 {
-  font-size: clamp(2.75rem, 1.55rem + 3.6vw, 4.5rem);
-  line-height: 1.03;
-  letter-spacing: -0.015em;
+  font-size: clamp(2.5rem, 1.45rem + 2.6vw, 3.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  max-width: 8.8em; /* fits "Everything you need" (8.25em) but not "…need to" (9.26em) */
   text-wrap: balance;
 }
+.landing-hero-lead { font-size: clamp(1rem, 0.9rem + 0.35vw, 1.125rem); line-height: 1.65; }
 
 .landing-h2 {
   font-size: clamp(2.1rem, 1.6rem + 1.4vw, 3rem);
