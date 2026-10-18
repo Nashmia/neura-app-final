@@ -40,6 +40,11 @@ export async function resizeImageToDataUrl(file: File, max = 256, quality = 0.72
   return canvas.toDataURL("image/jpeg", quality);
 }
 
+/** Session ended: go to login and come back to this page afterwards. */
+export function redirectToLogin() {
+  window.location.href = `/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+}
+
 export async function api<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
     ...options,

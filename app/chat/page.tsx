@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/layout/logo";
 import { QUIZ_MAX_ANSWER_CHARS } from "@/lib/quiz-limits";
-import { api } from "@/lib/utils";
+import { api, redirectToLogin } from "@/lib/utils";
 
 type ChatMessage = { role: "user" | "assistant"; text: string };
 type QuizTurn =
@@ -47,7 +47,7 @@ export default function ChatPage() {
       }
     } catch (err) {
       if (err instanceof Error && err.message === "Please log in first.") {
-        location.href = "/login";
+        redirectToLogin();
         return;
       }
       if (err instanceof Error && err.message === "Complete onboarding first.") {
@@ -194,7 +194,7 @@ export default function ChatPage() {
                   <div className="rounded-3xl rounded-bl-md border border-border bg-surface px-5 py-4 text-slate-500">Thinking...</div>
                 </div>
               )}
-              {error && <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-red-700">{error}</div>}
+              {error && <div role="alert" className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-red-700">{error}</div>}
               <div ref={bottomRef} />
             </div>
 
@@ -208,9 +208,10 @@ export default function ChatPage() {
                 disabled={sending}
                 maxLength={QUIZ_MAX_ANSWER_CHARS}
                 placeholder="Type your answer..."
+                aria-label="Your answer"
                 className="h-14 flex-1 rounded-2xl border border-border bg-surface px-5 text-lg text-slate-800 outline-none transition focus:border-blue-400 focus:bg-white disabled:opacity-60"
               />
-              <Button onClick={submitAnswer} disabled={sending || (Boolean(sessionId) && !input.trim())} size="icon" className="size-14 shrink-0">
+              <Button onClick={submitAnswer} disabled={sending || (Boolean(sessionId) && !input.trim())} size="icon" aria-label={sessionId ? "Send answer" : "Start the check-in"} className="size-14 shrink-0">
                 <Send className="size-5" />
               </Button>
             </div>

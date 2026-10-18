@@ -14,9 +14,13 @@ function JoinContent() {
   const [status, setStatus] = useState<"idle" | "joining" | "done" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   const [patientName, setPatientName] = useState("");
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  // Bring the person back to this exact invite after logging in or signing up.
+  const back = encodeURIComponent(`/join?code=${encodeURIComponent(code)}`);
 
   useEffect(() => {
     if (!code) setStatus("error");
+    fetch("/api/me").then((r) => r.json()).then((me) => setSignedIn(Boolean(me?.user))).catch(() => setSignedIn(false));
   }, [code]);
 
   async function join() {
@@ -25,8 +29,8 @@ function JoinContent() {
     const r = await fetch("/api/join", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) });
     const d = await r.json();
     if (r.status === 401) {
-      setError("Please log in or create an account first, then open this invite link again.");
-      setStatus("error");
+      setSignedIn(false);
+      setStatus("idle");
       return;
     }
     if (!r.ok) {
@@ -62,12 +66,22 @@ function JoinContent() {
               <>
                 <Users className="mx-auto mb-4 size-14 text-primary" />
                 <h1 className="text-[1.6rem] text-ink">Join a care team</h1>
-                <p className="mt-3 text-slate-600">You've been invited to co-manage a patient's care profile on Neura. Log in first if you haven't already.</p>
-                {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-                <Button onClick={join} disabled={status === "joining"} className="mt-6 w-full">
-                  {status === "joining" && <Loader2 className="mr-2 size-4 animate-spin" />}
-                  Join care team
-                </Button>
+                <p className="mt-3 text-slate-600">You've been invited to co-manage a patient's care profile on Neura.</p>
+                {error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}
+                {signedIn === false ? (
+                  <>
+                    <p className="mt-3 text-sm text-slate-600">Log in or create a caregiver account first. You'll come straight back here to accept.</p>
+                    <div className="mt-6 grid gap-3">
+                      <Button asChild className="w-full"><Link href={`/login?next=${back}`}>Log in to accept</Link></Button>
+                      <Button asChild variant="outline" className="w-full bg-white"><Link href={`/signup?next=${back}`}>Create an account</Link></Button>
+                    </div>
+                  </>
+                ) : (
+                  <Button onClick={join} disabled={status === "joining" || signedIn === null} className="mt-6 w-full">
+                    {status === "joining" && <Loader2 className="mr-2 size-4 animate-spin" />}
+                    Join care team
+                  </Button>
+                )}
               </>
             )}
           </CardContent>

@@ -7,7 +7,7 @@ import { BookOpen, Home, Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/layout/logo";
-import { api } from "@/lib/utils";
+import { api, redirectToLogin } from "@/lib/utils";
 
 type HistoryTurn = { role: "user" | "model"; text: string };
 // Only the knowledge-base articles the reply cites, numbered as in the reply ("[1]").
@@ -52,14 +52,19 @@ export default function AssistantPage() {
       setMessages((m) => [...m, { role: "assistant", text: data.message, sources: data.sources }]);
     } catch (err) {
       if (err instanceof Error && err.message === "Please log in first.") {
-        location.href = "/login";
+        redirectToLogin();
         return;
       }
       if (err instanceof Error && err.message === "Complete onboarding first.") {
         setNeedsOnboarding(true);
         return;
       }
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      // Take the unanswered question back out (so the next request doesn't carry two questions in a row) and return it to the input for a retry.
+      setHistory(history);
+      setMessages((m) => m.slice(0, -1));
+      setInput(question);
+      const message = err instanceof Error && err.message !== "Failed to fetch" && err.message !== "Request failed" ? err.message : "The assistant couldn't be reached.";
+      setError(`${message} Your question is back in the box below; press send to try again.`);
     } finally {
       setSending(false);
     }
@@ -107,6 +112,7 @@ export default function AssistantPage() {
             <div className="flex-1 space-y-4 overflow-y-auto pr-1">
               {messages.length === 0 && (
                 <div className="grid gap-2">
+                  <p className="rounded-2xl bg-surface px-4 py-3 text-sm leading-6 text-slate-600">Ask about everyday caregiving or this patient&apos;s recorded medications, moods, notes, appointments and check-ins. Numbered sources show which guidance an answer used. The assistant can be wrong and is not a substitute for professional medical advice; for medical decisions, contact the patient&apos;s doctor.</p>
                   <p className="text-sm text-slate-500">Try asking:</p>
                   {starterPrompts.map((p) => (
                     <button
@@ -155,7 +161,7 @@ export default function AssistantPage() {
                   <div className="rounded-3xl rounded-bl-md border border-border bg-surface px-5 py-4 text-slate-500">Thinking...</div>
                 </div>
               )}
-              {error && <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-red-700">{error}</div>}
+              {error && <div role="alert" className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-red-700">{error}</div>}
               <div ref={bottomRef} />
             </div>
 
@@ -168,10 +174,11 @@ export default function AssistantPage() {
                 }}
                 disabled={sending}
                 maxLength={2000}
+                aria-label="Your question for the care assistant"
                 placeholder="Ask about care, symptoms, or this patient's recent activity..."
                 className="h-14 flex-1 rounded-2xl border border-border bg-surface px-5 text-lg text-slate-800 outline-none transition focus:border-blue-400 focus:bg-white disabled:opacity-60"
               />
-              <Button onClick={() => send(input)} disabled={sending || !input.trim()} size="icon" className="size-14 shrink-0 rounded-2xl">
+              <Button onClick={() => send(input)} disabled={sending || !input.trim()} size="icon" aria-label="Send question" className="size-14 shrink-0 rounded-2xl">
                 <Send className="size-5" />
               </Button>
             </div>

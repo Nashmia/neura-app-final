@@ -1,4 +1,4 @@
-import { Activity, Brain, CalendarCheck, HeartPulse, Home, LayoutDashboard, MessageCircle, Pill, Settings, ShieldCheck, Sparkles, UserRound } from "lucide-react";
+import { Activity, Brain, CalendarCheck, HeartPulse, Home, LayoutDashboard, MessageCircle, Pill, Settings, ShieldCheck, Sparkles } from "lucide-react";
 
 export const landingFeatures = [
   { icon: Brain, title: "Guided cognitive activities", description: "Offer supervised memory, recognition, and other cognitive exercises through a simple, easy-to-follow interface." },
@@ -28,8 +28,7 @@ export const sidebarItems = [
   { icon: Pill, label: "Medication", href: "/medications" },
   { icon: CalendarCheck, label: "Appointments", href: "/appointments" },
   { icon: HeartPulse, label: "Journal", href: "/journal" },
-  { icon: UserRound, label: "Onboarding", href: "/onboarding" },
-  { icon: Settings, label: "Settings", href: "/settings" },
+  { icon: Settings, label: "Profile & settings", href: "/settings" },
   { icon: Home, label: "Landing", href: "/" },
 ];
 

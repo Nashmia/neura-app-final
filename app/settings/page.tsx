@@ -7,6 +7,9 @@ import { Check, Copy, Home, Loader2, UserPlus, Users } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { CaregiverProfileForm } from "@/components/settings/caregiver-profile-form";
+import { PatientProfileForm } from "@/components/settings/patient-profile-form";
+import { redirectToLogin } from "@/lib/utils";
 
 type Caregiver = { id: string; name: string; email: string };
 
@@ -21,7 +24,7 @@ export default function SettingsPage() {
 
   async function load() {
     const r = await fetch("/api/settings");
-    if (r.status === 401) return (location.href = "/login");
+    if (r.status === 401) return redirectToLogin();
     const d = await r.json();
     setCaregivers(d.caregivers || []);
     setPatientName(d.patient?.name || "");
@@ -35,23 +38,38 @@ export default function SettingsPage() {
     setGenerating(true);
     setError(null);
     setCopied(false);
-    const r = await fetch("/api/invite", { method: "POST" });
-    const d = await r.json();
-    if (!r.ok) setError(d.error || "Could not create an invite link.");
-    else setInviteUrl(d.url);
-    setGenerating(false);
+    try {
+      const r = await fetch("/api/invite", { method: "POST" });
+      if (r.status === 401) return redirectToLogin();
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) setError(d.error || "Could not create an invite link.");
+      else setInviteUrl(d.url);
+    } catch {
+      setError("Couldn't reach the server. Check your connection and try again.");
+    } finally {
+      setGenerating(false);
+    }
   }
 
   async function copyInvite() {
     if (!inviteUrl) return;
-    await navigator.clipboard.writeText(inviteUrl);
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+    } catch {
+      setError("Your browser blocked copying. Select the link above and copy it manually.");
+      return;
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
   return (
-    <AppShell eyebrow="Care team" title={<>Settings</>} description={<>Manage who can access {patientName || "this patient"}'s care profile.</>} actions={<Button asChild variant="outline"><Link href="/dashboard"><Home className="mr-1 size-4"/>Dashboard</Link></Button>}>
-            <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+    <AppShell eyebrow="Profile & settings" title={<>Profile &amp; <em>settings</em></>} description={<>Your details, {patientName ? `${patientName}'s` : "the patient's"} profile, and who can access this care profile.</>} actions={<Button asChild variant="outline"><Link href="/dashboard"><Home className="mr-1 size-4"/>Dashboard</Link></Button>}>
+            <div className="mb-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+              <div className="min-w-0"><CaregiverProfileForm /></div>
+              <div className="min-w-0"><PatientProfileForm onSaved={setPatientName} /></div>
+            </div>
+            <div id="care-team" className="grid scroll-mt-24 gap-6 lg:grid-cols-[1fr_380px]">
               <Card>
                 <CardContent className="p-6">
                   <div className="mb-6 flex items-center gap-3">

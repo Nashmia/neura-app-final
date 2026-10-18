@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { findPatientForUser, getCollections, withoutMongoId } from "@/lib/db";
 import { hashPassword, setSession, verifyPassword } from "@/lib/auth";
+import { safeNextPath } from "@/lib/access";
 
 // Lock an account's login for a while after this many wrong passwords in a row.
 const MAX_FAILURES = 5;
@@ -11,6 +12,7 @@ const schema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(6),
   remember: z.union([z.boolean(), z.literal("on")]).optional(),
+  next: z.string().optional(),
 });
 
 export async function POST(request: Request) {
@@ -61,6 +63,6 @@ export async function POST(request: Request) {
 
   await setSession(user, parsed.data.remember !== false);
   const patient = await findPatientForUser(collections, user.id);
-  if (isFormPost) return NextResponse.redirect(new URL(patient ? "/dashboard" : "/onboarding", request.url), 303);
+  if (isFormPost) return NextResponse.redirect(new URL(safeNextPath(parsed.data.next) ?? (patient ? "/dashboard" : "/onboarding"), request.url), 303);
   return NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, phone: user.phone }, hasPatient: Boolean(patient) });
 }

@@ -7,7 +7,7 @@ import { Home, Loader2, NotebookPen, Send } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn, redirectToLogin } from "@/lib/utils";
 
 type MoodTag = "Calm" | "Anxious" | "Confused" | "Happy" | "Tired";
 type JournalEntry = { id: string; text: string; moodTag?: MoodTag; createdAt: string };
@@ -26,32 +26,74 @@ export default function JournalPage() {
   const [saving, setSaving] = useState(false);
   const [text, setText] = useState("");
   const [selectedMood, setSelectedMood] = useState<MoodTag | null>(null);
+  const [moodSaving, setMoodSaving] = useState<MoodTag | null>(null);
+  const [moodStatus, setMoodStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const [noteStatus, setNoteStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const [listError, setListError] = useState("");
 
   async function load() {
-    const r = await fetch("/api/journal");
-    if (r.status === 401) return (location.href = "/login");
-    const d = await r.json();
-    setEntries(d.entries || []);
-    setLoading(false);
+    try {
+      const r = await fetch("/api/journal");
+      if (r.status === 401) return redirectToLogin();
+      if (!r.ok) throw new Error();
+      const d = await r.json();
+      setEntries(d.entries || []);
+      setListError("");
+    } catch {
+      setListError("Couldn't load the timeline. Refresh the page to try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function post(body: object) {
+    const r = await fetch("/api/journal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (r.status === 401) {
+      redirectToLogin();
+      return false;
+    }
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      throw new Error(d.error || "It wasn't saved.");
+    }
+    return true;
   }
   useEffect(() => {
     load();
   }, []);
 
+  // One tap records one mood entry; further taps are ignored until it has saved.
   async function logMood(tag: MoodTag) {
-    setSelectedMood(tag);
-    await fetch("/api/journal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: "", moodTag: tag }) });
-    await load();
+    if (moodSaving) return;
+    setMoodSaving(tag);
+    setMoodStatus(null);
+    try {
+      if (!(await post({ text: "", moodTag: tag }))) return;
+      setSelectedMood(tag);
+      setMoodStatus({ ok: true, text: `${tag} recorded at ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.` });
+      await load();
+    } catch (err) {
+      setMoodStatus({ ok: false, text: `${err instanceof Error && err.message !== "Failed to fetch" ? err.message : "Couldn't reach the server."} Tap the mood again to retry.` });
+    } finally {
+      setMoodSaving(null);
+    }
   }
 
   async function addEntry(e: React.FormEvent) {
     e.preventDefault();
-    if (!text.trim()) return;
+    if (!text.trim() || saving) return;
     setSaving(true);
-    await fetch("/api/journal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
-    setText("");
-    await load();
-    setSaving(false);
+    setNoteStatus(null);
+    try {
+      if (!(await post({ text }))) return;
+      setText(""); // only cleared once the note is safely saved
+      setNoteStatus({ ok: true, text: "Note saved to the timeline." });
+      await load();
+    } catch (err) {
+      setNoteStatus({ ok: false, text: `${err instanceof Error && err.message !== "Failed to fetch" ? err.message : "Couldn't reach the server."} Your note is still here.` });
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -61,30 +103,35 @@ export default function JournalPage() {
                 <Card>
                   <CardContent className="p-6">
                     <h2 className="text-[1.35rem] text-ink">Today's check-in</h2>
-                    <p className="mt-2 text-sm text-slate-500">Tap the mood that best describes the patient right now.</p>
+                    <p className="mt-2 text-sm text-slate-500">Tap the mood that best describes the patient right now. Each tap adds an entry to the timeline.</p>
                     <div className="mt-5 grid grid-cols-5 gap-2">
                       {moods.map((m) => (
                         <button
                           key={m.tag}
+                          type="button"
                           onClick={() => logMood(m.tag)}
+                          disabled={Boolean(moodSaving)}
+                          aria-pressed={selectedMood === m.tag}
                           className={cn(
                             "flex flex-col items-center gap-1 rounded-2xl border border-border bg-surface py-3 text-xs font-semibold text-slate-600 transition hover:bg-blue-100",
                             selectedMood === m.tag && "border-blue-400 bg-blue-100 text-blue-800"
                           )}
                         >
-                          <span className="text-2xl">{m.emoji}</span>
+                          <span className="text-2xl" aria-hidden>{moodSaving === m.tag ? <Loader2 className="mx-auto size-6 animate-spin" /> : m.emoji}</span>
                           {m.tag}
                         </button>
                       ))}
                     </div>
+                    {moodStatus && <p role={moodStatus.ok ? "status" : "alert"} className={cn("mt-3 text-sm font-medium", moodStatus.ok ? "text-accent-ink" : "text-red-600")}>{moodStatus.text}</p>}
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardContent className="p-6">
-                    <h2 className="text-[1.35rem] text-ink">Add a note</h2>
+                    <h2 className="text-[1.35rem] text-ink"><label htmlFor="journal-note">Add a note</label></h2>
                     <form onSubmit={addEntry} className="mt-4 space-y-3">
                       <textarea
+                        id="journal-note"
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         placeholder="How did today go? Any changes worth remembering..."
@@ -93,8 +140,9 @@ export default function JournalPage() {
                       />
                       <Button disabled={saving || !text.trim()} className="w-full">
                         {saving ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Send className="mr-2 size-4" />}
-                        Save entry
+                        {saving ? "Saving..." : "Save entry"}
                       </Button>
+                      {noteStatus && <p role={noteStatus.ok ? "status" : "alert"} className={cn("text-sm font-medium", noteStatus.ok ? "text-accent-ink" : "text-red-600")}>{noteStatus.text}</p>}
                     </form>
                   </CardContent>
                 </Card>
@@ -103,10 +151,11 @@ export default function JournalPage() {
               <Card>
                 <CardContent className="p-6">
                   <h2 className="text-[1.6rem] text-ink">Timeline</h2>
+                  {listError && <p role="alert" className="mt-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{listError}</p>}
                   {loading ? (
                     <p className="mt-6 text-slate-500">Loading...</p>
                   ) : entries.length === 0 ? (
-                    <p className="mt-6 text-slate-500">No journal entries yet.</p>
+                    <p className="mt-6 text-slate-500">No journal entries yet. Record a mood or add a note to start the timeline.</p>
                   ) : (
                     <div className="mt-6 grid gap-4">
                       {entries.map((entry, index) => {

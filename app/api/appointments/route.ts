@@ -4,12 +4,13 @@ import { getCurrentUser } from "@/lib/auth";
 import { createId, findPatientForUser, getCollections, withoutMongoId } from "@/lib/db";
 
 const createSchema = z.object({
-  title: z.string().min(2),
+  title: z.string().trim().min(2).max(200),
   type: z.enum(["Doctor", "Therapy", "Other"]),
-  date: z.string().min(1),
-  time: z.string().min(1),
-  location: z.string().optional(),
-  notes: z.string().optional(),
+  // Shapes produced by <input type="date"> and <input type="time">.
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  time: z.string().regex(/^\d{2}:\d{2}$/),
+  location: z.string().max(200).optional(),
+  notes: z.string().max(2000).optional(),
 });
 const updateSchema = z.object({ id: z.string(), status: z.enum(["Upcoming", "Cancelled"]) });
 

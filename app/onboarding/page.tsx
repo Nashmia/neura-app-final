@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Heart, ImagePlus, Trash2, UserPlus, UserRound, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Heart, ImagePlus, Loader2, LogOut, Trash2, UserPlus, UserRound, Users } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,7 +14,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Logo } from "@/components/layout/logo";
 import { QUIZ_MAX_QUESTIONS, QUIZ_MIN_QUESTIONS } from "@/lib/quiz-limits";
-import { api, resizeImageToDataUrl } from "@/lib/utils";
+import { redirectToLogin, resizeImageToDataUrl } from "@/lib/utils";
+
+// Unsaved answers survive a refresh in this tab (photos excepted: they are too large for storage).
+const DRAFT_KEY = "neura-onboarding-draft";
 
 const quizLengthMessage = `Choose between ${QUIZ_MIN_QUESTIONS} and ${QUIZ_MAX_QUESTIONS} questions.`;
 
@@ -49,7 +51,9 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
-  const { register, control, watch, handleSubmit, trigger, formState: { isSubmitting, errors } } = useForm<Values>({
+  const [finished, setFinished] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const { register, control, watch, reset, handleSubmit, trigger, formState: { isSubmitting, errors } } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
       patientName: "",
@@ -63,6 +67,30 @@ export default function OnboardingPage() {
     },
   });
   const patientFields = ["patientName", "age", "gender", "dementiaStage"];
+
+  // Restore an unfinished draft, then keep saving it as the caregiver types.
+  useEffect(() => {
+    try {
+      const draft = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || "null");
+      if (draft?.values) {
+        reset({ ...draft.values, contacts: (draft.values.contacts || []).map((c: Record<string, unknown>) => ({ ...c, photo: "" })) });
+        setStep(Math.min(Math.max(Number(draft.step) || 0, 0), labels.length - 1));
+      }
+    } catch {}
+  }, [reset]);
+  useEffect(() => {
+    const sub = watch((values) => {
+      try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ values, step })); } catch {}
+    });
+    try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ values: watch(), step })); } catch {}
+    return () => sub.unsubscribe();
+  }, [watch, step]);
+
+  async function logout() {
+    setSigningOut(true);
+    try { sessionStorage.removeItem(DRAFT_KEY); } catch {}
+    try { await fetch("/api/auth/logout", { method: "POST" }); } finally { window.location.replace("/login"); }
+  }
 
   // Patient details are required, so check them before leaving that step.
   async function next() {
@@ -118,10 +146,18 @@ export default function OnboardingPage() {
       contacts: withPhotos.filter((c: { name?: string }) => c.name && c.name.trim()),
     };
     try {
-      await api("/api/onboarding", { method: "POST", body: JSON.stringify(payload) });
-      router.push("/dashboard");
+      const response = await fetch("/api/onboarding", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const data = await response.json().catch(() => ({}));
+      if (response.status === 401) return redirectToLogin();
+      // 409: setup was already finished (e.g. in another tab). Nothing to redo.
+      if (!response.ok && response.status !== 409) throw new Error(data.error || "Could not save your setup.");
+      setFinished(true); // keep the button disabled until the dashboard has loaded
+      try { sessionStorage.removeItem(DRAFT_KEY); } catch {}
+      router.replace("/dashboard");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save onboarding.");
+      // Everything entered stays in the form, so the caregiver can simply try again.
+      const message = e instanceof Error ? e.message : "";
+      setError(message && message !== "Failed to fetch" ? `${message} Your answers are still here.` : "Couldn't reach the server. Check your connection and press Finish setup again; your answers are still here.");
     }
   }
 
@@ -130,16 +166,16 @@ export default function OnboardingPage() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-8 flex items-center justify-between">
           <Logo />
-          <Button asChild variant="outline" className="rounded-full bg-white"><Link href="/dashboard">Dashboard</Link></Button>
+          <Button type="button" variant="outline" onClick={logout} disabled={signingOut} className="rounded-full bg-white"><LogOut className="mr-1 size-4" />{signingOut ? "Signing out..." : "Log out"}</Button>
         </div>
         <Card >
           <CardContent className="p-6 sm:p-8 lg:p-10">
             <div className="mb-8">
               <span className="eyebrow">Caregiver onboarding</span>
               <h1 className="mt-4 text-[2rem] leading-tight text-ink sm:text-[2.6rem]">Set up Neura in <em>four simple steps</em>.</h1>
-              <p className="mt-3 max-w-2xl text-slate-600">The form saves to the backend and prepares the caregiver dashboard.</p>
+              <p className="mt-3 max-w-2xl text-slate-600">Your answers are saved when you press Finish setup, and you can change them later in Profile &amp; settings. Joining someone else's care team instead? Open the invite link they sent you.</p>
             </div>
-            {error && <div className="mb-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
+            {error && <div role="alert" className="mb-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
             <div className="mb-8">
               <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 {labels.map((label, index) => (
@@ -169,7 +205,7 @@ export default function OnboardingPage() {
                         <Field label="Age" type="number" placeholder="e.g. 72" error={errors.age?.message} props={register("age")} />
                         <Field label="Gender" placeholder="e.g. Female" error={errors.gender?.message} props={register("gender")} />
                         <Field label="Dementia stage" placeholder="e.g. Mild, Moderate or Severe" error={errors.dementiaStage?.message} props={register("dementiaStage")} />
-                        <div className="space-y-2 sm:col-span-2"><Label>Medical notes</Label><Textarea {...register("notes")} /></div>
+                        <div className="space-y-2 sm:col-span-2"><Label htmlFor="field-notes">Medical notes</Label><Textarea id="field-notes" {...register("notes")} /></div>
                       </div>
                     </StepShell>
                   )}
@@ -235,7 +271,7 @@ export default function OnboardingPage() {
                 <Button type="button" variant="outline" onClick={() => setStep((v) => Math.max(v - 1, 0))} disabled={step === 0} className="h-12 rounded-2xl bg-white"><ArrowLeft className="mr-2 size-4" />Back</Button>
                 {step < labels.length - 1
                   ? <Button key="next" type="button" onClick={next} className="h-12 rounded-2xl">Continue<ArrowRight className="ml-2 size-4" /></Button>
-                  : <Button key="submit" type="submit" disabled={isSubmitting} className="h-12">Finish setup<Check className="ml-2 size-4" /></Button>}
+                  : <Button key="submit" type="submit" disabled={isSubmitting || finished} className="h-12">{isSubmitting || finished ? <><Loader2 className="mr-2 size-4 animate-spin" />Saving...</> : <>Finish setup<Check className="ml-2 size-4" /></>}</Button>}
               </div>
             </form>
           </CardContent>
@@ -258,11 +294,12 @@ function StepShell({ title, description, icon, children }: any) {
 }
 
 function Field({ label, props, type = "text", value, disabled, placeholder, error }: any) {
+  const id = `field-${String(label).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
-      <Input type={type} defaultValue={value} disabled={disabled} placeholder={placeholder} aria-invalid={error ? true : undefined} className={error ? "h-13 border-red-300" : "h-13"} {...props} />
-      {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+      <Label htmlFor={id}>{label}</Label>
+      <Input id={id} type={type} defaultValue={value} disabled={disabled} placeholder={placeholder} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined} className={error ? "h-13 border-red-300" : "h-13"} {...props} />
+      {error && <p id={`${id}-error`} className="text-sm font-medium text-red-600">{error}</p>}
     </div>
   );
 }

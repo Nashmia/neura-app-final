@@ -3,18 +3,24 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LogOut, Menu, X } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Logo } from "@/components/layout/logo";
 import { sidebarItems } from "@/lib/frontend-data";
 import { cn } from "@/lib/utils";
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const router = useRouter();
+  const [signingOut, setSigningOut] = useState(false);
 
+  // A full page replace (not client navigation) so no signed-in screen stays in
+  // memory or in the Back button's cache after the session cookie is cleared.
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
+    setSigningOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      window.location.replace("/login");
+    }
   }
 
   return (
@@ -44,8 +50,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="mt-auto rounded-[1.25rem] border border-white/10 bg-white/[0.05] p-5">
         <h3 className="text-lg text-white">Care workspace</h3>
         <p className="mt-1.5 text-[13px] leading-5 text-white/65">Review progress, update medicines, and start patient-friendly quizzes.</p>
-        <button onClick={logout} className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-full bg-periwinkle text-sm font-medium text-navy transition hover:bg-[#9dadff]">
-          <LogOut className="size-4" /> Logout
+        <button onClick={logout} disabled={signingOut} className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-full bg-periwinkle text-sm font-medium text-navy transition hover:bg-[#9dadff] disabled:opacity-70">
+          <LogOut className="size-4" /> {signingOut ? "Signing out..." : "Logout"}
         </button>
       </div>
     </div>
