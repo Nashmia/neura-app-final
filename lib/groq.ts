@@ -45,3 +45,33 @@ export async function runGroqTurn(systemInstruction: string, history: HistoryTur
     clearTimeout(timeout);
   }
 }
+
+
+/**
+ * A small JSON task (the retrieval reranker) on Groq: same signature as
+ * runJsonTask in lib/gemini.ts. The system prompt already states the JSON
+ * shape; Groq's JSON mode guarantees a parsable object.
+ */
+export async function runGroqJsonTask<T>(systemInstruction: string, prompt: string, _responseSchema: object, timeoutMs = 8000): Promise<T> {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) throw new Error("GROQ_API_KEY is not set.");
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+    body: JSON.stringify({
+      model: groqModel(),
+      temperature: 0,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: `${systemInstruction}\nRespond with a single JSON object only.` },
+        { role: "user", content: prompt },
+      ],
+    }),
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+  if (!response.ok) throw new Error(`Groq returned ${response.status}: ${(await response.text()).slice(0, 200)}`);
+  const data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error("Groq returned no JSON.");
+  return JSON.parse(text) as T;
+}

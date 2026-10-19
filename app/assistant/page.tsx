@@ -12,7 +12,7 @@ import { api, redirectToLogin } from "@/lib/utils";
 type HistoryTurn = { role: "user" | "model"; text: string };
 // Only the knowledge-base articles the reply cites, numbered as in the reply ("[1]").
 type Source = { n: number; title: string; source: string };
-type ChatMessage = { role: "user" | "assistant"; text: string; sources?: Source[]; model?: string; ms?: number };
+type ChatMessage = { role: "user" | "assistant"; text: string; sources?: Source[]; model?: string; ms?: number; fallbackReason?: string };
 
 const starterPrompts = [
   "How should I respond when they ask the same question over and over?",
@@ -44,12 +44,12 @@ export default function AssistantPage() {
     setSending(true);
     setError(null);
     try {
-      const data = await api<{ message: string; sources: Source[]; model?: string; generationMs?: number }>("/api/assistant/chat", {
+      const data = await api<{ message: string; sources: Source[]; model?: string; generationMs?: number; fallbackReason?: string }>("/api/assistant/chat", {
         method: "POST",
         body: JSON.stringify({ history: nextHistory }),
       });
       setHistory((h) => [...h, { role: "model", text: data.message }]);
-      setMessages((m) => [...m, { role: "assistant", text: data.message, sources: data.sources, model: data.model, ms: data.generationMs }]);
+      setMessages((m) => [...m, { role: "assistant", text: data.message, sources: data.sources, model: data.model, ms: data.generationMs, fallbackReason: data.fallbackReason }]);
     } catch (err) {
       if (err instanceof Error && err.message === "Please log in first.") {
         redirectToLogin();
@@ -147,15 +147,23 @@ export default function AssistantPage() {
                       <p className="mt-1.5 pl-2 text-[11px] text-slate-500">
                         Answered by {message.model}
                         {typeof message.ms === "number" ? ` · ${(message.ms / 1000).toFixed(1)}s` : ""}
+                        {message.fallbackReason && <span className="block text-amber-700">Why not the main model: {message.fallbackReason}</span>}
                       </p>
                     )}
                     {message.sources && message.sources.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {message.sources.map((s) => (
-                          <span key={s.source} className="flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-primary shadow-sm">
+                          <a
+                            key={s.source}
+                            href={`/assistant/sources/${encodeURIComponent(s.source)}`}
+                            target="_blank"
+                            rel="noopener"
+                            title="Open this guidance article in a new tab"
+                            className="flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-primary shadow-sm underline-offset-2 transition hover:bg-lavender hover:underline"
+                          >
                             <BookOpen className="size-3" />
                             [{s.n}] {s.title}
-                          </span>
+                          </a>
                         ))}
                       </div>
                     )}

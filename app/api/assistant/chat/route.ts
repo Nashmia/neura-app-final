@@ -6,7 +6,7 @@ import { findPatientForUser, getCollections, withoutMongoId } from "@/lib/db";
 import { embedText } from "@/lib/embeddings";
 import { runAssistantTurn, runJsonTask, type HistoryTurn } from "@/lib/gemini";
 import { runFinetunedTurn } from "@/lib/finetuned-model";
-import { groqModel, runGroqTurn } from "@/lib/groq";
+import { groqModel, runGroqJsonTask, runGroqTurn } from "@/lib/groq";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { retrieve } from "@/lib/retrieval";
 
@@ -25,7 +25,7 @@ export const maxDuration = 60;
  */
 const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error)).replace(/\s+/g, " ").slice(0, 220);
 
-async function generateReply(systemInstruction: string, history: HistoryTurn[]): Promise<{ message: string; model: string; ms: number }> {
+async function generateReply(systemInstruction: string, history: HistoryTurn[]): Promise<{ message: string; model: string; ms: number; fallbackReason?: string }> {
   const provider = process.env.ASSISTANT_MODEL_PROVIDER;
   const started = Date.now();
   let primaryError = "";
@@ -50,7 +50,7 @@ async function generateReply(systemInstruction: string, history: HistoryTurn[]):
   const fallbackStart = Date.now();
   try {
     const message = await runAssistantTurn(systemInstruction, history);
-    return { message, model: primaryError ? "Gemini (fallback)" : "Gemini", ms: Date.now() - fallbackStart };
+    return { message, model: primaryError ? "Gemini (fallback)" : "Gemini", ms: Date.now() - fallbackStart, ...(primaryError ? { fallbackReason: primaryError } : {}) };
   } catch (error) {
     throw new Error([primaryError, `Gemini: ${errorText(error)}`].filter(Boolean).join(" | "));
   }
@@ -96,7 +96,19 @@ export async function POST(request: Request) {
     ]);
 
     // Dense candidates, then an LLM relevance check; falls back to plain top-4 retrieval on any failure.
-    const retrieval = await retrieve(history, chunks, { embed: embedText, task: runJsonTask });
+    // With Groq configured, the reranker runs there too (much faster), falling back to Gemini.
+    const task: typeof runJsonTask =
+      process.env.ASSISTANT_MODEL_PROVIDER === "groq"
+        ? async (system, prompt, schema, timeoutMs) => {
+            try {
+              return await runGroqJsonTask(system, prompt, schema, timeoutMs);
+            } catch (error) {
+              console.error("Groq rerank failed, using Gemini:", error);
+              return runJsonTask(system, prompt, schema, timeoutMs);
+            }
+          }
+        : runJsonTask;
+    const retrieval = await retrieve(history, chunks, { embed: embedText, task });
     if (retrieval.errors.length) console.warn("Retrieval degraded:", retrieval.errors.join("; "));
     const topChunks = retrieval.selected;
 
@@ -104,10 +116,10 @@ export async function POST(request: Request) {
       buildKnowledgeContext(topChunks),
       buildPatientContext({ patient, medications, sessions, journalEntries, appointments }, new Date(), history[history.length - 1].text)
     );
-    const { message, model, ms } = await generateReply(systemInstruction, history);
+    const { message, model, ms, fallbackReason } = await generateReply(systemInstruction, history);
 
     // Show only the excerpts the reply actually cites; uncited (often irrelevant) articles are dropped.
-    return NextResponse.json({ message, sources: citedSources(message, topChunks), model, generationMs: ms });
+    return NextResponse.json({ message, sources: citedSources(message, topChunks), model, generationMs: ms, fallbackReason });
   } catch (error) {
     console.error(error);
     // The reason (provider error text, never keys or patient data) helps diagnose a live failure quickly.
