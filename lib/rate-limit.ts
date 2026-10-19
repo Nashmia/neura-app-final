@@ -23,6 +23,10 @@ export const RATE_LIMITS = {
   quizStart: [
     { name: "day", max: 3, windowMs: DAY, message: (w) => `You've already started 3 check-ins today. A new one can be started in ${w}.` },
   ],
+  // One voice recording = one Whisper transcription.
+  transcribe: [
+    { name: "10min", max: 30, windowMs: 10 * MINUTE, message: (w) => `That's a lot of voice messages in a short time. Please wait ${w} and try again.` },
+  ],
 } satisfies Record<string, Window[]>;
 
 export type RateLimitResult = { ok: true } | { ok: false; retryAfterSeconds: number; message: string };

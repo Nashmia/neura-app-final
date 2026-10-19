@@ -39,6 +39,8 @@ export type Patient = {
   friendsCount: number;
   quizLength: number;
   quizDifficulty: string;
+  // Bumped to revoke every doctor share link issued so far (lib/auth.ts).
+  doctorShareVersion?: number;
   createdAt: string;
   updatedAt: string;
 };

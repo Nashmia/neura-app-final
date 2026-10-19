@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Home, Send, Sparkles } from "lucide-react";
+import { CheckCircle2, Home, Send, Sparkles, Volume2, VolumeX } from "lucide-react";
+import { VoiceInputButton } from "@/components/voice/voice-input-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/layout/logo";
@@ -20,6 +21,10 @@ export default function ChatPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Read each question aloud (browser speech). Off until the caregiver turns it on: browsers only allow speech after a tap.
+  const [readAloud, setReadAloud] = useState(false);
+  const spokenCount = useRef(0);
   const [sending, setSending] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [result, setResult] = useState<{ score: number; total: number; summary: string } | null>(null);
@@ -83,6 +88,39 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
 
+  function speak(text: string) {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.9; // a little slower, easier to follow
+    u.lang = "en-GB";
+    window.speechSynthesis.speak(u);
+  }
+
+  // Speak each new question once while read-aloud is on.
+  useEffect(() => {
+    if (!readAloud) return;
+    const last = messages.length - 1;
+    if (last >= 0 && last >= spokenCount.current && messages[last].role === "assistant") speak(messages[last].text);
+    spokenCount.current = messages.length;
+  }, [messages, readAloud]);
+
+  useEffect(() => () => { if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel(); }, []);
+
+  function toggleReadAloud() {
+    setReadAloud((on) => {
+      const next = !on;
+      if (next) {
+        spokenCount.current = messages.length;
+        const lastQuestion = [...messages].reverse().find((m) => m.role === "assistant");
+        if (lastQuestion) speak(lastQuestion.text);
+      } else if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      return next;
+    });
+  }
+
   function submitAnswer() {
     if (sending || result) return;
     if (!sessionId) {
@@ -141,14 +179,20 @@ export default function ChatPage() {
   return (
     <main className="soft-gradient relative min-h-screen overflow-hidden px-4 py-6 sm:py-10">
       <div className="mx-auto flex h-[calc(100dvh-3rem)] max-w-3xl flex-col sm:h-[calc(100dvh-5rem)]">
-        <header className="mb-6 flex items-center justify-between">
+        <header className="mb-6 flex items-center justify-between gap-3">
           <Logo />
-          <Button asChild variant="outline" className="rounded-full bg-white">
-            <Link href="/dashboard">
-              <Home className="mr-2 size-4" />
-              Dashboard
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" onClick={toggleReadAloud} aria-pressed={readAloud} className={readAloud ? "rounded-full border-periwinkle bg-lavender" : "rounded-full bg-white"}>
+              {readAloud ? <Volume2 className="mr-2 size-4" /> : <VolumeX className="mr-2 size-4" />}
+              {readAloud ? "Reading aloud" : "Read aloud"}
+            </Button>
+            <Button asChild variant="outline" className="rounded-full bg-white">
+              <Link href="/dashboard">
+                <Home className="mr-2 size-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </Link>
+            </Button>
+          </div>
         </header>
 
         <Card className="flex min-h-0 flex-1 flex-col overflow-hidden shadow-[0_30px_60px_-36px_rgba(31,37,92,0.3)]">
@@ -200,6 +244,7 @@ export default function ChatPage() {
 
             <div className="mt-6 flex shrink-0 items-center gap-3">
               <input
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -207,9 +252,14 @@ export default function ChatPage() {
                 }}
                 disabled={sending}
                 maxLength={QUIZ_MAX_ANSWER_CHARS}
-                placeholder="Type your answer..."
+                placeholder="Type or tap the mic to speak..."
                 aria-label="Your answer"
                 className="h-14 flex-1 rounded-2xl border border-border bg-surface px-5 text-lg text-slate-800 outline-none transition focus:border-blue-400 focus:bg-white disabled:opacity-60"
+              />
+              <VoiceInputButton
+                disabled={sending || Boolean(result) || !sessionId}
+                onText={(text) => { setError(null); setInput((v) => (v ? `${v} ${text}` : text).slice(0, QUIZ_MAX_ANSWER_CHARS)); inputRef.current?.focus(); }}
+                onError={setError}
               />
               <Button onClick={submitAnswer} disabled={sending || (Boolean(sessionId) && !input.trim())} size="icon" aria-label={sessionId ? "Send answer" : "Start the check-in"} className="size-14 shrink-0">
                 <Send className="size-5" />

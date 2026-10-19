@@ -127,3 +127,29 @@ export function verifyInviteCode(code?: string | null): string | null {
   if (!Number.isFinite(Number(timestamp)) || Date.now() - Number(timestamp) > INVITE_TTL_MS) return null;
   return patientId;
 }
+
+/*
+  Doctor share links: read-only access to one patient's summary without an
+  account. The code is `patientId.version.expiresAt.signature`, signed with a
+  "doctor" purpose prefix so an invite code can never be used as one (or the
+  reverse). Revoking bumps the patient's doctorShareVersion, which invalidates
+  every link issued before.
+*/
+export const DOCTOR_LINK_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function createDoctorShareCode(patientId: string, version = 0, now = Date.now()) {
+  const payload = `${patientId}.${version}.${now + DOCTOR_LINK_TTL_MS}`;
+  return `${payload}.${hmac(`doctor:${payload}`)}`;
+}
+
+export function verifyDoctorShareCode(code?: string | null, now = Date.now()) {
+  if (!code) return null;
+  const parts = code.split(".");
+  if (parts.length !== 4) return null;
+  const [patientId, version, expiresAt, signature] = parts;
+  const expected = hmac(`doctor:${patientId}.${version}.${expiresAt}`);
+  if (!safeEqual(signature, expected)) return null;
+  const expires = Number(expiresAt);
+  if (!Number.isFinite(expires)) return null;
+  return { patientId, version: Number(version), expiresAt: expires, expired: now > expires };
+}

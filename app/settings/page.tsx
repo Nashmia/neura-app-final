@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CaregiverProfileForm } from "@/components/settings/caregiver-profile-form";
 import { PatientProfileForm } from "@/components/settings/patient-profile-form";
+import { DoctorShareCard } from "@/components/settings/doctor-share-card";
 import { redirectToLogin } from "@/lib/utils";
 
 type Caregiver = { id: string; name: string; email: string };
@@ -105,6 +106,7 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
+              <div className="space-y-6">
               <Card>
                 <CardContent className="p-6">
                   <h2 className="text-[1.35rem] text-ink">Invite a caregiver</h2>
@@ -125,6 +127,8 @@ export default function SettingsPage() {
                   )}
                 </CardContent>
               </Card>
+              <DoctorShareCard />
+              </div>
             </div>
           </AppShell>
   );

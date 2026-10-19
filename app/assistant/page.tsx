@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, Home, Send, Sparkles } from "lucide-react";
+import { VoiceInputButton } from "@/components/voice/voice-input-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/layout/logo";
@@ -189,8 +190,13 @@ export default function AssistantPage() {
                 disabled={sending}
                 maxLength={2000}
                 aria-label="Your question for the care assistant"
-                placeholder="Ask about care, symptoms, or this patient's recent activity..."
+                placeholder="Ask, or tap the mic to speak..."
                 className="h-14 flex-1 rounded-2xl border border-border bg-surface px-5 text-lg text-slate-800 outline-none transition focus:border-blue-400 focus:bg-white disabled:opacity-60"
+              />
+              <VoiceInputButton
+                disabled={sending}
+                onText={(text) => { setError(null); setInput((v) => (v ? `${v} ${text}` : text).slice(0, 2000)); }}
+                onError={setError}
               />
               <Button onClick={() => send(input)} disabled={sending || !input.trim()} size="icon" aria-label="Send question" className="size-14 shrink-0 rounded-2xl">
                 <Send className="size-5" />
