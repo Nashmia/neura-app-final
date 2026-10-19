@@ -23,14 +23,18 @@ export const maxDuration = 60;
  * Any failure of Groq or the Space falls back to Gemini so the assistant stays usable.
  * Returns which model answered and how long generation took, for display.
  */
+const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error)).replace(/\s+/g, " ").slice(0, 220);
+
 async function generateReply(systemInstruction: string, history: HistoryTurn[]): Promise<{ message: string; model: string; ms: number }> {
   const provider = process.env.ASSISTANT_MODEL_PROVIDER;
   const started = Date.now();
+  let primaryError = "";
   if (provider === "groq") {
     try {
       const message = await runGroqTurn(systemInstruction, history);
       return { message, model: `Llama (${groqModel()}) via Groq`, ms: Date.now() - started };
     } catch (error) {
+      primaryError = `Groq: ${errorText(error)}`;
       console.error("Groq unavailable, falling back to Gemini:", error);
     }
   }
@@ -39,12 +43,30 @@ async function generateReply(systemInstruction: string, history: HistoryTurn[]):
       const message = await runFinetunedTurn(systemInstruction, history);
       return { message, model: "Neura fine-tuned Llama-3.2-1B", ms: Date.now() - started };
     } catch (error) {
+      primaryError = `Fine-tuned model: ${errorText(error)}`;
       console.error("Fine-tuned model unavailable, falling back to Gemini:", error);
     }
   }
   const fallbackStart = Date.now();
-  const message = await runAssistantTurn(systemInstruction, history);
-  return { message, model: "Gemini", ms: Date.now() - fallbackStart };
+  try {
+    const message = await runAssistantTurn(systemInstruction, history);
+    return { message, model: primaryError ? "Gemini (fallback)" : "Gemini", ms: Date.now() - fallbackStart };
+  } catch (error) {
+    throw new Error([primaryError, `Gemini: ${errorText(error)}`].filter(Boolean).join(" | "));
+  }
+}
+
+// The knowledge base (32 articles with embeddings) rarely changes, so keep it in
+// memory per server instance instead of reloading ~1 MB from MongoDB on every question.
+let knowledgeCache: { at: number; chunks: Awaited<ReturnType<typeof loadKnowledge>> } | null = null;
+async function loadKnowledge(collections: Awaited<ReturnType<typeof getCollections>>) {
+  return collections.knowledgeChunks.find({}, withoutMongoId).toArray();
+}
+async function knowledgeBase(collections: Awaited<ReturnType<typeof getCollections>>) {
+  if (knowledgeCache && Date.now() - knowledgeCache.at < 10 * 60 * 1000) return knowledgeCache.chunks;
+  const chunks = await loadKnowledge(collections);
+  knowledgeCache = { at: Date.now(), chunks };
+  return chunks;
 }
 
 export async function POST(request: Request) {
@@ -66,7 +88,7 @@ export async function POST(request: Request) {
 
   try {
     const [chunks, medications, sessions, journalEntries, appointments] = await Promise.all([
-      collections.knowledgeChunks.find({}, withoutMongoId).toArray(),
+      knowledgeBase(collections),
       collections.medications.find({ patientId: patient.id }, withoutMongoId).toArray(),
       collections.quizSessions.find({ patientId: patient.id }, withoutMongoId).toArray(),
       collections.journalEntries.find({ patientId: patient.id }, withoutMongoId).toArray(),
@@ -88,6 +110,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message, sources: citedSources(message, topChunks), model, generationMs: ms });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "The care assistant is unavailable right now." }, { status: 502 });
+    // The reason (provider error text, never keys or patient data) helps diagnose a live failure quickly.
+    return NextResponse.json({ error: `The care assistant is unavailable right now. (${errorText(error)})` }, { status: 502 });
   }
 }
