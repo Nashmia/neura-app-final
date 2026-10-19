@@ -9,16 +9,24 @@ import type { HistoryTurn } from "@/lib/gemini";
  * console.groq.com).
  *
  * Model choice: GROQ_MODEL if set. Otherwise the app asks Groq which models
- * this key can use and picks the best available Llama, because Groq retires
- * model ids over time and a hard-coded one eventually returns 404.
+ * this key can use and picks the best available open-weight chat model:
+ * Llama first, then OpenAI's open-weight gpt-oss, then Qwen. Groq retires
+ * model ids over time (it no longer serves Llama chat models), so a
+ * hard-coded id eventually returns 404.
  */
 const REQUEST_TIMEOUT_MS = 15_000;
-const PREFERRED = [/^llama-3\.3-70b/i, /llama-4.*maverick/i, /llama-4.*scout/i, /^llama.*70b/i, /^llama.*instant/i, /llama/i];
+const PREFERRED = [/llama-3\.3-70b/i, /llama-4.*maverick/i, /llama-4.*scout/i, /llama.*70b/i, /llama.*instant/i, /llama/i, /gpt-oss-120b/i, /gpt-oss/i, /qwen/i];
 let resolved: { id: string; at: number } | null = null;
 
 /** The model id last used (for the "Answered by" label). */
 export function groqModel() {
   return process.env.GROQ_MODEL || resolved?.id || "Llama";
+}
+
+/** Reasoning models think before answering; keep that short and out of the reply. */
+function reasoningOptions(model: string) {
+  if (/gpt-oss/i.test(model)) return { reasoning_effort: "low" };
+  return {};
 }
 
 async function chooseModel(key: string): Promise<string> {
@@ -31,10 +39,10 @@ async function chooseModel(key: string): Promise<string> {
   if (!response.ok) throw new Error(`Groq model list returned ${response.status}`);
   const data = (await response.json()) as { data?: { id: string; active?: boolean }[] };
   const ids = (data.data ?? []).filter((m) => m.active !== false).map((m) => m.id);
-  // Only chat models: skip guard/safety and speech models.
-  const chat = ids.filter((id) => /llama/i.test(id) && !/guard|whisper|tts|prompt/i.test(id));
+  // Only general chat models: skip guard/safety, speech and voice models.
+  const chat = ids.filter((id) => !/guard|safeguard|whisper|tts|orpheus|prompt|allam/i.test(id));
   const pick = PREFERRED.map((re) => chat.find((id) => re.test(id))).find(Boolean);
-  if (!pick) throw new Error(`No Llama chat model available on this Groq key (found: ${ids.slice(0, 8).join(", ")})`);
+  if (!pick) throw new Error(`No suitable chat model on this Groq key (found: ${ids.slice(0, 10).join(", ")})`);
   resolved = { id: pick, at: Date.now() };
   return pick;
 }
@@ -53,7 +61,8 @@ export async function runGroqTurn(systemInstruction: string, history: HistoryTur
       body: JSON.stringify({
         model,
         temperature: 0.4,
-        max_tokens: 600,
+        max_tokens: 1500,
+        ...reasoningOptions(model),
         messages: [
           { role: "system", content: systemInstruction },
           ...history.map((turn) => ({ role: turn.role === "user" ? "user" : "assistant", content: turn.text })),
@@ -66,7 +75,8 @@ export async function runGroqTurn(systemInstruction: string, history: HistoryTur
       throw new Error(`Groq returned ${response.status}: ${(await response.text()).slice(0, 200)}`);
     }
     const data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
-    const text = data.choices?.[0]?.message?.content?.trim();
+    // Some open models put their thinking in <think> tags; never show that to the caregiver.
+    const text = data.choices?.[0]?.message?.content?.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
     if (!text) throw new Error("Groq returned no message.");
     return text;
   } finally {
@@ -90,6 +100,8 @@ export async function runGroqJsonTask<T>(systemInstruction: string, prompt: stri
     body: JSON.stringify({
       model,
       temperature: 0,
+      max_tokens: 1500,
+      ...reasoningOptions(model),
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: `${systemInstruction}\nRespond with a single JSON object only.` },

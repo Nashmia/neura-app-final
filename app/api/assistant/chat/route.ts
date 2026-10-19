@@ -32,7 +32,7 @@ async function generateReply(systemInstruction: string, history: HistoryTurn[]):
   if (provider === "groq") {
     try {
       const message = await runGroqTurn(systemInstruction, history);
-      return { message, model: `Llama (${groqModel()}) via Groq`, ms: Date.now() - started };
+      return { message, model: `${groqModel()} via Groq`, ms: Date.now() - started };
     } catch (error) {
       primaryError = `Groq: ${errorText(error)}`;
       console.error("Groq unavailable, falling back to Gemini:", error);
