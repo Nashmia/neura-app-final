@@ -380,6 +380,17 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--accent-ink); }
   text-wrap: balance;
 }
 .landing-hero-lead { font-size: clamp(1rem, 0.9rem + 0.35vw, 1.125rem); line-height: 1.65; }
+/* The italic second line of the hero headline: same face, colour and tracking, set smaller.
+   It may run wider than the headline's 8.8em measure, but never wider than the screen. */
+.landing-type h1.landing-h1 .landing-h1-sub {
+  display: block;
+  margin-top: 0.3em;
+  font-size: 0.62em;
+  line-height: 1.12;
+  width: max-content;
+  max-width: min(17em, calc(100vw - 2rem));
+  text-wrap: balance;
+}
 
 .landing-h2 {
   font-size: clamp(2.1rem, 1.6rem + 1.4vw, 3rem);
