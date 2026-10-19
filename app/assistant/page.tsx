@@ -12,7 +12,7 @@ import { api, redirectToLogin } from "@/lib/utils";
 type HistoryTurn = { role: "user" | "model"; text: string };
 // Only the knowledge-base articles the reply cites, numbered as in the reply ("[1]").
 type Source = { n: number; title: string; source: string };
-type ChatMessage = { role: "user" | "assistant"; text: string; sources?: Source[] };
+type ChatMessage = { role: "user" | "assistant"; text: string; sources?: Source[]; model?: string; ms?: number };
 
 const starterPrompts = [
   "How should I respond when they ask the same question over and over?",
@@ -44,12 +44,12 @@ export default function AssistantPage() {
     setSending(true);
     setError(null);
     try {
-      const data = await api<{ message: string; sources: Source[] }>("/api/assistant/chat", {
+      const data = await api<{ message: string; sources: Source[]; model?: string; generationMs?: number }>("/api/assistant/chat", {
         method: "POST",
         body: JSON.stringify({ history: nextHistory }),
       });
       setHistory((h) => [...h, { role: "model", text: data.message }]);
-      setMessages((m) => [...m, { role: "assistant", text: data.message, sources: data.sources }]);
+      setMessages((m) => [...m, { role: "assistant", text: data.message, sources: data.sources, model: data.model, ms: data.generationMs }]);
     } catch (err) {
       if (err instanceof Error && err.message === "Please log in first.") {
         redirectToLogin();
@@ -143,6 +143,12 @@ export default function AssistantPage() {
                     >
                       {message.text}
                     </div>
+                    {message.model && (
+                      <p className="mt-1.5 pl-2 text-[11px] text-slate-500">
+                        Answered by {message.model}
+                        {typeof message.ms === "number" ? ` · ${(message.ms / 1000).toFixed(1)}s` : ""}
+                      </p>
+                    )}
                     {message.sources && message.sources.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {message.sources.map((s) => (

@@ -6,6 +6,7 @@ import { findPatientForUser, getCollections, withoutMongoId } from "@/lib/db";
 import { embedText } from "@/lib/embeddings";
 import { runAssistantTurn, runJsonTask, type HistoryTurn } from "@/lib/gemini";
 import { runFinetunedTurn } from "@/lib/finetuned-model";
+import { groqModel, runGroqTurn } from "@/lib/groq";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { retrieve } from "@/lib/retrieval";
 
@@ -15,21 +16,35 @@ import { retrieve } from "@/lib/retrieval";
 export const maxDuration = 60;
 
 /**
- * Which model actually generates the assistant's reply. Defaults to Gemini.
- * Set ASSISTANT_MODEL_PROVIDER=finetuned to use the fine-tuned model hosted
- * on Hugging Face (see training/) instead — if that endpoint is unreachable
- * (e.g. a free HF Space asleep), this falls back to Gemini automatically so
- * the assistant stays usable.
+ * Which model generates the assistant's reply, chosen by ASSISTANT_MODEL_PROVIDER:
+ *   (unset)    Gemini (default)
+ *   groq       Meta Llama on Groq (needs GROQ_API_KEY); sub-second generation
+ *   finetuned  the self-trained Llama-3.2-1B on the Hugging Face Space (see training/)
+ * Any failure of Groq or the Space falls back to Gemini so the assistant stays usable.
+ * Returns which model answered and how long generation took, for display.
  */
-async function generateReply(systemInstruction: string, history: HistoryTurn[]): Promise<string> {
-  if (process.env.ASSISTANT_MODEL_PROVIDER === "finetuned") {
+async function generateReply(systemInstruction: string, history: HistoryTurn[]): Promise<{ message: string; model: string; ms: number }> {
+  const provider = process.env.ASSISTANT_MODEL_PROVIDER;
+  const started = Date.now();
+  if (provider === "groq") {
     try {
-      return await runFinetunedTurn(systemInstruction, history);
+      const message = await runGroqTurn(systemInstruction, history);
+      return { message, model: `Llama (${groqModel()}) via Groq`, ms: Date.now() - started };
+    } catch (error) {
+      console.error("Groq unavailable, falling back to Gemini:", error);
+    }
+  }
+  if (provider === "finetuned") {
+    try {
+      const message = await runFinetunedTurn(systemInstruction, history);
+      return { message, model: "Neura fine-tuned Llama-3.2-1B", ms: Date.now() - started };
     } catch (error) {
       console.error("Fine-tuned model unavailable, falling back to Gemini:", error);
     }
   }
-  return runAssistantTurn(systemInstruction, history);
+  const fallbackStart = Date.now();
+  const message = await runAssistantTurn(systemInstruction, history);
+  return { message, model: "Gemini", ms: Date.now() - fallbackStart };
 }
 
 export async function POST(request: Request) {
@@ -67,10 +82,10 @@ export async function POST(request: Request) {
       buildKnowledgeContext(topChunks),
       buildPatientContext({ patient, medications, sessions, journalEntries, appointments }, new Date(), history[history.length - 1].text)
     );
-    const message = await generateReply(systemInstruction, history);
+    const { message, model, ms } = await generateReply(systemInstruction, history);
 
     // Show only the excerpts the reply actually cites; uncited (often irrelevant) articles are dropped.
-    return NextResponse.json({ message, sources: citedSources(message, topChunks) });
+    return NextResponse.json({ message, sources: citedSources(message, topChunks), model, generationMs: ms });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "The care assistant is unavailable right now." }, { status: 502 });
