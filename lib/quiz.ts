@@ -1,6 +1,7 @@
 import { createId, type DataCollection } from "@/lib/db";
 import type { HistoryTurn, QuizTurn } from "@/lib/gemini";
 import { clampQuizLength, QUIZ_MAX_ANSWER_CHARS } from "@/lib/quiz-limits";
+import { combineSpeechMarkers, type SpeechMarkers } from "@/lib/speech-markers";
 import type { Patient, QuizItem, QuizSession, QuizTranscript } from "@/lib/types";
 
 /**
@@ -13,7 +14,7 @@ import type { Patient, QuizItem, QuizSession, QuizTranscript } from "@/lib/types
 export type QuizRunner = (systemInstruction: string, history: HistoryTurn[]) => Promise<QuizTurn>;
 type Collections = { quizSessions: DataCollection<QuizSession>; quizTranscripts: DataCollection<QuizTranscript> };
 export type QuizResult =
-  | { ok: true; sessionId: string; turn: QuizTurn }
+  | { ok: true; sessionId: string; turn: QuizTurn; speech?: SpeechMarkers | null }
   | { ok: false; status: 400 | 404 | 409 | 502; error: string };
 
 const START_PROMPT = "Please begin the check-in.";
@@ -49,6 +50,7 @@ export async function handleQuizTurn(opts: {
   patient: Patient;
   sessionId?: string;
   answer?: string;
+  speech?: SpeechMarkers | null; // set when the answer was spoken
   runTurn: QuizRunner;
 }): Promise<QuizResult> {
   const { collections, userId, patient, runTurn } = opts;
@@ -77,7 +79,9 @@ export async function handleQuizTurn(opts: {
   if (transcript.status !== "in_progress") return { ok: false, status: 409, error: "This check-in is already complete." };
 
   const total = transcript.questionCount;
-  const items: QuizItem[] = [...transcript.items, { questionNumber: transcript.items.length + 1, question: transcript.pendingQuestion, answer }];
+  const item: QuizItem = { questionNumber: transcript.items.length + 1, question: transcript.pendingQuestion, answer };
+  if (opts.speech?.recordings) item.speech = opts.speech;
+  const items: QuizItem[] = [...transcript.items, item];
   const turn = await runTurn(quizSystemInstruction(patient, total), transcriptToHistory(items, total));
   const finished = items.length >= total;
 
@@ -99,6 +103,7 @@ export async function handleQuizTurn(opts: {
   const complete = turn as Extract<QuizTurn, { type: "complete" }>;
   const score = Math.min(Math.max(Math.round(Number(complete.score) || 0), 0), total);
   const summary = String(complete.summary ?? "").slice(0, 2000);
-  await collections.quizSessions.insertOne({ id: transcript.id, userId, patientId: patient.id, score, total, summary, items, createdAt: now });
-  return { ok: true, sessionId: transcript.id, turn: { type: "complete", message: complete.message, score, total, summary } };
+  const speech = combineSpeechMarkers(items.map((i) => i.speech));
+  await collections.quizSessions.insertOne({ id: transcript.id, userId, patientId: patient.id, score, total, summary, items, ...(speech ? { speech } : {}), createdAt: now });
+  return { ok: true, sessionId: transcript.id, turn: { type: "complete", message: complete.message, score, total, summary }, speech };
 }

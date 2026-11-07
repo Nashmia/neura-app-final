@@ -87,3 +87,21 @@ test("quiz length is clamped to 3-8", async () => {
   const { clampQuizLength } = await import("../lib/quiz-limits");
   assert.deepEqual([clampQuizLength(1), clampQuizLength(5), clampQuizLength(20), clampQuizLength(undefined)], [3, 5, 8, 5]);
 });
+
+test("keeps speech markers from spoken answers and totals them on the session", async () => {
+  const collections = await getCollections();
+  const runTurn = fakeRunner(2);
+  const speech = { recordings: 1, durationSec: 4, speakingSec: 3, wordCount: 6, uniqueWordCount: 5, pauseCount: 1, longPauseCount: 0, totalPauseSec: 0.8, fillerCount: 1, repetitionCount: 0, totalLatencySec: 1.2 };
+  const start = await handleQuizTurn({ collections, userId: "u1", patient, runTurn });
+  assert.ok(start.ok);
+  await handleQuizTurn({ collections, userId: "u1", patient, sessionId: start.sessionId, answer: "Monday", speech, runTurn });
+  await handleQuizTurn({ collections, userId: "u1", patient, sessionId: start.sessionId, answer: "Priya", runTurn }); // typed
+  const last = await handleQuizTurn({ collections, userId: "u1", patient, sessionId: start.sessionId, answer: "Autumn", speech, runTurn });
+  assert.ok(last.ok);
+  assert.equal(last.speech?.recordings, 2);
+  assert.equal(last.speech?.wordCount, 12);
+  const saved = await collections.quizSessions.findOne({ id: start.sessionId });
+  assert.equal(saved?.speech?.fillerCount, 2);
+  assert.equal(saved?.items?.[1].speech, undefined);
+  assert.equal(saved?.items?.[0].speech?.totalLatencySec, 1.2);
+});

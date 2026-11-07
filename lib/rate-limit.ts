@@ -23,6 +23,11 @@ export const RATE_LIMITS = {
   quizStart: [
     { name: "day", max: 3, windowMs: DAY, message: (w) => `You've already started 3 check-ins today. A new one can be started in ${w}.` },
   ],
+  // One photo = one Gemini vision request.
+  scan: [
+    { name: "10min", max: 8, windowMs: 10 * MINUTE, message: (w) => `That's a lot of scans in a short time. Please wait ${w} and try again.` },
+    { name: "day", max: 25, windowMs: DAY, message: (w) => `You've reached today's limit of 25 scans. It resets in ${w}.` },
+  ],
   // One voice recording = one Whisper transcription.
   transcribe: [
     { name: "10min", max: 30, windowMs: 10 * MINUTE, message: (w) => `That's a lot of voice messages in a short time. Please wait ${w} and try again.` },

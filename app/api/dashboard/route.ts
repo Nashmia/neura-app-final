@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { findPatientForUser, getCollections, withoutMongoId } from "@/lib/db";
+import { combineSpeechMarkers, summarizeSpeech } from "@/lib/speech-markers";
 
 const moodScore: Record<string, number> = { Anxious: 1, Confused: 2, Tired: 3, Calm: 4, Happy: 5 };
 
@@ -35,6 +36,26 @@ export async function GET() {
     mood: moodScore[entry.moodTag as string] ?? 3,
   }));
 
+  // Speech markers: the latest voice check-in, compared with up to five earlier ones as a baseline.
+  const voiceSessions = sessions.filter((s) => s.speech?.recordings);
+  const latestVoice = voiceSessions.at(-1);
+  const speech = latestVoice
+    ? {
+        latest: latestVoice.speech,
+        latestDate: latestVoice.createdAt,
+        baseline: combineSpeechMarkers(voiceSessions.slice(-6, -1).map((s) => s.speech)),
+        baselineSessions: Math.min(voiceSessions.length - 1, 5),
+        trend: voiceSessions.slice(-10).map((s) => {
+          const sum = summarizeSpeech(s.speech!);
+          return {
+            day: new Date(s.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+            pace: sum.speechRateWpm,
+            pauses: sum.pausesPerMinute,
+          };
+        }),
+      }
+    : null;
+
   const metrics = [
     { label: "Quiz Score", value: score === null ? "—" : `${score}%`, helper: latest ? "Latest completed quiz" : "No quiz completed yet" },
     { label: "Medication", value: `${taken}/${medications.length || 0}`, helper: !medications.length ? "No medicines added yet" : medications.some((m) => m.status === "Pending") ? "Some doses pending" : "All doses completed" },
@@ -50,6 +71,7 @@ export async function GET() {
     metrics,
     chart: sessions.slice(-7).map((session, index) => ({ day: `S${index + 1}`, score: Math.round((session.score / session.total) * 100) })),
     moodChart,
+    speech,
     upcomingAppointments,
     notifications: [
       { title: "Medication reminder", description: !medications.length ? "No medicines added yet." : medications.some((m) => m.status === "Pending") ? "One medicine is still pending today." : "All medicines are marked as taken." },

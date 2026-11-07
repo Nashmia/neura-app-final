@@ -2,17 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Mic, Square } from "lucide-react";
+import type { SpeechMarkers } from "@/lib/speech-markers";
 import { cn, redirectToLogin } from "@/lib/utils";
 
 const MAX_SECONDS = 60;
 
 /**
  * Tap to record, tap again to stop; the clip is transcribed by Whisper
- * (/api/transcribe) and the words are handed to `onText`. Typing always
- * still works. Hidden in browsers that can't record audio.
+ * (/api/transcribe) and the words are handed to `onText`, with the speech
+ * markers measured from that recording when available. Typing always still
+ * works. Hidden in browsers that can't record audio.
  */
 export function VoiceInputButton({ onText, onError, disabled, className }: {
-  onText: (text: string) => void;
+  onText: (text: string, speech: SpeechMarkers | null) => void;
   onError: (message: string) => void;
   disabled?: boolean;
   className?: string;
@@ -82,7 +84,7 @@ export function VoiceInputButton({ onText, onError, disabled, className }: {
       if (r.status === 401) return redirectToLogin();
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || "Couldn't understand the recording.");
-      onText(d.text);
+      onText(d.text, d.speech ?? null);
     } catch (err) {
       onError(err instanceof Error && err.message !== "Failed to fetch" ? err.message : "Couldn't reach the server. Please type instead.");
     } finally {

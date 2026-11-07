@@ -1,3 +1,5 @@
+import type { SpeechMarkers } from "@/lib/speech-markers";
+
 export type User = {
   id: string;
   name: string;
@@ -64,10 +66,13 @@ export type QuizSession = {
   summary?: string;
   // Every question and answer of the check-in, so the score can be audited. Absent on older sessions.
   items?: QuizItem[];
+  // All voice answers' speech markers added together. Absent when every answer was typed.
+  speech?: SpeechMarkers;
   createdAt: string;
 };
 
-export type QuizItem = { questionNumber: number; question: string; answer: string };
+// `speech` is set when the answer was spoken (Whisper timings, lib/speech-markers.ts).
+export type QuizItem = { questionNumber: number; question: string; answer: string; speech?: SpeechMarkers };
 
 /** A check-in in progress. The server keeps the transcript, so the saved score never depends on client-supplied history. */
 export type QuizTranscript = {

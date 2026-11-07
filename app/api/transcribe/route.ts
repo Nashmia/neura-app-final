@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { computeSpeechMarkers, type WordTiming } from "@/lib/speech-markers";
 
 export const maxDuration = 30;
 
@@ -8,7 +9,11 @@ const MAX_BYTES = 8 * 1024 * 1024; // about 8 minutes of compressed speech; reco
 
 /**
  * Speech to text for voice answers and questions: the browser records a short
- * clip and this sends it to OpenAI's Whisper model on Groq. Nothing is stored.
+ * clip and this sends it to OpenAI's Whisper model on Groq. Nothing is stored here.
+ *
+ * Whisper also returns each word's timing, from which we compute speech markers (pace, pauses,
+ * delay before answering, fillers; see lib/speech-markers.ts). The check-in saves those with the
+ * answer. The prompt nudges Whisper to keep "um"/"uh", which it otherwise tends to tidy away.
  */
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -29,7 +34,10 @@ export async function POST(request: Request) {
   const type = audio.type || "audio/webm";
   upstream.append("file", audio, `speech.${type.includes("mp4") ? "mp4" : type.includes("ogg") ? "ogg" : type.includes("wav") ? "wav" : "webm"}`);
   upstream.append("model", process.env.GROQ_STT_MODEL || "whisper-large-v3");
-  upstream.append("response_format", "json");
+  upstream.append("response_format", "verbose_json");
+  upstream.append("timestamp_granularities[]", "word");
+  upstream.append("timestamp_granularities[]", "segment");
+  upstream.append("prompt", "Umm, let me think... uh, hmm. Well, I- I think it's, er, Tuesday.");
   upstream.append("temperature", "0");
 
   try {
@@ -43,10 +51,11 @@ export async function POST(request: Request) {
       console.error("Transcription failed:", r.status, (await r.text()).slice(0, 300));
       return NextResponse.json({ error: "Couldn't understand the recording right now. Please try again or type instead." }, { status: 502 });
     }
-    const data = (await r.json()) as { text?: string };
+    const data = (await r.json()) as { text?: string; duration?: number; words?: WordTiming[] };
     const text = (data.text ?? "").trim();
     if (!text) return NextResponse.json({ error: "I didn't catch any words. Please try again, a little closer to the microphone." }, { status: 422 });
-    return NextResponse.json({ text });
+    const speech = Array.isArray(data.words) ? computeSpeechMarkers(data.words, Number(data.duration) || 0) : null;
+    return NextResponse.json({ text, speech });
   } catch (error) {
     console.error("Transcription error:", error);
     return NextResponse.json({ error: "Voice input timed out. Please try again or type instead." }, { status: 504 });

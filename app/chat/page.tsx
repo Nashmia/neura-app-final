@@ -5,10 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Home, Send, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { VoiceInputButton } from "@/components/voice/voice-input-button";
+import { SpeechMarkersPanel } from "@/components/speech/speech-markers-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/layout/logo";
 import { QUIZ_MAX_ANSWER_CHARS } from "@/lib/quiz-limits";
+import { combineSpeechMarkers, type SpeechMarkers } from "@/lib/speech-markers";
 import { api, redirectToLogin } from "@/lib/utils";
 
 type ChatMessage = { role: "user" | "assistant"; text: string };
@@ -27,19 +29,21 @@ export default function ChatPage() {
   const spokenCount = useRef(0);
   const [sending, setSending] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
-  const [result, setResult] = useState<{ score: number; total: number; summary: string } | null>(null);
+  const [result, setResult] = useState<{ score: number; total: number; summary: string; speech: SpeechMarkers | null } | null>(null);
+  // Speech markers of each voice recording that went into the current answer (several taps add up).
+  const speechParts = useRef<SpeechMarkers[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const started = useRef(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  async function sendTurn(answer?: string) {
+  async function sendTurn(answer?: string, speech?: SpeechMarkers | null) {
     setSending(true);
     setError(null);
     try {
-      const data = await api<{ sessionId: string; turn: QuizTurn }>("/api/chat/quiz", {
+      const data = await api<{ sessionId: string; turn: QuizTurn; speech: SpeechMarkers | null }>("/api/chat/quiz", {
         method: "POST",
-        body: JSON.stringify(answer === undefined ? {} : { sessionId, answer }),
+        body: JSON.stringify(answer === undefined ? {} : { sessionId, answer, speech: speech ?? null }),
       });
       const { turn } = data;
       setSessionId(data.sessionId);
@@ -48,7 +52,7 @@ export default function ChatPage() {
         setProgress({ current: turn.questionNumber, total: turn.total });
       } else {
         setProgress({ current: turn.total, total: turn.total });
-        setResult({ score: turn.score, total: turn.total, summary: turn.summary });
+        setResult({ score: turn.score, total: turn.total, summary: turn.summary, speech: data.speech });
       }
     } catch (err) {
       if (err instanceof Error && err.message === "Please log in first.") {
@@ -64,6 +68,7 @@ export default function ChatPage() {
         // The server saved nothing, so give the answer back to resend.
         setMessages((m) => m.slice(0, -1));
         setInput(answer);
+        speechParts.current = speech ? [speech] : [];
       }
       if (answer === undefined || message.startsWith("This check-in has expired")) {
         setSessionId(null);
@@ -129,9 +134,11 @@ export default function ChatPage() {
     }
     const answer = input.trim();
     if (!answer) return;
+    const speech = combineSpeechMarkers(speechParts.current);
+    speechParts.current = [];
     setMessages((m) => [...m, { role: "user", text: answer }]);
     setInput("");
-    sendTurn(answer);
+    sendTurn(answer, speech);
   }
 
   const progressPct = progress.total ? (progress.current / progress.total) * 100 : 0;
@@ -155,7 +162,7 @@ export default function ChatPage() {
   if (result) {
     return (
       <main className="soft-gradient relative grid min-h-screen place-items-center overflow-hidden px-4">
-        <motion.div initial={{ opacity: 0, scale: 0.92, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} className="w-full max-w-md">
+        <motion.div initial={{ opacity: 0, scale: 0.92, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} className={result.speech ? "w-full max-w-lg py-8" : "w-full max-w-md"}>
           <Card className="shadow-[0_30px_60px_-36px_rgba(31,37,92,0.3)]">
             <CardContent className="p-8 text-center">
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 12 }}>
@@ -166,6 +173,12 @@ export default function ChatPage() {
                 Score: <strong className="text-gradient text-2xl font-extrabold">{result.score}</strong> out of <strong>{result.total}</strong>
               </p>
               <p className="mt-4 rounded-2xl bg-surface p-4 text-left text-sm leading-6 text-slate-600">{result.summary}</p>
+              {result.speech && (
+                <div className="mt-5 text-left">
+                  <h2 className="mb-3 text-base font-semibold text-ink">Speech markers</h2>
+                  <SpeechMarkersPanel speech={result.speech} compact />
+                </div>
+              )}
               <Button asChild className="mt-6">
                 <Link href="/dashboard">Back to dashboard</Link>
               </Button>
@@ -246,19 +259,27 @@ export default function ChatPage() {
               <input
                 ref={inputRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  if (!e.target.value.trim()) speechParts.current = []; // answer cleared: drop its recordings
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") submitAnswer();
                 }}
                 disabled={sending}
                 maxLength={QUIZ_MAX_ANSWER_CHARS}
-                placeholder="Type or tap the mic to speak..."
+                placeholder="Type, or tap the mic to answer out loud..."
                 aria-label="Your answer"
                 className="h-14 flex-1 rounded-2xl border border-border bg-surface px-5 text-lg text-slate-800 outline-none transition focus:border-blue-400 focus:bg-white disabled:opacity-60"
               />
               <VoiceInputButton
                 disabled={sending || Boolean(result) || !sessionId}
-                onText={(text) => { setError(null); setInput((v) => (v ? `${v} ${text}` : text).slice(0, QUIZ_MAX_ANSWER_CHARS)); inputRef.current?.focus(); }}
+                onText={(text, speech) => {
+                  setError(null);
+                  if (speech) speechParts.current.push(speech);
+                  setInput((v) => (v ? `${v} ${text}` : text).slice(0, QUIZ_MAX_ANSWER_CHARS));
+                  inputRef.current?.focus();
+                }}
                 onError={setError}
               />
               <Button onClick={submitAnswer} disabled={sending || (Boolean(sessionId) && !input.trim())} size="icon" aria-label={sessionId ? "Send answer" : "Start the check-in"} className="size-14 shrink-0">

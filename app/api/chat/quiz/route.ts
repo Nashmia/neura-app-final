@@ -7,6 +7,7 @@ import { runQuizTurn } from "@/lib/gemini";
 import { handleQuizTurn } from "@/lib/quiz";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { QUIZ_MAX_ANSWER_CHARS } from "@/lib/quiz-limits";
+import { SPEECH_LIMITS } from "@/lib/speech-markers";
 
 // A single Gemini call can occasionally take longer than Vercel's default
 // serverless timeout, especially under provider load — give it more room.
@@ -14,9 +15,21 @@ export const maxDuration = 60;
 
 // The client sends only the session ID and its latest answer; the transcript lives on the server
 // (see lib/quiz.ts). Any other field, such as a client-built history, is ignored.
+const seconds = z.number().finite().min(0).max(SPEECH_LIMITS.maxSeconds);
+const count = z.number().int().min(0).max(SPEECH_LIMITS.maxCount);
+// Speech markers measured by /api/transcribe for a spoken answer. They are tracking information the
+// caregiver's own browser relays; they never affect the score.
+const speechSchema = z.object({
+  recordings: z.number().int().min(1).max(SPEECH_LIMITS.maxRecordings),
+  durationSec: seconds, speakingSec: seconds.min(0.1), wordCount: count, uniqueWordCount: count,
+  pauseCount: count, longPauseCount: count, totalPauseSec: seconds, fillerCount: count,
+  repetitionCount: count, totalLatencySec: seconds,
+});
+
 const schema = z.object({
   sessionId: z.string().min(1).max(100).optional(),
   answer: z.string().max(QUIZ_MAX_ANSWER_CHARS * 2).optional(),
+  speech: speechSchema.nullish(),
 });
 
 export async function POST(request: Request) {
@@ -44,10 +57,11 @@ export async function POST(request: Request) {
       patient,
       sessionId: parsed.data.sessionId,
       answer: parsed.data.answer,
+      speech: parsed.data.speech,
       runTurn: runQuizTurn,
     });
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
-    return NextResponse.json({ sessionId: result.sessionId, turn: result.turn });
+    return NextResponse.json({ sessionId: result.sessionId, turn: result.turn, speech: result.speech ?? null });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "The AI quiz assistant is unavailable right now." }, { status: 502 });
