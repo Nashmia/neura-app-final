@@ -116,3 +116,46 @@ export async function runGroqJsonTask<T>(systemInstruction: string, prompt: stri
   if (!text) throw new Error("Groq returned no JSON.");
   return JSON.parse(text) as T;
 }
+
+/**
+ * A JSON-mode conversation turn on Groq (the check-in's fallback when every Gemini model is
+ * unavailable). The system prompt already describes the JSON shape; the caller validates it.
+ */
+export async function runGroqJsonTurn<T>(systemInstruction: string, history: HistoryTurn[], timeoutMs = 15_000): Promise<T> {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) throw new Error("GROQ_API_KEY is not set.");
+  const model = await chooseModel(key);
+  const request = (jsonMode: boolean) =>
+    fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model,
+        temperature: 0.6,
+        max_tokens: 1500,
+        ...reasoningOptions(model),
+        ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
+        messages: [
+          { role: "system", content: `${systemInstruction}\nRespond with a single JSON object only.` },
+          ...history.map((turn) => ({ role: turn.role === "user" ? "user" : "assistant", content: turn.text })),
+        ],
+      }),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  let response = await request(true);
+  // Groq's JSON mode occasionally rejects its own output (json_validate_failed); one retry without it,
+  // reading the JSON object out of the reply, gets past that.
+  let jsonMode = true;
+  if (response.status === 400) {
+    const body = await response.text();
+    if (!body.includes("json_validate_failed")) throw new Error(`Groq returned 400: ${body.slice(0, 200)}`);
+    jsonMode = false;
+    response = await request(false);
+  }
+  if (!response.ok) throw new Error(`Groq returned ${response.status}: ${(await response.text()).slice(0, 200)}`);
+  const data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
+  const text = data.choices?.[0]?.message?.content?.replace(/<think>[\s\S]*?<\/think>/g, "");
+  if (!text) throw new Error("Groq returned no JSON.");
+  const json = jsonMode ? text : text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
+  return JSON.parse(json) as T;
+}

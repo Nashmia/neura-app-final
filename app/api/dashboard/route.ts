@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { findPatientForUser, getCollections, withoutMongoId } from "@/lib/db";
+import { MOOD_SCORE, moodAnomaly } from "@/lib/journal-insights";
 import { scoreTrend } from "@/lib/score-trend";
 import { combineSpeechMarkers, summarizeSpeech } from "@/lib/speech-markers";
-
-const moodScore: Record<string, number> = { Anxious: 1, Confused: 2, Tired: 3, Calm: 4, Happy: 5 };
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -34,8 +33,9 @@ export async function GET() {
     .reverse();
   const moodChart = moodEntries.map((entry, index) => ({
     day: new Date(entry.createdAt).toLocaleDateString(undefined, { weekday: "short" }) || `Day ${index + 1}`,
-    mood: moodScore[entry.moodTag as string] ?? 3,
+    mood: MOOD_SCORE[entry.moodTag as string] ?? 3,
   }));
+  const anomaly = moodAnomaly(journalEntries);
 
   // Speech markers: the latest voice check-in, compared with up to five earlier ones as a baseline.
   const voiceSessions = sessions.filter((s) => s.speech?.recordings);
@@ -87,6 +87,7 @@ export async function GET() {
     chart: chartScores.map((score, index) => ({ day: `S${index + 1}`, score, trend: trend?.fitted[index] })),
     scoreTrend: trend && { status: trend.status, change: trend.change, sessions: trend.sessions, latestUnusuallyLow: trend.latestUnusuallyLow, note: trendNote },
     moodChart,
+    moodAnomaly: anomaly,
     speech,
     upcomingAppointments,
     notifications: [

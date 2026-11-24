@@ -3,7 +3,8 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { readJsonBody } from "@/lib/chat-validation";
 import { findPatientForUser, getCollections } from "@/lib/db";
-import { runQuizTurn } from "@/lib/gemini";
+import { describePhoto, runQuizTurn, type HistoryTurn, type QuizTurn } from "@/lib/gemini";
+import { runGroqJsonTurn } from "@/lib/groq";
 import { handleQuizTurn } from "@/lib/quiz";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { QUIZ_MAX_ANSWER_CHARS } from "@/lib/quiz-limits";
@@ -32,6 +33,20 @@ const schema = z.object({
   speech: speechSchema.nullish(),
 });
 
+/**
+ * Gemini runs the check-in. If every Gemini model is overloaded, Groq's open-weight model takes the
+ * turn instead (when GROQ_API_KEY is set); Gemini's budget is shortened so that still fits in 60 s.
+ */
+async function runTurn(systemInstruction: string, history: HistoryTurn[]): Promise<QuizTurn> {
+  if (!process.env.GROQ_API_KEY) return runQuizTurn(systemInstruction, history);
+  try {
+    return await runQuizTurn(systemInstruction, history, 30_000);
+  } catch (error) {
+    console.warn("Gemini unavailable for the check-in, using Groq:", error instanceof Error ? error.message.slice(0, 200) : error);
+    return runGroqJsonTurn<QuizTurn>(systemInstruction, history);
+  }
+}
+
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Please log in first." }, { status: 401 });
@@ -58,7 +73,11 @@ export async function POST(request: Request) {
       sessionId: parsed.data.sessionId,
       answer: parsed.data.answer,
       speech: parsed.data.speech,
-      runTurn: runQuizTurn,
+      runTurn,
+      describePhoto: (dataUrl) => {
+        const match = /^data:(image\/[a-z+]+);base64,(.+)$/.exec(dataUrl);
+        return match ? describePhoto(match[2], match[1]) : Promise.resolve("");
+      },
     });
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
     return NextResponse.json({ sessionId: result.sessionId, turn: result.turn, speech: result.speech ?? null });

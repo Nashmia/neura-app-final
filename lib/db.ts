@@ -3,7 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 import { getMongoDb } from "@/lib/mongodb";
-import type { User, Patient, Medication, QuizSession, QuizTranscript, Appointment, JournalEntry, KnowledgeChunk } from "@/lib/types";
+import type { User, Patient, Medication, QuizSession, QuizTranscript, Appointment, JournalEntry, KnowledgeChunk, JournalEmbedding, AssistantTopic, CareDigest } from "@/lib/types";
 
 /**
  * Data access layer (dual-mode).
@@ -50,6 +50,9 @@ type FileShape = {
   journalEntries: Row[];
   knowledgeChunks: Row[];
   rateLimits: Row[];
+  journalEmbeddings: Row[];
+  assistantTopics: Row[];
+  careDigests: Row[];
 };
 
 const emptyFileShape: FileShape = {
@@ -62,6 +65,9 @@ const emptyFileShape: FileShape = {
   journalEntries: [],
   knowledgeChunks: [],
   rateLimits: [],
+  journalEmbeddings: [],
+  assistantTopics: [],
+  careDigests: [],
 };
 
 async function readFile(): Promise<FileShape> {
@@ -149,6 +155,9 @@ export async function getCollections(): Promise<{
   appointments: DataCollection<Appointment>;
   journalEntries: DataCollection<JournalEntry>;
   knowledgeChunks: DataCollection<KnowledgeChunk>;
+  journalEmbeddings: DataCollection<JournalEmbedding>;
+  assistantTopics: DataCollection<AssistantTopic>;
+  careDigests: DataCollection<CareDigest>;
 }> {
   if (!process.env.MONGODB_URI) {
     // Local development fallback — no database required.
@@ -161,6 +170,9 @@ export async function getCollections(): Promise<{
       appointments: new JsonCollection<Appointment>("appointments"),
       journalEntries: new JsonCollection<JournalEntry>("journalEntries"),
       knowledgeChunks: new JsonCollection<KnowledgeChunk>("knowledgeChunks"),
+      journalEmbeddings: new JsonCollection<JournalEmbedding>("journalEmbeddings"),
+      assistantTopics: new JsonCollection<AssistantTopic>("assistantTopics"),
+      careDigests: new JsonCollection<CareDigest>("careDigests"),
     };
   }
 
@@ -174,6 +186,9 @@ export async function getCollections(): Promise<{
     appointments: db.collection("appointments") as unknown as DataCollection<Appointment>,
     journalEntries: db.collection("journalEntries") as unknown as DataCollection<JournalEntry>,
     knowledgeChunks: db.collection("knowledgeChunks") as unknown as DataCollection<KnowledgeChunk>,
+    journalEmbeddings: db.collection("journalEmbeddings") as unknown as DataCollection<JournalEmbedding>,
+    assistantTopics: db.collection("assistantTopics") as unknown as DataCollection<AssistantTopic>,
+    careDigests: db.collection("careDigests") as unknown as DataCollection<CareDigest>,
   };
 }
 

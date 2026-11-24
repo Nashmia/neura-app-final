@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { buildKnowledgeContext, buildPatientContext, buildSystemInstruction, citedSources } from "@/lib/assistant-context";
+import { classifyTopic, getTopicVectors } from "@/lib/assistant-topics";
 import { getCurrentUser } from "@/lib/auth";
 import { readJsonBody, validateHistory } from "@/lib/chat-validation";
-import { findPatientForUser, getCollections, withoutMongoId } from "@/lib/db";
+import { createId, findPatientForUser, getCollections, withoutMongoId } from "@/lib/db";
 import { embedText } from "@/lib/embeddings";
 import { runAssistantTurn, runJsonTask, type HistoryTurn } from "@/lib/gemini";
 import { runFinetunedTurn } from "@/lib/finetuned-model";
 import { groqModel, runGroqJsonTask, runGroqTurn } from "@/lib/groq";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { retrieve } from "@/lib/retrieval";
+import { INJECTION_THRESHOLD, safetyInstruction, screenQuestion } from "@/lib/safety";
 
 // This route does an embedding call, several DB reads, and a generation call
 // in sequence — comfortably over Vercel's default serverless timeout when
@@ -87,6 +89,13 @@ export async function POST(request: Request) {
   if (!limit.ok) return NextResponse.json({ error: limit.message }, { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } });
 
   try {
+    const question = history[history.length - 1].text;
+    // Safety screen (Groq guard models, Gemini fallback) runs while the records load and retrieval runs.
+    const safetyPromise = screenQuestion(question);
+    const topicVectorsPromise = getTopicVectors(embedText).catch((error) => {
+      console.warn("Topic tagging skipped:", error instanceof Error ? error.message : error);
+      return null;
+    });
     const [chunks, medications, sessions, journalEntries, appointments] = await Promise.all([
       knowledgeBase(collections),
       collections.medications.find({ patientId: patient.id }, withoutMongoId).toArray(),
@@ -108,18 +117,49 @@ export async function POST(request: Request) {
             }
           }
         : runJsonTask;
-    const retrieval = await retrieve(history, chunks, { embed: embedText, task });
+    // Keep the question's embedding from retrieval to tag its topic without another embedding call.
+    let questionVector: number[] | null = null;
+    const embed = async (text: string) => {
+      const vector = await embedText(text);
+      questionVector ??= vector;
+      return vector;
+    };
+    const retrieval = await retrieve(history, chunks, { embed, task });
     if (retrieval.errors.length) console.warn("Retrieval degraded:", retrieval.errors.join("; "));
     const topChunks = retrieval.selected;
 
-    const systemInstruction = buildSystemInstruction(
-      buildKnowledgeContext(topChunks),
-      buildPatientContext({ patient, medications, sessions, journalEntries, appointments }, new Date(), history[history.length - 1].text)
-    );
+    const patientContext = buildPatientContext({ patient, medications, sessions, journalEntries, appointments }, new Date(), question);
+    const safety = await safetyPromise;
+    const safetyNote = safetyInstruction(safety);
+    const systemInstruction = buildSystemInstruction(buildKnowledgeContext(topChunks), patientContext) + (safetyNote ? `
+
+${safetyNote}` : "");
     const { message, model, ms, fallbackReason } = await generateReply(systemInstruction, history);
 
+    // Zero-shot topic tag (only the tag is stored, never the question). Never blocks the answer.
+    const topicVectors = await topicVectorsPromise;
+    if (questionVector && topicVectors) {
+      await collections.assistantTopics
+        .insertOne({ id: createId("topic"), patientId: patient.id, topic: classifyTopic(questionVector, topicVectors), createdAt: new Date().toISOString() })
+        .catch((error) => console.warn("Topic not saved:", error instanceof Error ? error.message : error));
+    }
+
     // Show only the excerpts the reply actually cites; uncited (often irrelevant) articles are dropped.
-    return NextResponse.json({ message, sources: citedSources(message, topChunks), model, generationMs: ms, fallbackReason });
+    // `evidence` (the retrieved guidance and the patient records the reply was given) lets the
+    // browser's NLI model check which sentences of the reply the sources support.
+    return NextResponse.json({
+      message,
+      sources: citedSources(message, topChunks),
+      model,
+      generationMs: ms,
+      fallbackReason,
+      evidence: [...topChunks.map((c) => c.text), patientContext],
+      safety: {
+        category: safety.category,
+        injection: safety.injectionScore !== null && safety.injectionScore >= INJECTION_THRESHOLD,
+        model: safety.model,
+      },
+    });
   } catch (error) {
     console.error(error);
     // The reason (provider error text, never keys or patient data) helps diagnose a live failure quickly.

@@ -94,7 +94,7 @@ export function PatientProfileForm({ onSaved }: { onSaved?: (name: string) => vo
     if (!file) return;
     setPhotoError("");
     try {
-      updateContact(key, { photo: await resizeImageToDataUrl(file) });
+      updateContact(key, { photo: await resizeImageToDataUrl(file, 256, 0.72, { faceCrop: true }) });
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : "Could not use that image.");
     }

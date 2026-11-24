@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
-import { CalendarCheck, ClipboardList, NotebookPen, Pill, Brain, ShieldCheck } from "lucide-react";
+import { CalendarCheck, ClipboardList, NotebookPen, Pill, Brain, ShieldCheck, Sparkles } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import { Card, CardContent } from "@/components/ui/card";
 import { PrintButton } from "@/components/doctor/print-button";
 import { getCollections } from "@/lib/db";
 import { loadDoctorView } from "@/lib/doctor-share";
+import { latestDigest } from "@/lib/digest";
+import { scoreTrend } from "@/lib/score-trend";
 import { formatCalendarDate, formatTimestamp } from "@/lib/assistant-context";
 
 // Read-only clinical summary opened from a caregiver's doctor share link. No account needed;
@@ -16,7 +18,8 @@ const MOOD_ORDER = ["Happy", "Calm", "Tired", "Confused", "Anxious"] as const;
 
 export default async function DoctorPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
-  const view = await loadDoctorView(await getCollections(), decodeURIComponent(code));
+  const collections = await getCollections();
+  const view = await loadDoctorView(collections, decodeURIComponent(code));
 
   if (!view.ok) {
     const text = {
@@ -40,6 +43,9 @@ export default async function DoctorPage({ params }: { params: Promise<{ code: s
   const { patient, medications, sessions, appointments, journal, caregivers, expiresAt } = view;
   const recentSessions = sessions.slice(-10);
   const pct = (s: { score: number; total: number }) => Math.round((s.score / s.total) * 100);
+  // Same trend line as the caregiver's dashboard (last 7 check-ins), and the latest AI care digest.
+  const trend = scoreTrend(sessions.slice(-7).map(pct));
+  const digest = await latestDigest(collections.careDigests, patient.id).catch(() => null);
   const twoWeeksAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
   const recentMoods = journal.filter((j) => j.moodTag && Date.parse(j.createdAt) >= twoWeeksAgo);
   const moodCounts = MOOD_ORDER.map((m) => ({ mood: m, count: recentMoods.filter((j) => j.moodTag === m).length })).filter((m) => m.count);
@@ -101,9 +107,21 @@ export default async function DoctorPage({ params }: { params: Promise<{ code: s
           </Section>
         </div>
 
+        {digest && (
+          <Section className="mt-6" icon={<Sparkles className="size-5" />} title="Care digest" subtitle={`AI-written summary of the caregiver's records, ${formatTimestamp(digest.createdAt)} · ${digest.model}. Check against the records below.`}>
+            <p className="text-sm leading-6 text-slate-700">{digest.text}</p>
+          </Section>
+        )}
+
         <Section className="mt-6" icon={<Brain className="size-5" />} title="Cognitive check-ins" subtitle="Short supervised conversations scored by Neura. A tracking aid, not a diagnostic test.">
           {recentSessions.length === 0 ? <Empty>No check-ins completed yet.</Empty> : (
             <>
+              {trend && (
+                <p className="mb-3 text-sm text-slate-600">
+                  Trend over the last {trend.sessions} check-ins (least-squares fit): <span className="font-semibold text-ink">{trend.status}</span>, {trend.change > 0 ? "+" : ""}{trend.change} points
+                  {trend.latestUnusuallyLow ? "; the latest score is unusually low for this patient (z ≤ −2)." : "."}
+                </p>
+              )}
               <Sparkline values={recentSessions.map(pct)} />
               <ul className="mt-4 divide-y divide-border text-sm">
                 {[...recentSessions].reverse().map((s) => (

@@ -28,6 +28,14 @@ export const RATE_LIMITS = {
     { name: "10min", max: 8, windowMs: 10 * MINUTE, message: (w) => `That's a lot of scans in a short time. Please wait ${w} and try again.` },
     { name: "day", max: 25, windowMs: DAY, message: (w) => `You've reached today's limit of 25 scans. It resets in ${w}.` },
   ],
+  // One search = one Gemini embedding call (plus a few backfilled notes).
+  journalSearch: [
+    { name: "10min", max: 30, windowMs: 10 * MINUTE, message: (w) => `That's a lot of searches in a short time. Please wait ${w} and try again.` },
+  ],
+  // One digest = one generation request; it is cached for the day, so this only limits refreshes.
+  digest: [
+    { name: "day", max: 6, windowMs: DAY, message: (w) => `The care digest has been refreshed several times today. It can be refreshed again in ${w}.` },
+  ],
   // One voice recording = one Whisper transcription.
   transcribe: [
     { name: "10min", max: 30, windowMs: 10 * MINUTE, message: (w) => `That's a lot of voice messages in a short time. Please wait ${w} and try again.` },

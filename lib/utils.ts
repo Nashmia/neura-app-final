@@ -10,8 +10,10 @@ export function cn(...inputs: ClassValue[]) {
  * compressed JPEG data URL. Doing this in the browser keeps stored photos tiny
  * (~20-40KB) so they can live directly on the contact record — no file server
  * needed, and it works on Vercel's read-only filesystem.
+ * With `faceCrop`, an on-device face detector (lib/face-crop.ts) crops a square around the largest face
+ * first; without a face, or if detection can't run, the whole photo is used as before.
  */
-export async function resizeImageToDataUrl(file: File, max = 256, quality = 0.72): Promise<string> {
+export async function resizeImageToDataUrl(file: File, max = 256, quality = 0.72, { faceCrop = false } = {}): Promise<string> {
   const readAsDataUrl = (f: File) =>
     new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -28,15 +30,22 @@ export async function resizeImageToDataUrl(file: File, max = 256, quality = 0.72
     image.src = source;
   });
 
-  const scale = Math.min(1, max / Math.max(img.width, img.height));
-  const width = Math.max(1, Math.round(img.width * scale));
-  const height = Math.max(1, Math.round(img.height * scale));
+  let region = { x: 0, y: 0, width: img.width, height: img.height };
+  if (faceCrop) {
+    const { detectFace, faceCrop: cropAround } = await import("@/lib/face-crop");
+    const face = await detectFace(img);
+    if (face) region = cropAround(face, img.width, img.height);
+  }
+
+  const scale = Math.min(1, max / Math.max(region.width, region.height));
+  const width = Math.max(1, Math.round(region.width * scale));
+  const height = Math.max(1, Math.round(region.height * scale));
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d");
   if (!ctx) return source;
-  ctx.drawImage(img, 0, 0, width, height);
+  ctx.drawImage(img, region.x, region.y, region.width, region.height, 0, 0, width, height);
   return canvas.toDataURL("image/jpeg", quality);
 }
 

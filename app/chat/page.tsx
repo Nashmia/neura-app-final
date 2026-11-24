@@ -5,17 +5,20 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Home, Send, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { VoiceInputButton } from "@/components/voice/voice-input-button";
+import { ModelBadge } from "@/components/ml/model-badge";
 import { SpeechMarkersPanel } from "@/components/speech/speech-markers-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/layout/logo";
 import { QUIZ_MAX_ANSWER_CHARS } from "@/lib/quiz-limits";
+import { getModelStatus, mlSupported, synthesizeSpeech, warmModel } from "@/lib/ml/client";
 import { combineSpeechMarkers, type SpeechMarkers } from "@/lib/speech-markers";
 import { api, redirectToLogin } from "@/lib/utils";
 
-type ChatMessage = { role: "user" | "assistant"; text: string };
+// `photo` is the family photo shown with the photo-recognition question.
+type ChatMessage = { role: "user" | "assistant"; text: string; photo?: string };
 type QuizTurn =
-  | { type: "question"; message: string; questionNumber: number; total: number }
+  | { type: "question"; message: string; questionNumber: number; total: number; photo?: string }
   | { type: "complete"; message: string; score: number; total: number; summary: string };
 
 export default function ChatPage() {
@@ -27,6 +30,11 @@ export default function ChatPage() {
   // Read each question aloud (browser speech). Off until the caregiver turns it on: browsers only allow speech after a tap.
   const [readAloud, setReadAloud] = useState(false);
   const spokenCount = useRef(0);
+  // Natural voice: Kokoro-82M runs on this device; the browser's own voice is used while it downloads or if it fails.
+  const [naturalVoice, setNaturalVoice] = useState(true);
+  const audioContext = useRef<AudioContext | null>(null);
+  const playing = useRef<AudioBufferSourceNode | null>(null);
+  const speakToken = useRef(0);
   const [sending, setSending] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [result, setResult] = useState<{ score: number; total: number; summary: string; speech: SpeechMarkers | null } | null>(null);
@@ -47,7 +55,7 @@ export default function ChatPage() {
       });
       const { turn } = data;
       setSessionId(data.sessionId);
-      setMessages((m) => [...m, { role: "assistant", text: turn.message }]);
+      setMessages((m) => [...m, { role: "assistant", text: turn.message, ...(turn.type === "question" && turn.photo ? { photo: turn.photo } : {}) }]);
       if (turn.type === "question") {
         setProgress({ current: turn.questionNumber, total: turn.total });
       } else {
@@ -93,13 +101,48 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
 
-  function speak(text: string) {
+  function stopSpeaking() {
+    speakToken.current++;
+    try {
+      playing.current?.stop();
+    } catch {
+      // already stopped
+    }
+    playing.current = null;
+    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+  }
+
+  function browserSpeak(text: string) {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.rate = 0.9; // a little slower, easier to follow
     u.lang = "en-GB";
     window.speechSynthesis.speak(u);
+  }
+
+  async function speak(text: string) {
+    stopSpeaking();
+    const token = speakToken.current;
+    const ctx = audioContext.current;
+    // Use Kokoro only once it has downloaded, so the first questions aren't left silent while it loads.
+    if (!naturalVoice || !ctx || !mlSupported() || getModelStatus("tts").status !== "ready") {
+      if (naturalVoice && ctx && mlSupported()) warmModel("tts");
+      return browserSpeak(text);
+    }
+    try {
+      const { samples, sampleRate } = await synthesizeSpeech(text);
+      if (token !== speakToken.current) return; // a newer question (or stop) came first
+      const buffer = ctx.createBuffer(1, samples.length, sampleRate);
+      buffer.getChannelData(0).set(samples);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start();
+      playing.current = source;
+    } catch {
+      if (token === speakToken.current) browserSpeak(text);
+    }
   }
 
   // Speak each new question once while read-aloud is on.
@@ -110,17 +153,24 @@ export default function ChatPage() {
     spokenCount.current = messages.length;
   }, [messages, readAloud]);
 
-  useEffect(() => () => { if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel(); }, []);
+  useEffect(() => () => {
+    stopSpeaking();
+    audioContext.current?.close().catch(() => undefined);
+  }, []);
 
   function toggleReadAloud() {
     setReadAloud((on) => {
       const next = !on;
       if (next) {
+        // Created inside the tap, so browsers (Safari especially) allow it to play audio later.
+        if (!audioContext.current && typeof AudioContext !== "undefined") audioContext.current = new AudioContext();
+        audioContext.current?.resume().catch(() => undefined);
+        if (naturalVoice && mlSupported()) warmModel("tts");
         spokenCount.current = messages.length;
         const lastQuestion = [...messages].reverse().find((m) => m.role === "assistant");
         if (lastQuestion) speak(lastQuestion.text);
-      } else if ("speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
+      } else {
+        stopSpeaking();
       }
       return next;
     });
@@ -199,6 +249,11 @@ export default function ChatPage() {
               {readAloud ? <Volume2 className="mr-2 size-4" /> : <VolumeX className="mr-2 size-4" />}
               {readAloud ? "Reading aloud" : "Read aloud"}
             </Button>
+            {readAloud && mlSupported() && (
+              <Button type="button" variant="outline" onClick={() => setNaturalVoice((v) => !v)} aria-pressed={naturalVoice} className="hidden rounded-full bg-white sm:inline-flex">
+                {naturalVoice ? "Natural voice" : "Standard voice"}
+              </Button>
+            )}
             <Button asChild variant="outline" className="rounded-full bg-white">
               <Link href="/dashboard">
                 <Home className="mr-2 size-4" />
@@ -242,6 +297,10 @@ export default function ChatPage() {
                         : "rounded-bl-md border border-border bg-surface text-slate-800"
                     }`}
                   >
+                    {message.photo && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={message.photo} alt="A photo of someone the patient knows" className="mb-3 size-40 rounded-2xl object-cover shadow-sm sm:size-48" />
+                    )}
                     {message.text}
                   </div>
                 </motion.div>
@@ -255,6 +314,7 @@ export default function ChatPage() {
               <div ref={bottomRef} />
             </div>
 
+            {readAloud && naturalVoice && <ModelBadge model="tts" className="mt-3" />}
             <div className="mt-6 flex shrink-0 items-center gap-3">
               <input
                 ref={inputRef}

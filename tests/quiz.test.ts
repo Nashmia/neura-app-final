@@ -2,7 +2,7 @@ import { after, test } from "node:test";
 import assert from "node:assert/strict";
 import { useTempJsonDb } from "./helpers";
 import { getCollections } from "../lib/db";
-import { handleQuizTurn, type QuizRunner } from "../lib/quiz";
+import { handleQuizTurn, quizSystemInstruction, type QuizRunner } from "../lib/quiz";
 import type { HistoryTurn } from "../lib/gemini";
 import type { Patient } from "../lib/types";
 
@@ -104,4 +104,38 @@ test("keeps speech markers from spoken answers and totals them on the session", 
   assert.equal(saved?.speech?.fillerCount, 2);
   assert.equal(saved?.items?.[1].speech, undefined);
   assert.equal(saved?.items?.[0].speech?.totalLatencySec, 1.2);
+});
+
+test("question 2 shows a contact photo and records whose it was", async () => {
+  const photo = "data:image/jpeg;base64,AAAA";
+  const withPhoto = { ...patient, contacts: [{ id: "c1", name: "Priya", relationship: "Daughter", type: "Family", photo }] } as unknown as Patient;
+  const systems: string[] = [];
+  const runTurn: QuizRunner = async (system, history) => {
+    systems.push(system);
+    return fakeRunner(2)(system, history);
+  };
+  const collections = await getCollections();
+  const start = await handleQuizTurn({ collections, userId: "u1", patient: withPhoto, runTurn, describePhoto: async () => "A woman smiling in a garden." });
+  assert.ok(start.ok);
+  assert.equal(start.turn.photo, undefined); // question 1 has no photo
+  const second = await handleQuizTurn({ collections, userId: "u1", patient: withPhoto, sessionId: start.sessionId, answer: "Monday", runTurn });
+  assert.ok(second.ok && second.turn.type === "question");
+  assert.equal(second.turn.photo, photo);
+  assert.match(systems[1], /photo of Priya \(Daughter\)\. The photo shows: A woman smiling in a garden\./);
+  await handleQuizTurn({ collections, userId: "u1", patient: withPhoto, sessionId: start.sessionId, answer: "Priya", runTurn });
+  await handleQuizTurn({ collections, userId: "u1", patient: withPhoto, sessionId: start.sessionId, answer: "Autumn", runTurn });
+  const saved = await collections.quizSessions.findOne({ id: start.sessionId });
+  assert.equal(saved?.items?.[1].photoContactId, "c1");
+  assert.equal(saved?.items?.[0].photoContactId, undefined);
+});
+
+test("a failed photo description still asks the photo question", async () => {
+  const withPhoto = { ...patient, contacts: [{ id: "c1", name: "Priya", relationship: "Daughter", type: "Family", photo: "data:image/jpeg;base64,AAAA" }] } as unknown as Patient;
+  const collections = await getCollections();
+  const start = await handleQuizTurn({ collections, userId: "u1", patient: withPhoto, runTurn: fakeRunner(2), describePhoto: async () => { throw new Error("vision down"); } });
+  assert.ok(start.ok);
+  const transcript = await collections.quizTranscripts.findOne({ id: start.sessionId });
+  assert.deepEqual(transcript?.photo, { contactId: "c1", questionNumber: 2, description: "" });
+  // Without a description the model is told it can't see the photo, so it won't invent details.
+  assert.match(quizSystemInstruction(withPhoto, 3, transcript!.photo), /You cannot see the photo/);
 });

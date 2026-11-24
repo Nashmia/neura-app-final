@@ -25,3 +25,11 @@ test("too-short notes get no suggestion", () => {
   assert.equal(suggestMood(""), null);
   assert.equal(suggestMood("tired"), null);
 });
+
+test("the emotion model decides when no keyword matches", () => {
+  assert.equal(suggestMood("She kept calling for her mother all evening", { label: "fear", score: 0.82 })?.tag, "Anxious");
+  assert.equal(suggestMood("We looked at old photos together", { label: "joy", score: 0.62 })?.tag, "Happy");
+  // Keywords still win, and a weak emotion falls back to VADER.
+  assert.equal(suggestMood("Very tired after the walk", { label: "joy", score: 0.9 })?.tag, "Tired");
+  assert.equal(suggestMood("Ate lunch fine and watched some TV", { label: "fear", score: 0.3 })?.tag, "Calm");
+});

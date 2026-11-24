@@ -72,7 +72,11 @@ export type QuizSession = {
 };
 
 // `speech` is set when the answer was spoken (Whisper timings, lib/speech-markers.ts).
-export type QuizItem = { questionNumber: number; question: string; answer: string; speech?: SpeechMarkers };
+// `photoContactId` is set on the photo-recognition question (the contact whose photo was shown).
+export type QuizItem = { questionNumber: number; question: string; answer: string; speech?: SpeechMarkers; photoContactId?: string };
+
+/** The photo-recognition question of a check-in: whose photo is shown, at which question, and what it shows. */
+export type QuizPhotoQuestion = { contactId: string; questionNumber: number; description: string };
 
 /** A check-in in progress. The server keeps the transcript, so the saved score never depends on client-supplied history. */
 export type QuizTranscript = {
@@ -82,6 +86,7 @@ export type QuizTranscript = {
   questionCount: number;
   items: QuizItem[];
   pendingQuestion: string;
+  photo?: QuizPhotoQuestion;
   status: "in_progress" | "complete";
   version: number; // bumped on every write; guards against double submissions
   createdAt: string;
@@ -110,8 +115,19 @@ export type JournalEntry = {
   patientId: string;
   text: string;
   moodTag?: MoodTag;
+  // Emotion the in-browser emotion model read in the note text (lib/ml), when it ran.
+  emotion?: { label: string; score: number };
   createdAt: string;
 };
+
+/** Gemini embedding of a journal note, kept apart so ordinary journal reads stay small. */
+export type JournalEmbedding = { entryId: string; patientId: string; embedding: number[]; createdAt: string };
+
+/** Topic of one Care Assistant question (the question text itself is not stored). */
+export type AssistantTopic = { id: string; patientId: string; topic: string; createdAt: string };
+
+/** The AI-written care digest, cached for a day per patient. */
+export type CareDigest = { id: string; patientId: string; day: string; text: string; model: string; createdAt: string };
 
 export type KnowledgeChunk = {
   id: string;

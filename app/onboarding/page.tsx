@@ -110,7 +110,7 @@ export default function OnboardingPage() {
     if (!file) return;
     setError("");
     try {
-      const dataUrl = await resizeImageToDataUrl(file);
+      const dataUrl = await resizeImageToDataUrl(file, 256, 0.72, { faceCrop: true });
       setPhotos((prev) => ({ ...prev, [fieldId]: dataUrl }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not process that image.");

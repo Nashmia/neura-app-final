@@ -120,7 +120,8 @@ const quizResponseSchema = {
   required: ["type", "message", "total"],
 };
 
-export async function runQuizTurn(systemInstruction: string, history: HistoryTurn[]): Promise<QuizTurn> {
+/** `budgetMs` caps the whole Gemini failover chain, leaving room for a caller's own fallback. */
+export async function runQuizTurn(systemInstruction: string, history: HistoryTurn[], budgetMs = 50_000): Promise<QuizTurn> {
   const ai = getClient();
   const contents = history.length ? history : [{ role: "user" as const, text: "Please begin the check-in." }];
 
@@ -138,7 +139,7 @@ export async function runQuizTurn(systemInstruction: string, history: HistoryTur
         },
       }),
     QUIZ_MODEL,
-    { attemptTimeoutMs: 12_000 }
+    { attemptTimeoutMs: 12_000, budgetMs }
   );
 
   const text = response.text;
@@ -283,4 +284,31 @@ export async function scanPrescriptionImage(imageBase64: string, mimeType: strin
   const text = response.text;
   if (!text) throw new Error("Empty response from Gemini.");
   return JSON.parse(text) as PrescriptionScan;
+}
+
+/**
+ * One gentle sentence describing a family photo (setting, clothing, what the person is doing), used to
+ * shape the check-in's photo-recognition question. `imageBase64` is the raw base64 (no data: prefix).
+ */
+export async function describePhoto(imageBase64: string, mimeType: string): Promise<string> {
+  const ai = getClient();
+  const response = await withModelFailover(
+    (model, abortSignal) =>
+      ai.models.generateContent({
+        model,
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { inlineData: { mimeType, data: imageBase64 } },
+              { text: "Describe this photo in one short, warm sentence for a memory activity: the setting and what the person is doing or wearing. Do not guess anyone's name, age, health or identity. If there is no person, describe the scene." },
+            ],
+          },
+        ],
+        config: { temperature: 0.2, maxOutputTokens: 80, abortSignal },
+      }),
+    VISION_MODEL,
+    { attemptTimeoutMs: 6_000, budgetMs: 10_000 }
+  );
+  return (response.text ?? "").replace(/\s+/g, " ").trim().slice(0, 300);
 }

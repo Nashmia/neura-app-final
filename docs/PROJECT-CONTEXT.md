@@ -519,6 +519,33 @@ Problems were reproduced first (against a throwaway local database, never real d
 
 ---
 
+## 14C. Machine-learning additions (24 Nov 2026)
+
+All ready-made models, no training. Each one falls back to the earlier behaviour if it can't run, so no existing feature depends on it. "On-device" models run in the caregiver's browser in a Web Worker (`lib/ml/worker.ts`, Transformers.js); their files download once from Hugging Face and are cached by the browser.
+
+| Feature | Model / method | Where it runs | Where in the app |
+|---|---|---|---|
+| Journal mood suggestion | Keyword rules + **VADER** sentiment (`lib/mood-suggest.ts`), then the emotion model below when loaded | Browser | Journal, "Suggested mood" |
+| Emotion of a note | **DistilRoBERTa emotion classifier** (`MicahB/emotion_text_classifier`, 7 emotions, ~83 MB) | On-device | Journal suggestion, timeline chip, "Emotions in notes" |
+| Search by meaning | **gemini-embedding-001** + cosine similarity (`app/api/journal/search`) | Server | Journal, "Search by meaning" |
+| Recurring themes | **k-means** (spherical, k-means++ seeding) on note embeddings, named by cluster TF-IDF (`lib/journal-insights.ts`) | Server | Journal, Insights |
+| Caregiver strain | Weekly **VADER** tone of notes; flagged when the last two weeks average ≤ −0.2 | Server | Journal, Insights |
+| Mood anomaly | **z-score** of this week's mood vs earlier weeks | Server | Journal Insights, dashboard Mood card |
+| Score trend | **Least-squares regression** + z-score of the latest score (`lib/score-trend.ts`), from 5 check-ins | Server | Dashboard chart, doctor summary |
+| Answer fact-checker | **DeBERTa-v3 NLI** (`Xenova/nli-deberta-v3-xsmall`, ~87 MB): each answer sentence vs the retrieved guidance and records (`lib/ml/fact-check.ts`) | On-device | Care Assistant, "Fact-check … Show highlights" |
+| Safety screen | **gpt-oss-safeguard-20b** on Groq with a caregiving policy (Gemini fallback); **Llama Prompt Guard 2 (86M)** for prompt injection (`lib/safety.ts`) | Server | Care Assistant crisis card and injection note |
+| Topic tags | Zero-shot classification by embedding similarity to 8 topic descriptions (`lib/assistant-topics.ts`); only the tag is stored | Server | Care Assistant, "What you've asked about" |
+| Photo memory question | Question 2 shows a family photo; **Gemini vision** describes it to shape the question (`lib/quiz.ts`) | Server | Check-in |
+| Natural read-aloud voice | **Kokoro-82M** text-to-speech, British voice `bf_emma` (~92 MB) | On-device | Check-in, "Read aloud" / "Natural voice" |
+| Face-centred photos | **MediaPipe BlazeFace** face detector crops contact photos around the face (`lib/face-crop.ts`) | On-device | Onboarding and Settings photo upload |
+| Weekly care digest | gpt-oss-120b on Groq (Gemini fallback), from the week's records and statistics; cached per day (`lib/digest.ts`) | Server | Dashboard, doctor summary |
+
+**Reliability change in the same work:** check-in turns now fall back to Groq's gpt-oss-120b when every Gemini model is overloaded (`app/api/chat/quiz/route.ts`); Gemini gets 30 s so the fallback fits the 60 s route limit.
+
+**Honesty notes for the report.** The fact-checker reports only "found in the sources" vs "not found": in testing, the small NLI model flagged correct advice as *contradicting* the sources, so contradiction is not shown. The safeguard model allows only 3 requests a minute on Groq's free tier; above that the Gemini fallback screens the question. Themes, strain, anomaly and trend are tracking aids on small samples, not assessments.
+
+---
+
 ## 15. Testing
 
 - **43 automated tests** (`npm test`, all passing on 19 Oct) covering:
