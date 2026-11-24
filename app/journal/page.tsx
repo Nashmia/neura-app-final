@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Home, Loader2, NotebookPen, Send } from "lucide-react";
+import { Home, Loader2, NotebookPen, Send, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import type { MoodSuggestion } from "@/lib/mood-suggest";
 import { cn, redirectToLogin } from "@/lib/utils";
 
 type MoodTag = "Calm" | "Anxious" | "Confused" | "Happy" | "Tired";
@@ -30,6 +31,29 @@ export default function JournalPage() {
   const [moodStatus, setMoodStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const [noteStatus, setNoteStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const [listError, setListError] = useState("");
+  const [suggestion, setSuggestion] = useState<MoodSuggestion | null>(null);
+  const [useSuggestion, setUseSuggestion] = useState(false);
+
+  // Suggest a mood from the note as the caregiver types (VADER sentiment + keywords, runs in the browser).
+  // The analyser is loaded only once there is a note to read, and nothing is attached unless they accept.
+  useEffect(() => {
+    if (!text.trim()) {
+      setSuggestion(null);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const { suggestMood } = await import("@/lib/mood-suggest");
+      if (cancelled) return;
+      setSuggestion(suggestMood(text));
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [text]);
+  // A different suggestion has to be accepted again.
+  useEffect(() => setUseSuggestion(false), [suggestion?.tag]);
 
   async function load() {
     try {
@@ -85,9 +109,11 @@ export default function JournalPage() {
     setSaving(true);
     setNoteStatus(null);
     try {
-      if (!(await post({ text }))) return;
+      const moodTag = useSuggestion && suggestion ? suggestion.tag : undefined;
+      if (!(await post({ text, moodTag }))) return;
       setText(""); // only cleared once the note is safely saved
-      setNoteStatus({ ok: true, text: "Note saved to the timeline." });
+      setUseSuggestion(false);
+      setNoteStatus({ ok: true, text: moodTag ? `Note saved to the timeline as ${moodTag}.` : "Note saved to the timeline." });
       await load();
     } catch (err) {
       setNoteStatus({ ok: false, text: `${err instanceof Error && err.message !== "Failed to fetch" ? err.message : "Couldn't reach the server."} Your note is still here.` });
@@ -138,6 +164,29 @@ export default function JournalPage() {
                         rows={5}
                         className="w-full px-4 py-3 text-base rounded-[12px] border border-input bg-white text-ink transition hover:border-slate-300 focus-visible:border-periwinkle focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-periwinkle/25"
                       />
+                      {suggestion && (() => {
+                        const mood = moods.find((m) => m.tag === suggestion.tag)!;
+                        return (
+                          <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
+                            <Sparkles className="size-4 shrink-0 text-primary" aria-hidden />
+                            <p className="min-w-0 flex-1 text-sm text-slate-600">
+                              Suggested mood: <span className="font-semibold text-ink">{mood.emoji} {suggestion.tag}</span>
+                              <span className="block text-xs text-slate-500">Because the note {suggestion.reason}.</span>
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setUseSuggestion((v) => !v)}
+                              aria-pressed={useSuggestion}
+                              className={cn(
+                                "shrink-0 rounded-full border border-border bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-blue-100",
+                                useSuggestion && "border-blue-400 bg-blue-100 text-blue-800"
+                              )}
+                            >
+                              {useSuggestion ? "Added ✓" : "Add to note"}
+                            </button>
+                          </div>
+                        );
+                      })()}
                       <Button disabled={saving || !text.trim()} className="w-full">
                         {saving ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Send className="mr-2 size-4" />}
                         {saving ? "Saving..." : "Save entry"}

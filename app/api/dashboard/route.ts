@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { findPatientForUser, getCollections, withoutMongoId } from "@/lib/db";
+import { scoreTrend } from "@/lib/score-trend";
 import { combineSpeechMarkers, summarizeSpeech } from "@/lib/speech-markers";
 
 const moodScore: Record<string, number> = { Anxious: 1, Confused: 2, Tired: 3, Calm: 4, Happy: 5 };
@@ -56,6 +57,20 @@ export async function GET() {
       }
     : null;
 
+  // Trend line over the same check-ins the chart shows, so the line and the label match what is on screen.
+  const chartSessions = sessions.slice(-7);
+  const chartScores = chartSessions.map((session) => Math.round((session.score / session.total) * 100));
+  const trend = scoreTrend(chartScores);
+  const trendNote = !trend
+    ? null
+    : trend.latestUnusuallyLow
+      ? `The latest score is unusually low compared with earlier check-ins. One check-in can be an off day, so watch the next few.`
+      : trend.status === "declining"
+        ? `Scores have trended down by about ${Math.abs(Math.round(trend.change))} points over the last ${trend.sessions} check-ins. Worth mentioning to the doctor.`
+        : trend.status === "improving"
+          ? `Scores have trended up by about ${Math.round(trend.change)} points over the last ${trend.sessions} check-ins.`
+          : `Scores have been steady over the last ${trend.sessions} check-ins.`;
+
   const metrics = [
     { label: "Quiz Score", value: score === null ? "—" : `${score}%`, helper: latest ? "Latest completed quiz" : "No quiz completed yet" },
     { label: "Medication", value: `${taken}/${medications.length || 0}`, helper: !medications.length ? "No medicines added yet" : medications.some((m) => m.status === "Pending") ? "Some doses pending" : "All doses completed" },
@@ -69,13 +84,14 @@ export async function GET() {
     medications,
     sessions,
     metrics,
-    chart: sessions.slice(-7).map((session, index) => ({ day: `S${index + 1}`, score: Math.round((session.score / session.total) * 100) })),
+    chart: chartScores.map((score, index) => ({ day: `S${index + 1}`, score, trend: trend?.fitted[index] })),
+    scoreTrend: trend && { status: trend.status, change: trend.change, sessions: trend.sessions, latestUnusuallyLow: trend.latestUnusuallyLow, note: trendNote },
     moodChart,
     speech,
     upcomingAppointments,
     notifications: [
       { title: "Medication reminder", description: !medications.length ? "No medicines added yet." : medications.some((m) => m.status === "Pending") ? "One medicine is still pending today." : "All medicines are marked as taken." },
-      { title: "Quiz progress", description: latest ? `Latest quiz score was ${score}%.` : "No quiz submitted yet. Start a calm session today." },
+      { title: "Quiz progress", description: latest ? `Latest quiz score was ${score}%.${trendNote ? ` ${trendNote}` : ""}` : "No quiz submitted yet. Start a calm session today." },
       {
         title: "Next appointment",
         description: upcomingAppointments[0]
