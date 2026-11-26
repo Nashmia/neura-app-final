@@ -46,6 +46,8 @@ export async function GET() {
         latestDate: latestVoice.createdAt,
         baseline: combineSpeechMarkers(voiceSessions.slice(-6, -1).map((s) => s.speech)),
         baselineSessions: Math.min(voiceSessions.length - 1, 5),
+        // Voice tone of the latest check-in where the device measured it.
+        voiceTone: voiceSessions.filter((s) => s.voiceTone?.recordings).at(-1)?.voiceTone ?? null,
         trend: voiceSessions.slice(-10).map((s) => {
           const sum = summarizeSpeech(s.speech!);
           return {

@@ -5,8 +5,9 @@
  *   emotion  MicahB/emotion_text_classifier (DistilRoBERTa, 7 emotions), ~83 MB quantised
  *   nli      Xenova/nli-deberta-v3-xsmall (natural-language inference), ~87 MB quantised
  *   tts      Kokoro-82M (open-weight text-to-speech, British voices), ~92 MB quantised
+ *   voice    wav2vec2-base fine-tuned for speech emotion (SUPERB ER: neutral/happy/angry/sad), ~90 MB 4-bit
  */
-import { AutoModelForSequenceClassification, AutoTokenizer, env, pipeline, softmax, type PreTrainedModel, type PreTrainedTokenizer, type TextClassificationPipeline } from "@huggingface/transformers";
+import { AutoModelForSequenceClassification, AutoTokenizer, env, pipeline, softmax, type AudioClassificationPipeline, type PreTrainedModel, type PreTrainedTokenizer, type TextClassificationPipeline } from "@huggingface/transformers";
 import type { KokoroTTS } from "kokoro-js";
 import type { MlModel, WorkerRequest, WorkerResponse } from "./protocol";
 
@@ -48,6 +49,12 @@ const nli = lazy("nli", async (): Promise<{ tokenizer: PreTrainedTokenizer; mode
   model: await AutoModelForSequenceClassification.from_pretrained(NLI_MODEL, { dtype: "q8", progress_callback: progressFor("nli") }),
 }));
 
+// 16 kHz mono audio in; long recordings are scored in windows (attention cost grows with length).
+const VOICE_SAMPLE_RATE = 16_000;
+const VOICE_WINDOW_SEC = 8;
+const audioClassifier = pipeline as unknown as (task: "audio-classification", model: string, options: object) => Promise<AudioClassificationPipeline>;
+const voice = lazy("voice", () => audioClassifier("audio-classification", "onnx-community/wav2vec2-base-superb-er-ONNX", { dtype: "q4", progress_callback: progressFor("voice") }));
+
 const tts = lazy("tts", async (): Promise<KokoroTTS> => {
   const { KokoroTTS } = await import("kokoro-js");
   return KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", { dtype: "q8", device: "wasm", progress_callback: progressFor("tts") });
@@ -56,7 +63,7 @@ const tts = lazy("tts", async (): Promise<KokoroTTS> => {
 async function handle(request: WorkerRequest) {
   switch (request.task) {
     case "warm": {
-      await (request.model === "emotion" ? emotion() : request.model === "nli" ? nli() : tts());
+      await (request.model === "emotion" ? emotion() : request.model === "nli" ? nli() : request.model === "voice" ? voice() : tts());
       return post({ type: "result", id: request.id, result: true });
     }
     case "emotion": {
@@ -80,6 +87,22 @@ async function handle(request: WorkerRequest) {
         }
       }
       return post({ type: "result", id: request.id, result: results });
+    }
+    case "voiceEmotion": {
+      const classify = await voice();
+      const window = VOICE_WINDOW_SEC * VOICE_SAMPLE_RATE;
+      const totals: Record<string, number> = {};
+      let seconds = 0;
+      for (let start = 0; start < request.samples.length; start += window) {
+        const chunk = request.samples.subarray(start, start + window);
+        if (chunk.length < VOICE_SAMPLE_RATE) continue; // under a second: too short to judge
+        const chunkSec = chunk.length / VOICE_SAMPLE_RATE;
+        const output = (await classify(chunk, { top_k: 4 })) as { label: string; score: number }[];
+        for (const { label, score } of output) totals[label] = (totals[label] ?? 0) + score * chunkSec;
+        seconds += chunkSec;
+      }
+      const scores = Object.fromEntries(Object.entries(totals).map(([label, value]) => [label, seconds ? value / seconds : 0]));
+      return post({ type: "result", id: request.id, result: { scores, seconds } });
     }
     case "tts": {
       const model = await tts();

@@ -83,3 +83,33 @@ The report counts every real HTTP request, including hidden retries, so you alwa
 | `judge.ts` | Optional advisory LLM judge |
 | `report.ts` | Writes report.json / report.md / scoring-sheet.csv |
 | `RUBRIC.md` | 0/1/2 scoring definitions |
+
+---
+
+# ML feature evaluation (`npm run eval:ml`)
+
+Measures the machine-learning features added in November 2026, each against a simpler baseline, on small labelled sets in `ml/cases.ts`. Nothing here changes how the app works, and it reads no app database.
+
+```
+npm run eval:ml                              # all four studies (~15 min: the safety study waits for Groq's 3-a-minute limit)
+npm run eval:ml -- --only=fact,mood,search   # skip the slow safety study (~2 min)
+```
+
+| Study | Model under test | Baseline / comparison | Set |
+|---|---|---|---|
+| `fact` | DeBERTa-v3 NLI fact-checker (`lib/ml/fact-check.ts`), threshold sweep | word overlap with the article | 48 sentences, 8 articles |
+| `mood` | live mood suggestion (keywords + DistilRoBERTa emotion model + VADER) | each part alone; the first version without the emotion model | 58 notes |
+| `safety` | gpt-oss-safeguard-20b; Llama Prompt Guard 2 | the Gemini fallback classifier | 34 messages + 8 injections |
+| `search` | Gemini-embedding search | BM25 keyword search | 12 queries, 30 notes |
+
+The on-device models run in Node with the same Transformers.js code and model files the browser uses. Each run writes `reports/ml-<timestamp>/report.md` and `report.json`.
+
+**The labels in `ml/cases.ts` are drafts** written by the developer with an AI assistant. Review them, change any you disagree with, and rerun before quoting results. The sets are small: one case moves a percentage by 2–8 points.
+
+Not evaluated: the voice-tone model (no labelled recordings of older adults are available; the model's published SUPERB emotion-recognition result on acted speech does not transfer directly), the Kokoro voice, and face cropping.
+
+| File | Purpose |
+|---|---|
+| `ml/run.ts` | Runner |
+| `ml/cases.ts` | The four labelled sets |
+| `ml/metrics.ts` | Precision/recall/F1, confusion matrix, BM25, Recall@k, MRR (tested in `tests/eval-metrics.test.ts`) |

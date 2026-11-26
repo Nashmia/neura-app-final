@@ -11,10 +11,12 @@ const MAX_SECONDS = 60;
  * Tap to record, tap again to stop; the clip is transcribed by Whisper
  * (/api/transcribe) and the words are handed to `onText`, with the speech
  * markers measured from that recording when available. Typing always still
- * works. Hidden in browsers that can't record audio.
+ * works. Hidden in browsers that can't record audio. `onAudio` also receives
+ * each recording (the check-in measures its voice tone on the device).
  */
-export function VoiceInputButton({ onText, onError, disabled, className }: {
+export function VoiceInputButton({ onText, onAudio, onError, disabled, className }: {
   onText: (text: string, speech: SpeechMarkers | null) => void;
+  onAudio?: (recording: Blob) => void;
   onError: (message: string) => void;
   disabled?: boolean;
   className?: string;
@@ -77,6 +79,7 @@ export function VoiceInputButton({ onText, onError, disabled, className }: {
       onError("That recording was too short. Hold on a moment after tapping, then speak.");
       return;
     }
+    onAudio?.(blob);
     try {
       const form = new FormData();
       form.append("audio", blob);

@@ -2,6 +2,7 @@ import { createId, type DataCollection } from "@/lib/db";
 import type { HistoryTurn, QuizTurn } from "@/lib/gemini";
 import { clampQuizLength, QUIZ_MAX_ANSWER_CHARS } from "@/lib/quiz-limits";
 import { combineSpeechMarkers, type SpeechMarkers } from "@/lib/speech-markers";
+import { combineVoiceTone, type VoiceTone } from "@/lib/voice-tone";
 import type { Patient, QuizItem, QuizPhotoQuestion, QuizSession, QuizTranscript } from "@/lib/types";
 
 /**
@@ -16,7 +17,7 @@ type Collections = { quizSessions: DataCollection<QuizSession>; quizTranscripts:
 /** A turn as sent to the client: the photo-recognition question also carries the contact's photo. */
 export type ClientQuizTurn = QuizTurn & { photo?: string };
 export type QuizResult =
-  | { ok: true; sessionId: string; turn: ClientQuizTurn; speech?: SpeechMarkers | null }
+  | { ok: true; sessionId: string; turn: ClientQuizTurn; speech?: SpeechMarkers | null; voiceTone?: VoiceTone | null }
   | { ok: false; status: 400 | 404 | 409 | 502; error: string };
 
 const START_PROMPT = "Please begin the check-in.";
@@ -98,6 +99,7 @@ export async function handleQuizTurn(opts: {
   sessionId?: string;
   answer?: string;
   speech?: SpeechMarkers | null; // set when the answer was spoken
+  voiceTone?: VoiceTone | null; // set when the device measured how the spoken answer sounded
   runTurn: QuizRunner;
   describePhoto?: (dataUrl: string) => Promise<string>; // Gemini vision; omitted in tests
 }): Promise<QuizResult> {
@@ -134,6 +136,7 @@ export async function handleQuizTurn(opts: {
   const total = transcript.questionCount;
   const item: QuizItem = { questionNumber: transcript.items.length + 1, question: transcript.pendingQuestion, answer };
   if (opts.speech?.recordings) item.speech = opts.speech;
+  if (opts.voiceTone?.recordings) item.voiceTone = opts.voiceTone;
   if (transcript.photo?.questionNumber === item.questionNumber) item.photoContactId = transcript.photo.contactId;
   const items: QuizItem[] = [...transcript.items, item];
   const turn = await runTurn(quizSystemInstruction(patient, total, transcript.photo), transcriptToHistory(items, total));
@@ -158,6 +161,7 @@ export async function handleQuizTurn(opts: {
   const score = Math.min(Math.max(Math.round(Number(complete.score) || 0), 0), total);
   const summary = String(complete.summary ?? "").slice(0, 2000);
   const speech = combineSpeechMarkers(items.map((i) => i.speech));
-  await collections.quizSessions.insertOne({ id: transcript.id, userId, patientId: patient.id, score, total, summary, items, ...(speech ? { speech } : {}), createdAt: now });
-  return { ok: true, sessionId: transcript.id, turn: { type: "complete", message: complete.message, score, total, summary }, speech };
+  const voiceTone = combineVoiceTone(items.map((i) => i.voiceTone));
+  await collections.quizSessions.insertOne({ id: transcript.id, userId, patientId: patient.id, score, total, summary, items, ...(speech ? { speech } : {}), ...(voiceTone ? { voiceTone } : {}), createdAt: now });
+  return { ok: true, sessionId: transcript.id, turn: { type: "complete", message: complete.message, score, total, summary }, speech, voiceTone };
 }

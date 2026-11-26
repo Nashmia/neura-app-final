@@ -12,6 +12,7 @@
     "gen:context-dataset": "tsx --conditions=react-server training/generate_context_dataset.ts",
     "users:list": "tsx --conditions=react-server scripts/list-users.ts",
     "eval:rag": "tsx --conditions=react-server evaluation/run.ts",
+    "eval:ml": "tsx --conditions=react-server evaluation/ml/run.ts",
     "test": "tsx --conditions=react-server --test tests/*.test.ts"
   },
   "dependencies": {

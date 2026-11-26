@@ -53,27 +53,37 @@ async function groq(model: string, messages: { role: string; content: string }[]
   return text;
 }
 
+// The two classifiers are exported separately so evaluation/ml can measure each one.
+export async function classifyWithSafeguard(text: string): Promise<SafetyCategory> {
+  const raw = await groq(
+    "openai/gpt-oss-safeguard-20b",
+    [{ role: "system", content: POLICY }, { role: "user", content: text }],
+    { reasoning_effort: "low", response_format: { type: "json_object" } }
+  );
+  return parseCategory(JSON.parse(raw).category);
+}
+
+export async function classifyWithGemini(text: string): Promise<SafetyCategory> {
+  const result = await runJsonTask<{ category: string }>(
+    POLICY,
+    `Message:\n${text}`,
+    { type: Type.OBJECT, properties: { category: { type: Type.STRING, enum: CATEGORIES } }, required: ["category"] },
+    TIMEOUT_MS
+  );
+  return parseCategory(result.category);
+}
+
 async function classify(text: string): Promise<{ category: SafetyCategory; model: string }> {
   try {
-    const raw = await groq(
-      "openai/gpt-oss-safeguard-20b",
-      [{ role: "system", content: POLICY }, { role: "user", content: text }],
-      { reasoning_effort: "low", response_format: { type: "json_object" } }
-    );
-    return { category: parseCategory(JSON.parse(raw).category), model: "gpt-oss-safeguard-20b" };
+    return { category: await classifyWithSafeguard(text), model: "gpt-oss-safeguard-20b" };
   } catch (error) {
     console.warn("Safeguard model unavailable, using Gemini for the safety screen:", error instanceof Error ? error.message : error);
-    const result = await runJsonTask<{ category: string }>(
-      POLICY,
-      `Message:\n${text}`,
-      { type: Type.OBJECT, properties: { category: { type: Type.STRING, enum: CATEGORIES } }, required: ["category"] },
-      TIMEOUT_MS
-    );
-    return { category: parseCategory(result.category), model: "Gemini (safety fallback)" };
+    return { category: await classifyWithGemini(text), model: "Gemini (safety fallback)" };
   }
 }
 
-async function injectionScore(text: string): Promise<number | null> {
+/** Llama Prompt Guard's injection probability for `text`, or null if it couldn't run. */
+export async function injectionScore(text: string): Promise<number | null> {
   try {
     const score = Number.parseFloat(await groq("meta-llama/llama-prompt-guard-2-86m", [{ role: "user", content: text }]));
     return Number.isFinite(score) ? score : null;

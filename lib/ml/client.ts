@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { EmotionScore, MlModel, ModelStatus, NliPair, NliScores, SpeechAudio, WorkerRequest, WorkerResponse } from "./protocol";
+import type { EmotionScore, MlModel, ModelStatus, NliPair, NliScores, SpeechAudio, VoiceEmotionResult, WorkerRequest, WorkerResponse } from "./protocol";
 
 /**
  * Page-side access to the on-device models (lib/ml/worker.ts). Every call can fail (old browser,
@@ -11,6 +11,7 @@ export const MODEL_INFO: Record<MlModel, { name: string; size: string }> = {
   emotion: { name: "DistilRoBERTa emotion model", size: "83 MB" },
   nli: { name: "DeBERTa-v3 NLI fact-checker", size: "87 MB" },
   tts: { name: "Kokoro-82M voice", size: "92 MB" },
+  voice: { name: "wav2vec2 voice-tone model", size: "90 MB" },
 };
 
 let worker: Worker | null = null;
@@ -20,6 +21,7 @@ const statuses: Record<MlModel, ModelStatus> = {
   emotion: { status: "idle", progress: 0 },
   nli: { status: "idle", progress: 0 },
   tts: { status: "idle", progress: 0 },
+  voice: { status: "idle", progress: 0 },
 };
 const listeners = new Set<() => void>();
 
@@ -64,7 +66,7 @@ function getWorker(): Worker {
 
 type Request = WorkerRequest extends infer R ? (R extends { id: number } ? Omit<R, "id"> : never) : never;
 
-function call<T>(request: Request, timeoutMs: number): Promise<T> {
+function call<T>(request: Request, timeoutMs: number, transfer: Transferable[] = []): Promise<T> {
   if (!mlSupported()) return Promise.reject(new Error("On-device models aren't available in this browser."));
   return new Promise<T>((resolve, reject) => {
     const id = nextId++;
@@ -83,7 +85,7 @@ function call<T>(request: Request, timeoutMs: number): Promise<T> {
       },
     });
     try {
-      getWorker().postMessage({ ...request, id });
+      getWorker().postMessage({ ...request, id }, transfer);
     } catch (error) {
       pending.delete(id);
       clearTimeout(timer);
@@ -110,6 +112,28 @@ export function entailment(pairs: NliPair[]): Promise<NliScores[]> {
 
 export function synthesizeSpeech(text: string, voice = "bf_emma"): Promise<SpeechAudio> {
   return call({ task: "tts", text, voice }, FIRST_LOAD_MS);
+}
+
+/** Decodes a recording and resamples it to 16 kHz mono, the rate the voice-tone model expects. */
+async function toMono16k(blob: Blob): Promise<Float32Array> {
+  const context = new AudioContext();
+  try {
+    const decoded = await context.decodeAudioData(await blob.arrayBuffer());
+    const offline = new OfflineAudioContext(1, Math.max(1, Math.ceil(decoded.duration * 16_000)), 16_000);
+    const source = offline.createBufferSource();
+    source.buffer = decoded;
+    source.connect(offline.destination);
+    source.start();
+    return (await offline.startRendering()).getChannelData(0);
+  } finally {
+    context.close().catch(() => undefined);
+  }
+}
+
+/** How the voice in a recording sounds (wav2vec2 speech-emotion model), averaged over the clip. */
+export async function classifyVoiceEmotion(blob: Blob): Promise<VoiceEmotionResult> {
+  const samples = await toMono16k(blob);
+  return call({ task: "voiceEmotion", samples }, FIRST_LOAD_MS, [samples.buffer]);
 }
 
 export function getModelStatus(model: MlModel): ModelStatus {

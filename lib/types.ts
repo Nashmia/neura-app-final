@@ -1,4 +1,5 @@
 import type { SpeechMarkers } from "@/lib/speech-markers";
+import type { VoiceTone } from "@/lib/voice-tone";
 
 export type User = {
   id: string;
@@ -68,12 +69,15 @@ export type QuizSession = {
   items?: QuizItem[];
   // All voice answers' speech markers added together. Absent when every answer was typed.
   speech?: SpeechMarkers;
+  // All voice answers' tone (on-device speech-emotion model, lib/voice-tone.ts). Absent when none was measured.
+  voiceTone?: VoiceTone;
   createdAt: string;
 };
 
 // `speech` is set when the answer was spoken (Whisper timings, lib/speech-markers.ts).
 // `photoContactId` is set on the photo-recognition question (the contact whose photo was shown).
-export type QuizItem = { questionNumber: number; question: string; answer: string; speech?: SpeechMarkers; photoContactId?: string };
+// `voiceTone` is how the spoken answer sounded (lib/voice-tone.ts), when the device could measure it.
+export type QuizItem = { questionNumber: number; question: string; answer: string; speech?: SpeechMarkers; voiceTone?: VoiceTone; photoContactId?: string };
 
 /** The photo-recognition question of a check-in: whose photo is shown, at which question, and what it shows. */
 export type QuizPhotoQuestion = { contactId: string; questionNumber: number; description: string };

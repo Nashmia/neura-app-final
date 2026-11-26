@@ -9,6 +9,7 @@ import { handleQuizTurn } from "@/lib/quiz";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { QUIZ_MAX_ANSWER_CHARS } from "@/lib/quiz-limits";
 import { SPEECH_LIMITS } from "@/lib/speech-markers";
+import { VOICE_TONE_LIMITS } from "@/lib/voice-tone";
 
 // A single Gemini call can occasionally take longer than Vercel's default
 // serverless timeout, especially under provider load — give it more room.
@@ -27,10 +28,19 @@ const speechSchema = z.object({
   repetitionCount: count, totalLatencySec: seconds,
 });
 
+// How the spoken answer sounded (on-device speech-emotion model, lib/voice-tone.ts): seconds of speech
+// per tone. Like the speech markers, tracking information only; it never affects the score.
+const toneSeconds = z.number().finite().min(0).max(VOICE_TONE_LIMITS.maxSeconds);
+const voiceToneSchema = z.object({
+  recordings: z.number().int().min(1).max(VOICE_TONE_LIMITS.maxRecordings),
+  seconds: toneSeconds, neu: toneSeconds, hap: toneSeconds, ang: toneSeconds, sad: toneSeconds,
+});
+
 const schema = z.object({
   sessionId: z.string().min(1).max(100).optional(),
   answer: z.string().max(QUIZ_MAX_ANSWER_CHARS * 2).optional(),
   speech: speechSchema.nullish(),
+  voiceTone: voiceToneSchema.nullish(),
 });
 
 /**
@@ -73,6 +83,7 @@ export async function POST(request: Request) {
       sessionId: parsed.data.sessionId,
       answer: parsed.data.answer,
       speech: parsed.data.speech,
+      voiceTone: parsed.data.voiceTone,
       runTurn,
       describePhoto: (dataUrl) => {
         const match = /^data:(image\/[a-z+]+);base64,(.+)$/.exec(dataUrl);
@@ -80,7 +91,7 @@ export async function POST(request: Request) {
       },
     });
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
-    return NextResponse.json({ sessionId: result.sessionId, turn: result.turn, speech: result.speech ?? null });
+    return NextResponse.json({ sessionId: result.sessionId, turn: result.turn, speech: result.speech ?? null, voiceTone: result.voiceTone ?? null });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "The AI quiz assistant is unavailable right now." }, { status: 502 });

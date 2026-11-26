@@ -539,6 +539,17 @@ All ready-made models, no training. Each one falls back to the earlier behaviour
 | Natural read-aloud voice | **Kokoro-82M** text-to-speech, British voice `bf_emma` (~92 MB) | On-device | Check-in, "Read aloud" / "Natural voice" |
 | Face-centred photos | **MediaPipe BlazeFace** face detector crops contact photos around the face (`lib/face-crop.ts`) | On-device | Onboarding and Settings photo upload |
 | Weekly care digest | gpt-oss-120b on Groq (Gemini fallback), from the week's records and statistics; cached per day (`lib/digest.ts`) | Server | Dashboard, doctor summary |
+| Voice tone | **wav2vec2-base speech-emotion model** (SUPERB ER: neutral/happy/angry/sad; `onnx-community/wav2vec2-base-superb-er-ONNX`, 4-bit, ~90 MB) on each spoken check-in answer, in 8 s windows, stored as seconds per tone (`lib/voice-tone.ts`) | On-device | Check-in result, dashboard Speech Markers card |
+
+**Evaluation** (`npm run eval:ml`, report `evaluation/reports/ml-2026-11-24T16-15-24/`; labels are drafts to review before quoting):
+
+| Study | Model | Baseline | Main result |
+|---|---|---|---|
+| Fact-checker, 48 sentences | DeBERTa NLI, F1 87.0% (precision 90.9%, recall 83.3%) | word overlap, best F1 82.8% | NLI separates supported from unsupported claims far better at the same recall |
+| Mood suggestion, 58 notes | keywords + emotion model + VADER: accuracy 65.5%, macro-F1 66.1% | without the emotion model: 56.9% / 58.2% | the emotion model adds about 9 points; Calm and Tired remain hard |
+| Safety screen, 34 messages | gpt-oss-safeguard: crisis recall 95%, 1 false alarm in 14 safe messages | Gemini fallback similar on the 25 it answered | missed "saving up my own tablets"; flagged end-of-life planning |
+| Prompt injection | Llama Prompt Guard: 6/8 attempts caught, 0/34 false alarms | – | missed indirect attempts |
+| Journal search, 12 queries | Gemini embeddings: Recall@3 82.6%, MRR 1.00 | BM25 keywords: Recall@3 9.7% | meaning-based search finds what keyword search can't |
 
 **Reliability change in the same work:** check-in turns now fall back to Groq's gpt-oss-120b when every Gemini model is overloaded (`app/api/chat/quiz/route.ts`); Gemini gets 30 s so the fallback fits the 60 s route limit.
 

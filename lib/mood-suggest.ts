@@ -32,20 +32,44 @@ function mentions(words: string[], phrase: string): boolean {
   return false;
 }
 
+// The three parts below are exported separately so evaluation/ml can measure each one on its own.
+
+/** The first mood whose keyword the note mentions (not negated), or null. */
+export function moodFromKeywords(text: string): { tag: MoodTag; keyword: string } | null {
+  const words = text.toLowerCase().replace(/[’]/g, "'").match(/[a-z']+/g) ?? [];
+  for (const [tag, keywords] of KEYWORDS) {
+    const hit = keywords.find((k) => mentions(words, k));
+    if (hit) return { tag, keyword: hit };
+  }
+  return null;
+}
+
+/** Happy / Calm from a VADER compound score; null for neutral or negative. */
+export function moodFromSentiment(compound: number): MoodTag | null {
+  return compound >= 0.5 ? "Happy" : compound >= 0.05 ? "Calm" : null;
+}
+
+/** The mood tag an emotion-model reading maps to, when it is confident enough. */
+export function moodFromEmotion(emotion: Emotion): MoodTag | null {
+  return emotion.score >= 0.5 ? (EMOTION_TAGS[emotion.label] ?? null) : null;
+}
+
+export function sentimentOf(text: string): number {
+  return SentimentIntensityAnalyzer.polarity_scores(text).compound;
+}
+
 export function suggestMood(text: string, emotion?: Emotion | null): MoodSuggestion | null {
   const clean = text.trim();
   if (clean.split(/\s+/).length < 3) return null; // too short to judge
-  const words = clean.toLowerCase().replace(/[’]/g, "'").match(/[a-z']+/g) ?? [];
-  const compound = SentimentIntensityAnalyzer.polarity_scores(clean).compound;
+  const compound = sentimentOf(clean);
 
-  for (const [tag, keywords] of KEYWORDS) {
-    const hit = keywords.find((k) => mentions(words, k));
-    if (hit) return { tag, compound, reason: `mentions "${hit}"` };
-  }
-  if (emotion && emotion.score >= 0.5 && EMOTION_TAGS[emotion.label])
-    return { tag: EMOTION_TAGS[emotion.label], compound, reason: `reads as ${emotion.label} (${Math.round(emotion.score * 100)}%) to the emotion model` };
+  const keyword = moodFromKeywords(clean);
+  if (keyword) return { tag: keyword.tag, compound, reason: `mentions "${keyword.keyword}"` };
+  const fromEmotion = emotion ? moodFromEmotion(emotion) : null;
+  if (emotion && fromEmotion)
+    return { tag: fromEmotion, compound, reason: `reads as ${emotion.label} (${Math.round(emotion.score * 100)}%) to the emotion model` };
   if (emotion?.label === "neutral" && emotion.score >= 0.7 && compound < 0.05) return null;
-  if (compound >= 0.5) return { tag: "Happy", compound, reason: "the note reads as clearly positive" };
-  if (compound >= 0.05) return { tag: "Calm", compound, reason: "the note reads as mildly positive" };
+  const fromSentiment = moodFromSentiment(compound);
+  if (fromSentiment) return { tag: fromSentiment, compound, reason: fromSentiment === "Happy" ? "the note reads as clearly positive" : "the note reads as mildly positive" };
   return null; // neutral or negative without a clear cause: no guess
 }

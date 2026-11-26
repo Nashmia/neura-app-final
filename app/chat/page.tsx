@@ -11,8 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/layout/logo";
 import { QUIZ_MAX_ANSWER_CHARS } from "@/lib/quiz-limits";
-import { getModelStatus, mlSupported, synthesizeSpeech, warmModel } from "@/lib/ml/client";
+import { classifyVoiceEmotion, getModelStatus, mlSupported, synthesizeSpeech, warmModel } from "@/lib/ml/client";
 import { combineSpeechMarkers, type SpeechMarkers } from "@/lib/speech-markers";
+import { combineVoiceTone, toneFromScores, type VoiceTone } from "@/lib/voice-tone";
+import { VoiceTonePanel } from "@/components/speech/voice-tone-panel";
 import { api, redirectToLogin } from "@/lib/utils";
 
 // `photo` is the family photo shown with the photo-recognition question.
@@ -37,21 +39,23 @@ export default function ChatPage() {
   const speakToken = useRef(0);
   const [sending, setSending] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
-  const [result, setResult] = useState<{ score: number; total: number; summary: string; speech: SpeechMarkers | null } | null>(null);
+  const [result, setResult] = useState<{ score: number; total: number; summary: string; speech: SpeechMarkers | null; voiceTone: VoiceTone | null } | null>(null);
   // Speech markers of each voice recording that went into the current answer (several taps add up).
   const speechParts = useRef<SpeechMarkers[]>([]);
+  // Voice tone of each recording, measured on this device (wav2vec2 speech-emotion model) while Whisper transcribes.
+  const toneParts = useRef<Promise<VoiceTone | null>[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const started = useRef(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  async function sendTurn(answer?: string, speech?: SpeechMarkers | null) {
+  async function sendTurn(answer?: string, speech?: SpeechMarkers | null, voiceTone?: VoiceTone | null) {
     setSending(true);
     setError(null);
     try {
-      const data = await api<{ sessionId: string; turn: QuizTurn; speech: SpeechMarkers | null }>("/api/chat/quiz", {
+      const data = await api<{ sessionId: string; turn: QuizTurn; speech: SpeechMarkers | null; voiceTone: VoiceTone | null }>("/api/chat/quiz", {
         method: "POST",
-        body: JSON.stringify(answer === undefined ? {} : { sessionId, answer, speech: speech ?? null }),
+        body: JSON.stringify(answer === undefined ? {} : { sessionId, answer, speech: speech ?? null, voiceTone: voiceTone ?? null }),
       });
       const { turn } = data;
       setSessionId(data.sessionId);
@@ -60,7 +64,7 @@ export default function ChatPage() {
         setProgress({ current: turn.questionNumber, total: turn.total });
       } else {
         setProgress({ current: turn.total, total: turn.total });
-        setResult({ score: turn.score, total: turn.total, summary: turn.summary, speech: data.speech });
+        setResult({ score: turn.score, total: turn.total, summary: turn.summary, speech: data.speech, voiceTone: data.voiceTone });
       }
     } catch (err) {
       if (err instanceof Error && err.message === "Please log in first.") {
@@ -176,7 +180,16 @@ export default function ChatPage() {
     });
   }
 
-  function submitAnswer() {
+  function measureTone(recording: Blob) {
+    if (!mlSupported()) return;
+    toneParts.current.push(
+      classifyVoiceEmotion(recording)
+        .then(({ scores, seconds }) => (seconds ? toneFromScores(scores, seconds) : null))
+        .catch(() => null)
+    );
+  }
+
+  async function submitAnswer() {
     if (sending || result) return;
     if (!sessionId) {
       sendTurn();
@@ -186,9 +199,16 @@ export default function ChatPage() {
     if (!answer) return;
     const speech = combineSpeechMarkers(speechParts.current);
     speechParts.current = [];
+    const tones = toneParts.current;
+    toneParts.current = [];
     setMessages((m) => [...m, { role: "user", text: answer }]);
     setInput("");
-    sendTurn(answer, speech);
+    setSending(true);
+    // Wait briefly for the voice-tone model; if it is still downloading, the answer goes without it.
+    const voiceTone = tones.length
+      ? await Promise.race([Promise.all(tones).then(combineVoiceTone), new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000))])
+      : null;
+    sendTurn(answer, speech, voiceTone);
   }
 
   const progressPct = progress.total ? (progress.current / progress.total) * 100 : 0;
@@ -227,6 +247,12 @@ export default function ChatPage() {
                 <div className="mt-5 text-left">
                   <h2 className="mb-3 text-base font-semibold text-ink">Speech markers</h2>
                   <SpeechMarkersPanel speech={result.speech} compact />
+                </div>
+              )}
+              {result.voiceTone && (
+                <div className="mt-5 text-left">
+                  <h2 className="mb-3 text-base font-semibold text-ink">Voice tone</h2>
+                  <VoiceTonePanel tone={result.voiceTone} />
                 </div>
               )}
               <Button asChild className="mt-6">
@@ -321,7 +347,10 @@ export default function ChatPage() {
                 value={input}
                 onChange={(e) => {
                   setInput(e.target.value);
-                  if (!e.target.value.trim()) speechParts.current = []; // answer cleared: drop its recordings
+                  if (!e.target.value.trim()) {
+                    speechParts.current = []; // answer cleared: drop its recordings
+                    toneParts.current = [];
+                  }
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") submitAnswer();
@@ -334,6 +363,7 @@ export default function ChatPage() {
               />
               <VoiceInputButton
                 disabled={sending || Boolean(result) || !sessionId}
+                onAudio={measureTone}
                 onText={(text, speech) => {
                   setError(null);
                   if (speech) speechParts.current.push(speech);

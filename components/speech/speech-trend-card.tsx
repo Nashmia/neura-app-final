@@ -5,6 +5,8 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import { Card, CardContent } from "@/components/ui/card";
 import { SpeechMarkersPanel } from "@/components/speech/speech-markers-panel";
 import type { SpeechMarkers } from "@/lib/speech-markers";
+import type { VoiceTone } from "@/lib/voice-tone";
+import { VoiceTonePanel } from "@/components/speech/voice-tone-panel";
 
 export type SpeechDashboardData = {
   latest: SpeechMarkers;
@@ -12,6 +14,7 @@ export type SpeechDashboardData = {
   baseline: SpeechMarkers | null;
   baselineSessions: number;
   trend: { day: string; pace: number | null; pauses: number | null }[];
+  voiceTone?: VoiceTone | null;
 };
 
 /** Dashboard card: speech markers from the latest voice check-in, against the patient's own earlier ones. */
@@ -31,6 +34,12 @@ export function SpeechTrendCard({ speech }: { speech: SpeechDashboardData }) {
           <div className="grid size-11 shrink-0 place-items-center rounded-full border border-periwinkle bg-white text-navy"><Mic className="size-5" /></div>
         </div>
         <SpeechMarkersPanel speech={speech.latest} baseline={speech.baseline} />
+        {speech.voiceTone && (
+          <div className="mt-6">
+            <p className="mb-2 text-sm font-medium text-ink">Voice tone</p>
+            <VoiceTonePanel tone={speech.voiceTone} />
+          </div>
+        )}
         {speech.trend.length > 1 && (
           <div className="mt-6">
             <p className="mb-2 text-sm font-medium text-ink">Pace and pauses over time</p>

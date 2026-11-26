@@ -139,3 +139,18 @@ test("a failed photo description still asks the photo question", async () => {
   // Without a description the model is told it can't see the photo, so it won't invent details.
   assert.match(quizSystemInstruction(withPhoto, 3, transcript!.photo), /You cannot see the photo/);
 });
+
+test("voice tone of spoken answers is stored per answer and added up for the check-in", async () => {
+  const collections = await getCollections();
+  const runTurn = fakeRunner(3);
+  const start = await handleQuizTurn({ collections, userId: "u1", patient, runTurn });
+  assert.ok(start.ok);
+  const tone = { recordings: 1, seconds: 4, neu: 3, hap: 1, ang: 0, sad: 0 };
+  await handleQuizTurn({ collections, userId: "u1", patient, sessionId: start.sessionId, answer: "Monday", runTurn, voiceTone: tone });
+  await handleQuizTurn({ collections, userId: "u1", patient, sessionId: start.sessionId, answer: "Priya", runTurn });
+  const last = await handleQuizTurn({ collections, userId: "u1", patient, sessionId: start.sessionId, answer: "Autumn", runTurn, voiceTone: tone });
+  assert.ok(last.ok);
+  assert.deepEqual(last.voiceTone, { recordings: 2, seconds: 8, neu: 6, hap: 2, ang: 0, sad: 0 });
+  const saved = await collections.quizSessions.findOne({ id: start.sessionId });
+  assert.deepEqual(saved?.items?.map((i) => Boolean(i.voiceTone)), [true, false, true]);
+});
